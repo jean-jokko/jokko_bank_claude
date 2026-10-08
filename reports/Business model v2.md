@@ -144,27 +144,70 @@ All costs below are **assumptions for planning**, to be replaced with quotes fro
 
 ### 1. Team: the largest cost
 
-"Loaded cost" means gross salary plus employer social charges (IPRES, CSS) and benefits.
+The team is built **lean on technology and heavy on sales**: buy the banking technology instead of building it, and put the money into people who sign clients. "Loaded cost" means gross salary plus employer social charges (IPRES, CSS) and benefits.
 
 | Function | Roles | Headcount Y1 / Y2 / Y3 | Loaded cost per person a month | Y1 | Y2 | Y3 |
 |---|---|---|---|---|---|---|
-| Leadership | CEO, CTO, COO; CFO from year 2 | 3 / 4 / 4 | 2.0 M | 72 | 96 | 96 |
-| Engineering and product | Backend, mobile, web, QA and DevOps, product, design | 10 / 14 / 18 | 1.3 M | 156 | 218 | 281 |
-| Compliance and risk | AML compliance officer (mandatory), compliance analysts, internal control | 2 / 3 / 4 | 1.1 M | 26 | 40 | 53 |
+| Leadership | CEO, CTO (also codes), COO; CFO from year 2 | 3 / 4 / 4 | 2.0 M | 72 | 96 | 96 |
+| Engineering and product | 3 developers + 1 product designer in year 1 (see below) | 4 / 6 / 9 | 1.3 M | 62 | 94 | 140 |
+| Compliance and risk | AML compliance officer (mandatory), compliance analyst, internal control | 2 / 3 / 4 | 1.1 M | 26 | 40 | 53 |
 | Credit | Credit risk lead (from month 6), analysts, collections | 1 / 4 / 7 | 1.0–1.5 M | 9 | 48 | 84 |
-| Operations and support | Company onboarding (KYB), customer support, reconciliation | 3 / 6 / 10 | 0.5 M | 18 | 36 | 60 |
-| Sales and partnerships | B2B sales, accountant and payroll-software partnerships, account managers | 2 / 5 / 8 | 0.9 M | 22 | 54 | 86 |
+| Operations and support | Company onboarding (KYB), customer support, reconciliation | 3 / 7 / 11 | 0.5 M | 18 | 42 | 66 |
+| **Sales and partnerships** | Head of sales, field sales, accountant and payroll-software partnerships, account managers | **6 / 10 / 14** | 0.8 M + commissions | 58 | 96 | 134 |
 | Finance and administration | Finance, HR, admin | 1 / 2 / 3 | 0.8 M | 10 | 19 | 29 |
 | Côte d'Ivoire | Country manager (other CI staff counted above) | 0 / 1 / 1 | 2.0 M | 0 | 24 | 24 |
-| **Total team** | | **22 / 39 / 55** | | **313** | **535** | **713** |
+| **Total team** | | **20 / 37 / 53** | | **255** | **458** | **626** |
 
-Year one assumes most hires are in place by month 3; a slower ramp-up would lower it to about 270 M.
+**Who does what in year one**
+
+| Role | Why it is needed |
+|---|---|
+| CEO | Fundraising, bank and SFD partners, regulator relationship, key clients |
+| CTO | Architecture, security, vendor choices, code reviews and deployment approvals; codes part of the time |
+| COO | Operations, compliance set-up, licence file, onboarding and support processes |
+| 3 developers | One for the backend (ledger, bank and PI-SPI integrations, payroll file import, approvals); one for the mobile app (one codebase for Android and iOS); one full-stack for the web app and the back-office |
+| Product designer | Screens, user tests, product specs; the CEO or COO acts as product owner |
+| AML compliance officer + analyst | Mandatory under BCEAO rules; customer and transaction screening, suspicious-activity reports to CENTIF |
+| Credit risk lead (from month 6) | Credit policy, scoring, the SFD relationship, ready for credit at month 12 |
+| 3 operations and support | Check company documents, answer clients on WhatsApp and phone, reconcile with the bank every day |
+| Head of sales + 4 field sales | Visit and sign employers in Dakar; about 12 new clients a month each once ramped up |
+| Partnerships manager | Recruits accounting firms and payroll software vendors as a sales channel |
+| Finance and admin | Accounting, payroll, suppliers, reporting to investors |
+
+**Why 3 developers can be enough, and on what conditions**
+
+Jokko is not building a bank's core system. The partner bank holds the accounts, a card processor runs the cards, and vendors handle identity checks and AML screening. The developers build the layer on top: the apps, payroll and approvals, and the connections between vendors. Three good developers plus the CTO can do that if:
+
+1. **Jokko buys instead of building**: a ready-made ledger or banking platform, a card issuing processor, an eKYC vendor, AML screening software and a low-code tool for the back-office. That is why the technology budget below goes up.
+2. **One codebase for mobile** (Flutter or React Native) and a simple web app.
+3. **Freelancers cover the gaps**: QA testing, DevOps and on-call support, and security testing (budgeted under other fixed costs).
+4. **The roadmap stays focused**: credit products, the accountant portal and API connectors arrive in order, not all at once.
+
+**The risks with only 3 developers**
+
+- **Key-person risk**: if one developer leaves, a whole part of the product stalls. Document everything and keep a freelancer who knows the code.
+- **Bank and BCEAO due diligence** will look at IT security and segregation of duties. No single developer should be able to deploy code that moves money without someone else approving it; here the CTO approves.
+- **Payday cannot fail**: salary payments need monitoring and someone on call, especially at month-end.
+- **Credit and Côte d'Ivoire add work**: the team grows to 6 developers in year 2 and 9 in year 3.
+
+**What the sales team must deliver**
+
+The client targets now rest on sales capacity, which the first team (2 salespeople) did not support:
+
+| | Year 1 | Year 2 | Year 3 |
+|---|---|---|---|
+| Field salespeople signing clients | 4 (Senegal) | 8 (5 Senegal, 3 CI) | 12 |
+| New clients per salesperson a month (after ramp-up) | ~12 | ~12 | ~15 |
+| New clients from direct sales | ~380 (8 selling months) | ~1,150 | ~2,150 |
+| New clients from accountants and payroll software | ~120 | ~350 | ~850 |
+| **Clients at year end** | **~500** | **~2,000** | **~5,000** |
 
 ### 2. Other fixed costs
 
 | Category | What it covers | Y1 | Y2 | Y3 |
 |---|---|---|---|---|
-| Technology platforms | Core ledger and banking software, card processor platform fee, eKYC and AML screening minimums, cloud hosting, monitoring, development tools | 100 | 155 | 210 |
+| Technology platforms | Ready-made ledger or banking platform, card processor platform fee, eKYC and AML screening minimums, low-code back-office tool, cloud hosting, monitoring, development tools | 130 | 185 | 240 |
+| Freelance engineering | QA testing, DevOps and on-call support, design help | 25 | 30 | 30 |
 | Security and certification | Penetration tests, PCI DSS assessment, security tooling | 20 | 25 | 30 |
 | Partner bank and SFD set-up | Integration, set-up fees, monthly minimums (Côte d'Ivoire bank in year 2) | 40 | 30 | 20 |
 | Legal and regulatory | Banking counsel, licence files (Senegal payment licence, CI payment licence, SFD), regulatory reporting | 60 | 70 | 60 |
@@ -172,8 +215,9 @@ Year one assumes most hires are in place by month 3; a slower ramp-up would lowe
 | Insurance | Professional liability (required for a payment licence), cyber, directors' liability | 10 | 15 | 20 |
 | Marketing and brand | Website, content, events, launch campaigns | 40 | 70 | 110 |
 | Partner commissions | Referral fees to accountants and payroll software vendors | 20 | 30 | 40 |
+| Sales commissions and travel | Bonuses for signed clients, field visits, transport | 20 | 40 | 60 |
 | Office and administration | Dakar office, Abidjan office from year 2, equipment, travel, admin | 40 | 60 | 80 |
-| **Total other fixed costs** | | **350** | **485** | **610** |
+| **Total other fixed costs** | | **425** | **585** | **730** |
 
 ### 3. Variable costs (grow with clients, cards, payments and loans)
 
@@ -210,24 +254,26 @@ Client mix: 60% Petite, 30% Moyenne, 10% Grande. Côte d'Ivoire opens in year 2.
 | Average loan book | — (starts month 12) | ≈ 1,200 | ≈ 5,000 |
 | Net credit margin to Jokko | — | 54 (≈ 4.5%) | 350 (≈ 7%) |
 | **Total contribution** | **59** | **349** | **1,175** |
-| Team | −313 | −535 | −713 |
-| Other fixed costs | −350 | −485 | −610 |
-| **Total fixed costs** | **−663** | **−1,020** | **−1,323** |
-| **Result** | **≈ −604 (≈ −€0.92 M)** | **≈ −671 (≈ −€1.02 M)** | **≈ −148 (≈ −€0.23 M)** |
+| Team | −255 | −458 | −626 |
+| Other fixed costs | −425 | −585 | −730 |
+| **Total fixed costs** | **−680** | **−1,043** | **−1,356** |
+| **Result** | **≈ −621 (≈ −€0.95 M)** | **≈ −694 (≈ −€1.06 M)** | **≈ −181 (≈ −€0.28 M)** |
 
-**Monthly break-even arrives late in year 3.** By the end of year 3, 5,000 clients bring about 98 M FCFA a month of contribution and an 8 bn FCFA loan book about 47 M FCFA a month, against about 110 M FCFA of monthly fixed costs. **The first full profitable year is year 4.**
+**Monthly break-even arrives late in year 3.** By the end of year 3, 5,000 clients bring about 98 M FCFA a month of contribution and an 8 bn FCFA loan book about 47 M FCFA a month, against about 113 M FCFA of monthly fixed costs. **The first full profitable year is year 4.**
+
+The lean-technology team does not cut total costs much: the money saved on developers goes into salespeople, commissions and bought technology. What it changes is **growth**: the client targets are now backed by enough people to sign them.
 
 ### 5. Capital to raise (not costs, but cash needed)
 
 | Item | Amount (M FCFA) | When |
 |---|---|---|
-| Operating losses until break-even | ≈ 1,420 | Years 1–3 |
+| Operating losses until break-even | ≈ 1,500 | Years 1–3 |
 | Payment licence capital: Senegal, then Côte d'Ivoire | 200 | Years 1–2 |
 | Card programme collateral at the partner bank | 25–100 (to quote) | Year 1 |
 | First-loss reserve (≈ 10% of the partner-funded loan book) | ≈ 250 | Year 2 |
 | Own SFD: licence capital or acquisition price | 300–1,000 (unknown) | Years 2–3 |
 | Cash buffer (about 6 months of fixed costs) | ≈ 600 | Ongoing |
-| **Total equity to raise** | **≈ 2,800–3,600 (≈ €4.3–5.5 M)** | |
+| **Total equity to raise** | **≈ 2,900–3,700 (≈ €4.4–5.6 M)** | |
 
 **Debt to fund the loans themselves comes on top**: DFI and local debt lines first, then deposits once Jokko has its own SFD, then securitisation above about 10 bn FCFA.
 
