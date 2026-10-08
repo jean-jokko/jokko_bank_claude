@@ -25,7 +25,7 @@ Senegal scored below Côte d'Ivoire in the regional scorecard (3.50 vs 4.30). Mo
 
 | Segment | Size signal | What they need | Priority |
 |---|---|---|---|
-| **Formal employers with 10–500 staff, Dakar** (services, distribution, schools, clinics, BTP, agencies, NGOs) | Part of the 40,300 IPRES-paying employers | Payroll to any bank or wallet with approvals, payslips, IPRES/CSS-ready exports, supplier payouts, cards for staff spending | **1** |
+| **Formal employers with 10–500 staff, Dakar** (services, distribution, schools, clinics, BTP, agencies, NGOs) | Part of the 40,300 IPRES-paying employers | Paying salaries from any payroll tool's file to any bank or wallet, with approvals; supplier payouts; cards for staff spending | **1** |
 | **NGOs, projects and mass-payout organisations** (cash transfers, field staff, per diems) | Many donor-funded programmes in Senegal | Bulk payouts to thousands of wallets, audit trails, reconciliation | **1** (fast volume, simple product) |
 | **Their employees** | About 14 per IPRES employer on average (577k ÷ 40.3k); target clients have more | A salary account with an IBAN, a card that works online, a salary advance | **1** (comes with each employer) |
 | Freelancers, agencies, online sellers | Not quantified | International card, getting paid from abroad | 2 (Premium tier) |
@@ -38,7 +38,7 @@ Senegal scored below Côte d'Ivoire in the regional scorecard (3.50 vs 4.30). Mo
 | Business account on the partner bank's rails, then on Jokko's own EP account | Free salary account with Jokko bank details (RIB/IBAN) |
 | **Payroll and bulk payouts to every wallet and bank** (Wave, Orange Money, Mixx, Free, banks) via PI-SPI | Virtual card (local BIN, Visa or Mastercard), then physical card |
 | Roles, approval chains and an audit trail | Transfers, bill pay, savings vaults (no interest until Jokko has its SFD) |
-| Payslips and IPRES/CSS exports | **Salary advance through a partner SFD** (target: 6 months after launch) |
+| Pay-file import from any payroll tool or accountant (Jokko does not calculate payroll; see the feature list) | **Salary advance through a partner SFD** (target: 6 months after launch) |
 | Supplier payouts and payment links | Clear fees, anti-scam confirmations, real customer support |
 | Expense cards for staff | |
 
@@ -56,7 +56,7 @@ Leave out of the Senegal launch: e-invoicing (no deadline yet), merchant accepta
 | Banks | Full accounts, credibility | In-person onboarding taking days, 10,000–25,000 FCFA a month in fees, poor digital tools |
 | Fintra (salary advance, 2022) | First mover | Pilot appears dormant; its pricing (6% for 15 days) would breach the rate cap if treated as credit |
 
-**The open gap: nobody combines payroll with approvals, IPRES-ready exports, employee accounts with an IBAN, and a compliant salary advance.** Julaya pays your people but does not bank or lend to them; Djamo banks consumers but does not run your payroll; Wave is cheap but is not a bank account.
+**The open gap: nobody combines salary payments from any payroll tool with approvals, employee accounts with an IBAN, and a compliant salary advance.** Julaya pays your people but does not bank or lend to them; Djamo banks consumers but does not run your payroll; Wave is cheap but is not a bank account.
 
 ### Pricing anchor (illustrative, to be tested)
 
