@@ -8,6 +8,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 OUT = sys.argv[1]
 EQUITY = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else [900e6, 2000e6, 3000e6]
+SERIES_B_MONTH = int(sys.argv[3]) if len(sys.argv) > 3 else 22
 
 wb = Workbook()
 FONT = "Arial"
@@ -20,6 +21,21 @@ NUM1 = '#,##0.0;(#,##0.0);"-"'
 PCT = '0.0%;(0.0%);"-"'
 PCT2 = '0.00%;(0.00%);"-"'
 DATEF = 'mmm-yy'
+EUR_F = '[<100]"€"#,##0.00;"€"#,##0'
+EURN = '"€"#,##0;("€"#,##0);"-"'
+FCFA_F = '#,##0" FCFA"'
+
+
+def equiv(unit, ref):
+    """Formula and format for the other-currency equivalent of a money input (None if not money)."""
+    u = unit or ""
+    if u.startswith("FCFA"):
+        return f"={ref}/FX_EUR", EUR_F
+    if u.startswith("USD"):
+        return f"={ref}*FX_USD/FX_EUR", EUR_F
+    if u.startswith("€"):
+        return f"={ref}*FX_EUR", FCFA_F
+    return None, None
 THIN = Side(style="thin", color="BFBFBF")
 NM, C0 = 60, 5
 COLS = [CL(C0 + i) for i in range(NM)]
@@ -65,7 +81,7 @@ name("Scenario", "'Assumptions'!$D$4")
 dv = DataValidation(type="list", formula1='"1,2,3"', allow_blank=False)
 A.add_data_validation(dv)
 dv.add("D4")
-for col, w in {"A": 2, "B": 52, "C": 16, "D": 15, "E": 15, "F": 15, "G": 15, "H": 15, "I": 90}.items():
+for col, w in {"A": 2, "B": 52, "C": 16, "D": 15, "E": 15, "F": 15, "G": 15, "H": 18, "I": 90, "J": 3, "K": 16, "L": 16, "M": 16, "N": 16, "O": 16}.items():
     A.column_dimensions[col].width = w
 arow = [6]
 
@@ -73,11 +89,12 @@ arow = [6]
 def a_sec(text, kind="scalar"):
     r = arow[0] + 1
     A.cell(r, 2, text)
-    heads = ["Unit", "Value used", "Prudent", "Base", "Ambitious", "", "Source / note"] if kind == "scalar" else \
-        ["Unit", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Source / note"]
+    heads = ["Unit", "Value used", "Prudent", "Base", "Ambitious", "€ / FCFA equivalent", "Source / note"] if kind == "scalar" else \
+        ["Unit", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Source / note", "", "Y1 (€ / FCFA)", "Y2 (€ / FCFA)", "Y3 (€ / FCFA)", "Y4 (€ / FCFA)", "Y5 (€ / FCFA)"]
     for j, h in enumerate(heads):
-        A.cell(r, 3 + j, h)
-    for j in range(2, 10):
+        if h:
+            A.cell(r, 3 + j, h)
+    for j in list(range(2, 10)) + ([11, 12, 13, 14, 15] if kind != "scalar" else []):
         c = A.cell(r, j)
         c.font = F(bold=True, color=WHITE)
         c.fill = HEAD_FILL
@@ -96,6 +113,9 @@ def a_in(nm, label, value, unit, fmt=NUM, note="", scen=None):
     else:
         style(A.cell(r, 4, value), fmt=fmt, color=BLUE, fill=IN_FILL)
     A.cell(r, 9, note).font = F(color=GREY)
+    fml, fm = equiv(unit, f"D{r}")
+    if fml and nm not in ("FX_EUR", "FX_USD"):
+        style(A.cell(r, 8, fml), fmt=fm, color=GREY)
     name(nm, f"'Assumptions'!$D${r}")
     arow[0] += 1
     return r
@@ -107,6 +127,9 @@ def a_arr(nm, label, values, unit, fmt=NUM, note=""):
     A.cell(r, 3, unit).font = F(color=GREY)
     for j, v in enumerate(values):
         style(A.cell(r, 4 + j, v), fmt=fmt, color=BLUE, fill=IN_FILL)
+        fml, fm = equiv(unit, f"{CL(4 + j)}{r}")
+        if fml:
+            style(A.cell(r, 11 + j, fml), fmt=fm, color=GREY)
     A.cell(r, 9, note).font = F(color=GREY)
     name(nm, f"'Assumptions'!$D${r}:$H${r}")
     arow[0] += 1
@@ -123,26 +146,22 @@ a_in("Contingency_Pct", "Contingency on fixed costs", 0.05, "%", PCT, "Same 5% a
 
 a_sec("2. Timing (month numbers, 1 = first month of the model)")
 a_in("Launch_SN", "Commercial launch, Senegal", 5, "month #", "0", "After partner bank integration and card programme set-up (business account with IBAN via the partner bank).")
-a_in("Launch_CI", "Commercial launch, Côte d'Ivoire", 19, "month #", "0", "Year 2, as in the Senegal launch plan.")
-a_in("Office_Start", "Dakar office opens (coworking before)", 4, "month #", "0", "")
-a_in("CI_Office_Start", "Abidjan office / coworking opens", 13, "month #", "0", "")
+a_in("Launch_CI", "Commercial launch, Côte d'Ivoire", 19, "month #", "0", "One month after the Abidjan office opens. Partners hold the licences in Côte d'Ivoire too.")
+a_in("Office_Start", "Dakar office (Regus) from", 1, "month #", "0", "Regus from day one: no lease, deposit or fit-out (decision).")
+a_in("CI_Office_Start", "Abidjan office (Regus) and first Côte d'Ivoire hires", 18, "month #", "0", "Not before month 18 (decision).")
 a_in("PayLinks_Start", "Payment links go live", 18, "month #", "0", "'Bientôt' feature in the app.")
-a_in("EmpAcc_Start", "Employee salary accounts go live", 9, "month #", "0", "Free account and card for client employees.")
-a_in("Own_Funding_Month", "Own SFD funds the loan book from", 37, "month #", "0", "Before this month the partner SFD funds loans and Tabax keeps a share of the margin.")
-a_in("SFD_Acq_Month", "Own SFD licence or acquisition paid", 36, "month #", "0", "")
-a_in("Licence_SN_Month", "Payment licence capital paid in, Senegal", 12, "month #", "0", "EP licence: 100M FCFA minimum capital per country.")
-a_in("Licence_CI_Month", "Payment licence capital paid in, Côte d'Ivoire", 30, "month #", "0", "")
+a_in("EmpAcc_Start", "B2C launch: employee salary accounts and personal accounts", 29, "month #", "0", "Not before 2 years of commercial activity: Senegal launch + 24 months (decision).")
+a_in("SFD_Acq_Month", "Acquisition of a microfinance company (SFD) closes", 24, "month #", "0", "Around year 2 (decision). Due diligence and the change-of-control approval run during year 2.")
+a_in("Own_Funding_Month", "Own SFD lends from", 25, "month #", "0", "Before this month the partner SFD lends and Tabax keeps a share of the margin. Côte d'Ivoire loans stay with a partner: SFD licences are national.")
 a_in("Collateral_Month", "Card programme collateral at partner bank", 4, "month #", "0", "")
 a_in("Bank_Setup_Month", "Partner bank set-up fee paid, Senegal", 2, "month #", "0", "")
 a_in("CI_Bank_Setup_Month", "Partner bank set-up fee paid, Côte d'Ivoire", 16, "month #", "0", "")
 a_in("Proc_Setup_Month", "Card processor set-up fee paid", 3, "month #", "0", "")
 a_in("Proc_Min_Start", "Card processor monthly minimum starts", 5, "month #", "0", "")
 a_in("Cloud_Start", "Cloud hosting starts", 2, "month #", "0", "")
-a_in("SFD_Setup_Month", "Partner SFD integration fee paid", 9, "month #", "0", "")
-a_in("CI_Company_Month", "Côte d'Ivoire subsidiary created", 13, "month #", "0", "")
-a_in("Licence_File_SN_Months", "Senegal licence file: months of work from month 1", 9, "months", "0", "Counsel and consultants spread over this period.")
-a_in("CI_Licence_File_Start", "Côte d'Ivoire licence file starts", 13, "month #", "0", "")
-a_in("Licence_File_CI_Months", "Côte d'Ivoire licence file: months of work", 12, "months", "0", "")
+a_in("SFD_Setup_Month", "Partner SFD integration fee paid", 15, "month #", "0", "Partner SFD signed early; integration paid before the first loans.")
+a_in("CI_Company_Month", "Côte d'Ivoire subsidiary created", 16, "month #", "0", "Before the first Abidjan hires.")
+a_in("Audit_Month", "First tech audit (then every 12 months)", 4, "month #", "0", "Before launch, for the partner bank; repeated yearly.")
 
 a_sec("3. Client acquisition (sales and marketing)")
 a_in("Rep_Productivity", "New clients signed per field sales rep per month", None, "clients", NUM1, "Rep counts come from the hiring plan. A rep sells from the month after joining. Senegal B2B field sales benchmark to validate in the pilot.", scen=(7, 10, 13))
@@ -229,31 +248,31 @@ a_in("Notif_Cost", "SMS, WhatsApp and support tools per client", 400, "FCFA / mo
 a_in("Emp_Notif", "Messages per employee account", 50, "FCFA / month", NUM, "")
 a_in("EmpAcc_Cost", "Processing per employee account", 150, "FCFA / month", NUM, "About €0.23 (cost breakdown).")
 
-a_sec("7. Credit (lender of record: partner SFD, later own SFD)")
+a_sec("7. Credit (lender of record: partner SFD, then own SFD in Senegal)")
 a_in("Credit_Mult", "Credit volume multiplier", None, "x", "0.00", "Scales every product's uptake.", scen=(0.6, 1.0, 1.4))
 a_in("CoR_Mult", "Credit losses multiplier", None, "x", "0.00", "Scales every product's cost of risk.", scen=(1.5, 1.0, 0.8))
 a_in("Credit_Ramp", "Months for a product to reach full uptake", 12, "months", "0", "")
-a_in("Start_Factoring", "Factoring: start month", 12, "month #", "0", "Lowest risk: the debtor pays the invoice.")
+a_in("Start_Factoring", "Factoring: start month", 18, "month #", "0", "No loans before month 18 (decision). Lowest risk: the debtor pays the invoice.")
 a_in("Uptake_Factoring", "Factoring: share of active clients using it", 0.05, "%", PCT, "")
 a_in("Avg_Factoring", "Factoring: average outstanding per user", 8000000, "FCFA", NUM, "80–90% of invoices, 30–90 days.")
 a_in("Yield_Factoring", "Factoring: yield", 0.23, "% / year", PCT, "0.063% a day = 23% a year, under the 24% SFD usury cap.")
 a_in("CoR_Factoring", "Factoring: cost of risk", 0.015, "% / year", PCT2, "")
-a_in("Start_Bridge", "Payroll bridge: start month", 12, "month #", "0", "")
+a_in("Start_Bridge", "Payroll bridge: start month", 18, "month #", "0", "")
 a_in("Uptake_Bridge", "Payroll bridge: share of active clients", 0.03, "%", PCT, "")
 a_in("Avg_Bridge", "Payroll bridge: average outstanding", 3000000, "FCFA", NUM, "Up to one month of payroll, 45 days max.")
 a_in("Yield_Bridge", "Payroll bridge: yield", 0.23, "% / year", PCT, "")
 a_in("CoR_Bridge", "Payroll bridge: cost of risk", 0.02, "% / year", PCT2, "")
-a_in("Start_Line", "Credit line: start month", 15, "month #", "0", "After 6 months of transactions.")
+a_in("Start_Line", "Credit line: start month", 21, "month #", "0", "Three months after the first loans, on transaction history.")
 a_in("Uptake_Line", "Credit line: share of active clients", 0.08, "%", PCT, "")
 a_in("Avg_Line", "Credit line: average drawn", 1500000, "FCFA", NUM, "5–30% of monthly inflows.")
 a_in("Yield_Line", "Credit line: yield", 0.23, "% / year", PCT, "")
 a_in("CoR_Line", "Credit line: cost of risk", 0.04, "% / year", PCT2, "")
-a_in("Start_Term", "Equipment / term loans: start month", 20, "month #", "0", "")
+a_in("Start_Term", "Equipment / term loans: start month", 27, "month #", "0", "Longer loans once the own SFD lends.")
 a_in("Uptake_Term", "Term loans: share of active clients", 0.02, "%", PCT, "")
 a_in("Avg_Term", "Term loans: average outstanding", 10000000, "FCFA", NUM, "1–50M FCFA, 6–24 months.")
 a_in("Yield_Term", "Term loans: yield", 0.22, "% / year", PCT, "")
 a_in("CoR_Term", "Term loans: cost of risk", 0.03, "% / year", PCT2, "")
-a_in("Start_Advance", "Salary advances: start month", 12, "month #", "0", "Retention product, not a profit centre.")
+a_in("Start_Advance", "Salary advances: start month", 30, "month #", "0", "B2C product: after employee accounts open. Retention product, not a profit centre.")
 a_in("Usage_Advance", "Salary advances: share of employee accounts with an advance", 0.10, "%", PCT, "")
 a_in("Avg_Advance", "Salary advances: average outstanding", 50000, "FCFA", NUM, "Up to 50% of pay already earned.")
 a_in("Yield_Advance", "Salary advances: yield", 0.23, "% / year", PCT, "")
@@ -264,54 +283,54 @@ a_in("Partner_Share", "Tabax share of the net margin while the partner SFD funds
 a_in("First_Loss", "First-loss cash reserve (partner phase)", 0.10, "% of book", PCT, "")
 a_in("Capital_Ratio", "Equity needed per FCFA lent (own SFD phase)", 0.15, "% of book", PCT, "The rest funded by debt lines (not modelled in the P&L except the cost of funds).")
 
-a_sec("8. Staff charges (Senegal)")
-a_in("IPRES_Rate", "IPRES pension, employer", 0.084, "%", PCT, "Up to the ceiling below.")
-a_in("IPRES_Cap", "IPRES ceiling", 432000, "FCFA / month", NUM, "")
-a_in("Cadre_Rate", "IPRES managers' supplement", 0.036, "%", PCT, "On the slice between the two ceilings.")
-a_in("Cadre_Cap", "IPRES managers' ceiling", 1296000, "FCFA / month", NUM, "")
-a_in("CSS_Rate", "CSS family allowances + work accidents", 0.08, "%", PCT, "7% + 1%, up to the ceiling below.")
-a_in("CSS_Cap", "CSS ceiling", 63000, "FCFA / month", NUM, "")
-a_in("IPM_Rate", "IPM health fund, employer", 0.03, "%", PCT, "")
-a_in("IPM_Cap", "IPM ceiling", 250000, "FCFA / month", NUM, "")
-a_in("CFCE_Rate", "CFCE payroll tax", 0.03, "%", PCT, "On the whole salary.")
-a_in("Thirteenth", "13th month", 1, "months / year", "0", "Spread monthly.")
-a_in("Transport_Allow", "Transport allowance", 25000, "FCFA / month", NUM, "")
-a_in("Health_TopUp", "Private health top-up", 15000, "FCFA / month", NUM, "")
+a_sec("8. Team, offices and tools")
+a_in("Employer_Charges", "Employer charges and taxes on top of the gross salary", 0.30, "% of gross", PCT, "All-in: social security, pension, health and payroll taxes, about 30% (decision).")
+a_in("Support_Start", "Customer support: first agents join", 4, "month #", "0", "One month before the Senegal launch.")
+a_in("Support_Min", "Customer support: starting team", 2, "people", NUM, "Decision. Agents also run onboarding checks with the partner.")
+a_in("Clients_per_Support", "Customer support: active business clients per agent", 500, "clients", NUM, "Estimate. The team grows with the client base.")
+a_in("EmpAcc_per_Support", "Customer support: B2C accounts per extra agent", 5000, "accounts", NUM, "From the B2C launch.")
+a_in("Salary_Support", "Customer support agent: gross salary", 250000, "FCFA / month", NUM, "Support and onboarding (KYC) work.")
+a_in("Devs_Min", "Developers: starting team (CTO not included)", 2, "people", NUM, "Decision.")
+a_in("Clients_per_Dev", "Developers: one more per this many active clients", 2000, "clients", NUM, "Estimate. Maak's platform covers the core; developers adapt and extend it.")
+a_in("Salary_Dev", "Developer: gross salary", 1200000, "FCFA / month", NUM, "Blend of senior (1.5M) and mid-level (0.8M) developers in Dakar.")
+a_in("Reps_Start", "Field sales: first reps join", 4, "month #", "0", "One month before the Senegal launch.")
+a_in("Reps_Min_SN", "Field sales reps, Senegal: starting team", 2, "people", NUM, "Plus the sales lead on the hiring plan: 3 sellers at launch (decision: 'a few sales').")
+a_in("Reps_Min_CI", "Field sales reps, Côte d'Ivoire: starting team", 2, "people", NUM, "From the Abidjan opening.")
+a_in("Clients_per_Rep", "Field sales: one rep per this many active clients in the country", 400, "clients", NUM, "Estimate. Based on the previous month's clients, so the team follows the client base.")
+a_in("Salary_Rep_SN", "Field sales rep, Senegal: gross salary", 400000, "FCFA / month", NUM, "300k fixed + about 100k commission.")
+a_in("Salary_Rep_CI", "Field sales rep, Côte d'Ivoire: gross salary", 450000, "FCFA / month", NUM, "")
+a_in("Credit_Lead_Months", "Credit team joins this many months before the first loans", 2, "months", "0", "Financial experts are added when loans start (decision).")
+a_in("Book_per_Credit", "Credit analysts and collections: one per this loan book", 1000000000, "FCFA", NUM, "Estimate. Minimum one from the start of credit.")
+a_in("Salary_Credit", "Credit analyst: gross salary", 600000, "FCFA / month", NUM, "")
+a_in("Regus_EUR", "Office: Regus, all included", 300, "€ / employee / month", NUM, "Desk, electricity, internet, cleaning and security included (decision). Dakar from month 1, Abidjan from its opening.")
 a_in("Laptop_Cost", "Laptop and equipment per new hire (capex)", 600000, "FCFA", NUM, "")
 a_in("Phone_Cost", "Phone and data plan per employee", 15000, "FCFA / month", NUM, "")
-a_in("Tools_USD", "Software tools per employee", 40, "USD / month", NUM, "Workspace, code hosting, design, monitoring.")
+a_in("Gmail_USD", "Google Workspace (Gmail) per user", 9, "USD / user / month", NUM, "Decision: about $9.")
+a_in("ClickUp_USD", "ClickUp per user", 9, "USD / user / month", NUM, "Decision: same price as Gmail.")
+a_in("Claude_USD", "Claude Enterprise seat", 25, "USD / seat / month", NUM, "Decision. One seat per developer and the CTO, plus the shared seats below.")
+a_in("Claude_Shared", "Shared Claude seats", 2, "seats", NUM, "One for support and marketing together, one for everyone else who needs it.")
+a_in("Website_USD", "Website builder", 25, "USD / month", NUM, "Decision: the group's site tool.")
+a_in("Domain_USD", "Domain name", 20, "USD / year", NUM, "")
 a_in("Dep_Months", "Depreciation period for capex", 36, "months", "0", "")
 
-a_sec("9. Fixed costs by year", kind="arr")
-A.cell(arow[0], 2, "Office and equipment").font = F(bold=True)
-arow[0] += 1
-r_cw = arow[0]
-A.cell(r_cw, 2, "Coworking before the office opens").font = F()
-A.cell(r_cw, 3, "FCFA / month").font = F(color=GREY)
-style(A.cell(r_cw, 4, 800000), fmt=NUM, color=BLUE, fill=IN_FILL)
-A.cell(r_cw, 9, "8 desks × 100k FCFA (Impact Hub / Jokkolabs: 70–150k a desk).").font = F(color=GREY)
-name("Coworking_Monthly", f"'Assumptions'!$D${r_cw}")
-arow[0] += 1
-a_arr("Office_m2", "Dakar office surface", [150, 250, 350, 450, 550], "m²", NUM, "Point E / Mermoz.")
-a_arr("Office_Price_Arr", "Office rent and charges per m²", [10500, 10500, 11000, 11500, 12000], "FCFA / m² / month", NUM, "8,500 rent + 2,000 charges.")
-a_arr("Electricity", "Electricity (Senelec)", [300000, 450000, 600000, 750000, 900000], "FCFA / month", NUM, "From the office opening.")
-a_arr("Internet", "Internet (fibre + dedicated line)", [440000, 440000, 600000, 700000, 800000], "FCFA / month", NUM, "")
-a_arr("Cleaning", "Cleaning, security, supplies", [250000, 350000, 450000, 550000, 650000], "FCFA / month", NUM, "")
-a_arr("Abidjan_Office", "Abidjan office", [0, 1200000, 3000000, 3500000, 4000000], "FCFA / month", NUM, "Coworking in year 2, then 120 m² in Cocody / Plateau.")
-a_arr("Fitout", "Office fit-out, furniture, generator (capex)", [13300000, 5000000, 6000000, 5000000, 5000000], "FCFA / year", NUM, "Paid at the office opening in year 1, then in the first month of each year.")
+a_sec("9. Technology from Maak (group company)")
+a_in("Maak_Option", "Deal with Maak (1 = lease, 2 = equity)", 1, "option", "0", "1: Tabax pays a yearly lease, lease-to-own. 2: Maak takes a small stake in Tabax instead and there is no lease cost. Either way, adapting the platform to Tabax is included.")
+a_in("Maak_Lease_EUR", "Lease of Maak's platform (option 1)", 70000, "€ / year", NUM, "Decision: about 70k a year, paid monthly from month 1. Includes adapting the platform to Tabax's products.")
+a_in("Maak_Equity_Pct", "Maak's stake in Tabax (option 2)", 0.05, "% of Tabax", PCT, "Assumption for 'a small %'. No cash cost; shown on the Dashboard.")
+a_in("Tech_Audit_USD", "Tech audit", 10000, "USD", NUM, "Reference price (decision). Before launch, then once a year.")
+
+a_sec("10. Fixed costs by year", kind="arr")
 A.cell(arow[0], 2, "Technology").font = F(bold=True)
 arow[0] += 1
-a_arr("Ledger_USD", "Core ledger / banking platform", [40000, 60000, 80000, 95000, 110000], "USD / year", NUM, "Open-source hosted + support, or regional vendor.")
-a_arr("Cloud_USD", "Cloud hosting", [3000, 5000, 8000, 10000, 12000], "USD / month", NUM, "No AWS/GCP region in WAEMU; CDP authorisation for data abroad.")
+a_arr("Cloud_USD", "Cloud hosting", [3000, 5000, 8000, 10000, 12000], "USD / month", NUM, "Check whether Maak's lease includes hosting. No AWS/GCP region in WAEMU; CDP authorisation for data abroad.")
 a_arr("Monitoring_USD", "Transaction monitoring and sanctions screening", [6000, 15000, 30000, 40000, 50000], "USD / year", NUM, "")
-a_arr("Backoffice_USD", "Back-office and internal tools", [12000, 18000, 24000, 30000, 36000], "USD / year", NUM, "")
 a_arr("Freelance", "Freelance QA, DevOps on-call, design help", [15700000, 19700000, 11800000, 11800000, 11800000], "FCFA / year", NUM, "")
-a_arr("Security_USD", "Penetration tests and PCI DSS", [25000, 45000, 45000, 50000, 55000], "USD / year", NUM, "")
 a_arr("Proc_Min_USD", "Card processor monthly minimum", [5000, 5000, 7500, 10000, 12000], "USD / month", NUM, "Tabax pays the higher of this minimum and the per-card fees.")
 r_proc = arow[0]
 A.cell(r_proc, 2, "Card processor set-up fee (one-off)").font = F()
 A.cell(r_proc, 3, "USD").font = F(color=GREY)
 style(A.cell(r_proc, 4, 50000), fmt=NUM, color=BLUE, fill=IN_FILL)
+style(A.cell(r_proc, 11, f"=D{r_proc}*FX_USD/FX_EUR"), fmt=EUR_F, color=GREY)
 A.cell(r_proc, 9, "USD 25–75k (estimate; quote needed).").font = F(color=GREY)
 name("Proc_Setup_USD", f"'Assumptions'!$D${r_proc}")
 arow[0] += 1
@@ -324,37 +343,38 @@ for nm, label, v, note in [("Bank_Setup_SN", "Partner bank set-up and card progr
     A.cell(r, 2, label).font = F()
     A.cell(r, 3, "FCFA").font = F(color=GREY)
     style(A.cell(r, 4, v), fmt=NUM, color=BLUE, fill=IN_FILL)
+    style(A.cell(r, 11, f"=D{r}/FX_EUR"), fmt=EUR_F, color=GREY)
     A.cell(r, 9, note).font = F(color=GREY)
     name(nm, f"'Assumptions'!$D${r}")
     arow[0] += 1
 a_arr("Bank_Min_SN", "Partner bank platform minimum, Senegal", [1500000, 1500000, 2000000, 2000000, 2000000], "FCFA / month", NUM, "From the Senegal launch.")
 a_arr("Bank_Min_CI", "Partner bank platform minimum, Côte d'Ivoire", [0, 1500000, 2000000, 2000000, 2000000], "FCFA / month", NUM, "From the Côte d'Ivoire launch.")
-a_arr("SFD_Annual", "Partner SFD running fees", [0, 3000000, 3000000, 3000000, 3000000], "FCFA / year", NUM, "")
+a_arr("SFD_Annual", "Partner SFD running fees", [0, 3000000, 3000000, 3000000, 3000000], "FCFA / year", NUM, "Still needed after the acquisition for Côte d'Ivoire loans.")
 A.cell(arow[0], 2, "Legal, regulatory and audit").font = F(bold=True)
 arow[0] += 1
 for nm, label, v, note in [("Company_Setup_SN", "Company set-up, Senegal (one-off, month 1)", 2500000, "1.5–3M FCFA excluding capital."),
-                           ("Company_Setup_CI", "Company set-up, Côte d'Ivoire (one-off)", 3000000, ""),
-                           ("Licence_File_SN", "Payment licence file, Senegal: counsel and consultants", 40000000, "30–80M FCFA per file (estimate; key gap)."),
-                           ("Licence_File_CI", "Payment licence file, Côte d'Ivoire", 50000000, "")]:
+                           ("Company_Setup_CI", "Company set-up, Côte d'Ivoire (one-off)", 3000000, "")]:
     r = arow[0]
     A.cell(r, 2, label).font = F()
     A.cell(r, 3, "FCFA").font = F(color=GREY)
     style(A.cell(r, 4, v), fmt=NUM, color=BLUE, fill=IN_FILL)
+    style(A.cell(r, 11, f"=D{r}/FX_EUR"), fmt=EUR_F, color=GREY)
     A.cell(r, 9, note).font = F(color=GREY)
     name(nm, f"'Assumptions'!$D${r}")
     arow[0] += 1
-a_arr("SFD_Project", "SFD project (licence or acquisition due diligence)", [0, 30000000, 20000000, 0, 0], "FCFA / year", NUM, "")
+a_arr("SFD_Project", "SFD acquisition: due diligence, counsel and approval file", [0, 40000000, 10000000, 0, 0], "FCFA / year", NUM, "Estimate. Year 2: target search, due diligence, change-of-control file; year 3: integration.")
+a_arr("SFD_Running", "Own SFD running costs (board, regulatory reporting, systems)", [36000000, 36000000, 42000000, 48000000, 54000000], "FCFA / year", NUM, "ESTIMATE, from the acquisition month only. Replace after due diligence (the SFD's own staff and revenue).")
 a_arr("Legal_Counsel", "Ongoing legal counsel", [1000000, 1500000, 2000000, 2500000, 3000000], "FCFA / month", NUM, "")
-a_arr("Auditor", "Statutory auditor", [5000000, 15000000, 25000000, 30000000, 35000000], "FCFA / year", NUM, "10–25M FCFA once licensed; two entities from year 2.")
+a_arr("Auditor", "Statutory auditor", [5000000, 10000000, 25000000, 30000000, 35000000], "FCFA / year", NUM, "Two entities from year 2; the SFD adds a regulated audit from year 3.")
 a_arr("Accountant_Ext", "External chartered accountant and tax adviser", [300000, 600000, 800000, 900000, 1000000], "FCFA / month", NUM, "")
-a_arr("AML_Audit", "Independent AML audit (mandatory)", [0, 8000000, 12000000, 14000000, 16000000], "FCFA / year", NUM, "")
+a_arr("AML_Audit", "Independent AML audit", [0, 0, 12000000, 14000000, 16000000], "FCFA / year", NUM, "From the own SFD (year 3). Before that the partners carry the AML obligations.")
 a_arr("Data_Protection", "Data-protection filings (CDP, ARTCI)", [3500000, 3000000, 1500000, 1500000, 1500000], "FCFA / year", NUM, "")
 a_arr("Insurance_USD", "Insurance: professional liability, cyber, directors", [20000, 25000, 35000, 45000, 55000], "USD / year", NUM, "")
 A.cell(arow[0], 2, "Sales and marketing (non-staff)").font = F(bold=True)
 arow[0] += 1
 a_arr("Digital_SN", "Digital ads budget, Senegal", [1310000, 2620000, 3940000, 4590000, 5250000], "FCFA / month", NUM, "From the Senegal launch. Drives digital clients through the cost per client above.")
 a_arr("Digital_CI", "Digital ads budget, Côte d'Ivoire", [0, 1310000, 2620000, 3280000, 3940000], "FCFA / month", NUM, "From the Côte d'Ivoire launch.")
-a_arr("Brand_PR", "Brand, website, launch events, PR", [16400000, 5250000, 6560000, 6560000, 6560000], "FCFA / year", NUM, "")
+a_arr("Brand_PR", "Brand, launch events, PR", [16400000, 5250000, 6560000, 6560000, 6560000], "FCFA / year", NUM, "The website itself is under Technology (site tool).")
 a_arr("Events", "Events, sponsorships, sales materials", [9840000, 19700000, 29500000, 36100000, 42600000], "FCFA / year", NUM, "")
 A.cell(arow[0], 2, "Other").font = F(bold=True)
 arow[0] += 1
@@ -362,18 +382,15 @@ a_arr("Recruitment", "Recruitment fees (executive search, job boards)", [1330000
 a_arr("Travel", "Travel (Dakar–Abidjan, regulators, partners)", [5250000, 13100000, 16400000, 19700000, 23000000], "FCFA / year", NUM, "")
 a_arr("Misc", "Company bank fees and miscellaneous", [300000, 450000, 600000, 700000, 800000], "FCFA / month", NUM, "")
 
-a_sec("10. Cash, capital and funding")
+a_sec("11. Cash, capital and funding")
 a_in("Opening_Cash", "Cash at month 1 before the first round", 0, "FCFA", NUM, "")
-a_in("Licence_Capital_SN", "Payment licence minimum capital, Senegal", 100000000, "FCFA", NUM, "BCEAO: 100M FCFA per country for a payment institution. Kept as restricted cash in this model.")
-a_in("Licence_Capital_CI", "Payment licence minimum capital, Côte d'Ivoire", 100000000, "FCFA", NUM, "")
 a_in("Card_Collateral", "Card programme collateral at the partner bank", 60000000, "FCFA", NUM, "To quote.")
-a_in("Office_Deposit_Months", "Office deposit", 3, "months of rent", "0", "")
-a_in("SFD_Acquisition", "Own SFD: licence capital or acquisition", 650000000, "FCFA", NUM, "Unknown; mid-range estimate (≈ €990k).")
+a_in("SFD_Acquisition", "Acquisition of a microfinance company (SFD)", 650000000, "FCFA", NUM, "Unknown; mid-range estimate (≈ €990k). Price depends on the target's equity, book and licence.")
 a_in("Seed_Month", "Seed round: month", 1, "month #", "0", "")
 a_in("Seed_Amount", "Seed round: amount", EQUITY[0], "FCFA", NUM, "Adjust to keep closing cash above zero (see Cash flow).")
 a_in("SeriesA_Month", "Series A: month", 15, "month #", "0", "")
 a_in("SeriesA_Amount", "Series A: amount", EQUITY[1], "FCFA", NUM, "")
-a_in("SeriesB_Month", "Series B: month", 33, "month #", "0", "Funds the own SFD and the credit book's equity.")
+a_in("SeriesB_Month", "Series B: month", SERIES_B_MONTH, "month #", "0", "Funds the SFD acquisition and the credit book's equity.")
 a_in("SeriesB_Amount", "Series B: amount", EQUITY[2], "FCFA", NUM, "")
 A.freeze_panes = "C6"
 
@@ -382,80 +399,25 @@ A.freeze_panes = "C6"
 # =====================================================================================
 H = wb.create_sheet("Hiring plan")
 title(H, "Hiring plan", "One line per hire or group of identical hires. Edit headcount, start month, end month (leave blank if they stay) and gross salary. Spare lines at the bottom for new roles.")
-heads = ["#", "Department", "Role", "Country", "Category", "Headcount", "Start month", "End month", "Gross salary (FCFA / month)", "Manager (Y/N)", "Employer cost per person (FCFA / month)", "Note"]
+heads = ["#", "Department", "Role", "Country", "Category", "Headcount", "Start month", "End month", "Gross salary (FCFA / month)", "Manager (Y/N)", "Employer cost per person (FCFA / month)", "Note", "Gross salary (€ / month)", "Employer cost per person (€ / month)"]
 for j, h in enumerate(heads):
     c = H.cell(4, 1 + j, h)
     c.font = F(bold=True, color=WHITE)
     c.fill = HEAD_FILL
     c.alignment = Alignment(wrap_text=True, vertical="top")
-for col, w in {"A": 5, "B": 22, "C": 44, "D": 9, "E": 12, "F": 11, "G": 11, "H": 11, "I": 16, "J": 10, "K": 18, "L": 60}.items():
+for col, w in {"A": 5, "B": 22, "C": 44, "D": 9, "E": 12, "F": 11, "G": 11, "H": 11, "I": 16, "J": 10, "K": 18, "L": 60, "M": 14, "N": 16}.items():
     H.column_dimensions[col].width = w
 H.row_dimensions[4].height = 42
 DEPTS = ["Leadership", "Engineering & product", "Compliance & risk", "Credit", "Operations & support", "Sales & partnerships", "Marketing", "Finance & admin"]
 HIRES = [
-    ("Leadership", "CEO", "SN", "", 1, 1, None, 2500000, "Y", ""),
-    ("Leadership", "CTO (also codes)", "SN", "", 1, 1, None, 2500000, "Y", ""),
-    ("Leadership", "COO", "SN", "", 1, 1, None, 2000000, "Y", ""),
-    ("Leadership", "CFO", "SN", "", 1, 19, None, 2000000, "Y", ""),
-    ("Leadership", "Country manager, Abidjan", "CI", "", 1, 13, None, 2800000, "Y", "Hired 6 months before the Côte d'Ivoire launch."),
-    ("Engineering & product", "Senior backend developer", "SN", "", 1, 1, None, 1500000, "Y", "Lean team: 3 developers in year 1."),
-    ("Engineering & product", "Senior mobile developer (Flutter / React Native)", "SN", "", 1, 1, None, 1500000, "Y", ""),
-    ("Engineering & product", "Full-stack web developer", "SN", "", 1, 3, None, 800000, "Y", ""),
-    ("Engineering & product", "Product designer (UI/UX)", "SN", "", 1, 1, None, 700000, "Y", ""),
-    ("Engineering & product", "Data scientist (credit scoring)", "SN", "", 1, 10, None, 1200000, "Y", "Builds the scoring model before credit starts."),
-    ("Engineering & product", "Senior backend developer", "SN", "", 1, 19, None, 1500000, "Y", ""),
-    ("Engineering & product", "Full-stack web developer", "SN", "", 1, 19, None, 800000, "Y", ""),
-    ("Engineering & product", "Product manager", "SN", "", 1, 25, None, 1300000, "Y", ""),
-    ("Engineering & product", "DevOps / security engineer", "SN", "", 1, 31, None, 1200000, "Y", ""),
-    ("Engineering & product", "Senior mobile developer", "SN", "", 1, 43, None, 1500000, "Y", ""),
-    ("Engineering & product", "Senior backend developer", "SN", "", 1, 43, None, 1500000, "Y", ""),
-    ("Compliance & risk", "Head of compliance / AML officer", "SN", "", 1, 3, None, 1500000, "Y", "Named compliance officer needed for the licence file."),
-    ("Compliance & risk", "Compliance analyst", "SN", "", 1, 7, None, 550000, "Y", ""),
-    ("Compliance & risk", "Compliance analyst", "SN", "", 1, 19, None, 550000, "Y", ""),
-    ("Compliance & risk", "Compliance officer, Abidjan", "CI", "", 1, 16, None, 1000000, "Y", ""),
-    ("Compliance & risk", "Compliance analyst", "SN", "", 1, 31, None, 550000, "Y", ""),
-    ("Compliance & risk", "Compliance analyst", "SN", "", 1, 43, None, 550000, "Y", ""),
-    ("Credit", "Credit risk manager", "SN", "", 1, 7, None, 1200000, "Y", "Ready for credit at month 12."),
-    ("Credit", "Credit analyst", "SN", "", 1, 19, None, 500000, "Y", ""),
-    ("Credit", "Collections agent (incl. variable pay)", "SN", "", 2, 19, None, 300000, "N", ""),
-    ("Credit", "Credit analyst", "SN", "", 2, 31, None, 500000, "Y", ""),
-    ("Credit", "Collections agent (incl. variable pay)", "SN", "", 1, 31, None, 300000, "N", ""),
-    ("Credit", "Credit analyst", "SN", "", 1, 43, None, 500000, "Y", ""),
-    ("Credit", "Collections agent (incl. variable pay)", "SN", "", 2, 43, None, 300000, "N", ""),
-    ("Operations & support", "KYC / onboarding agent", "SN", "", 2, 4, None, 275000, "N", ""),
-    ("Operations & support", "Customer support agent", "SN", "", 1, 4, None, 200000, "N", ""),
-    ("Operations & support", "KYC / onboarding agent", "SN", "", 1, 19, None, 275000, "N", ""),
-    ("Operations & support", "Customer support agent", "SN", "", 3, 19, None, 200000, "N", ""),
-    ("Operations & support", "KYC and support agent, Abidjan", "CI", "", 2, 19, None, 300000, "N", ""),
-    ("Operations & support", "Operations manager", "SN", "", 1, 25, None, 900000, "Y", ""),
-    ("Operations & support", "KYC / onboarding agent", "SN", "", 2, 31, None, 275000, "N", ""),
-    ("Operations & support", "Customer support agent", "SN", "", 2, 31, None, 200000, "N", ""),
-    ("Operations & support", "KYC and support agent, Abidjan", "CI", "", 2, 37, None, 300000, "N", ""),
-    ("Operations & support", "KYC / onboarding agent", "SN", "", 2, 43, None, 275000, "N", ""),
-    ("Operations & support", "Customer support agent", "SN", "", 3, 43, None, 200000, "N", ""),
-    ("Sales & partnerships", "Head of sales (incl. 25% bonus)", "SN", "", 1, 2, None, 1750000, "Y", ""),
-    ("Sales & partnerships", "Partnerships manager (accountants, payroll software)", "SN", "", 1, 4, None, 900000, "Y", ""),
-    ("Sales & partnerships", "Field sales rep (300k fixed + ~100k commission)", "SN", "Sales rep", 2, 4, None, 400000, "N", "Reps drive client acquisition (see Sales & marketing)."),
-    ("Sales & partnerships", "Field sales rep", "SN", "Sales rep", 2, 7, None, 400000, "N", ""),
-    ("Sales & partnerships", "Field sales rep", "SN", "Sales rep", 4, 19, None, 400000, "N", ""),
-    ("Sales & partnerships", "Field sales rep, Abidjan", "CI", "Sales rep", 3, 19, None, 450000, "N", ""),
-    ("Sales & partnerships", "Key account manager (Grande clients)", "SN", "", 1, 25, None, 1000000, "Y", ""),
-    ("Sales & partnerships", "Field sales rep", "SN", "Sales rep", 4, 31, None, 400000, "N", ""),
-    ("Sales & partnerships", "Field sales rep, Abidjan", "CI", "Sales rep", 3, 31, None, 450000, "N", ""),
-    ("Sales & partnerships", "Field sales rep", "SN", "Sales rep", 4, 43, None, 400000, "N", ""),
-    ("Sales & partnerships", "Field sales rep, Abidjan", "CI", "Sales rep", 3, 43, None, 450000, "N", ""),
-    ("Marketing", "Marketing and growth manager", "SN", "", 1, 6, None, 900000, "Y", ""),
-    ("Marketing", "Content and community officer", "SN", "", 1, 19, None, 400000, "N", ""),
-    ("Finance & admin", "Accountant", "SN", "", 1, 1, None, 400000, "Y", ""),
-    ("Finance & admin", "HR / admin assistant", "SN", "", 1, 19, None, 275000, "N", ""),
-    ("Finance & admin", "Accountant", "SN", "", 1, 31, None, 400000, "Y", ""),
-    ("Engineering & product", "Senior backend developer", "SN", "", 1, 49, None, 1500000, "Y", "Year 5: scale with volumes."),
-    ("Compliance & risk", "Compliance analyst", "SN", "", 1, 49, None, 550000, "Y", ""),
-    ("Credit", "Credit analyst", "SN", "", 1, 49, None, 500000, "Y", ""),
-    ("Credit", "Collections agent (incl. variable pay)", "SN", "", 1, 49, None, 300000, "N", ""),
-    ("Operations & support", "KYC / onboarding agent", "SN", "", 2, 49, None, 275000, "N", ""),
-    ("Operations & support", "Customer support agent", "SN", "", 3, 49, None, 200000, "N", ""),
-    ("Operations & support", "KYC and support agent, Abidjan", "CI", "", 2, 49, None, 300000, "N", ""),
+    ("Leadership", "CEO (full salary from year 2)", "SN", "", 1, 13, None, 2500000, "Y", "Founders and shareholders run the company unpaid in year 1 (decision)."),
+    ("Engineering & product", "CTO (also codes)", "SN", "", 1, 1, None, 2500000, "Y", "Developers are added with volume on the Staff sheet (2 at the start)."),
+    ("Finance & admin", "Financial expert (finance, partners, credit lead)", "SN", "", 1, 1, None, 1500000, "Y", "Starting team. Credit analysts are added with the loan book."),
+    ("Sales & partnerships", "Sales lead (also sells; incl. bonus)", "SN", "Sales rep", 1, 1, None, 1200000, "Y", "Plus 2 field reps from month 4, then reps grow with clients (Staff sheet)."),
+    ("Marketing", "Marketing manager (senior)", "SN", "", 1, 4, None, 900000, "Y", "Prepares the launch; runs digital ads and partnerships."),
+    ("Marketing", "Marketing officer (junior)", "SN", "", 1, 5, None, 400000, "N", "Content, social media, events."),
+    ("Leadership", "Country manager, Abidjan", "CI", "", 1, "=CI_Office_Start", None, 2800000, "Y", "Joins when the Abidjan office opens."),
+    ("Compliance & risk", "Compliance officer (AML/CFT)", "SN", "", 1, "=SFD_Acq_Month", None, 1500000, "Y", "Required once Tabax holds its own licence (SFD)."),
 ]
 SPARE = 20
 H0 = 5
@@ -473,16 +435,17 @@ for k in range(len(HIRES) + SPARE):
     H.cell(r, 1, k + 1).font = F(color=GREY)
     for j, v in enumerate([dep, role, cty, cat, hc, st, en, sal, mgr]):
         c = H.cell(r, 2 + j, v)
-        style(c, fmt=NUM if j in (4, 7) else ("0" if j in (5, 6) else None), color=BLUE, fill=IN_FILL)
-    H.cell(r, 11, f'=IF(I{r}="",0,I{r}+IPRES_Rate*MIN(I{r},IPRES_Cap)+IF(J{r}="Y",Cadre_Rate*MAX(0,MIN(I{r},Cadre_Cap)-IPRES_Cap),0)'
-                  f'+CSS_Rate*MIN(I{r},CSS_Cap)+IPM_Rate*MIN(I{r},IPM_Cap)+CFCE_Rate*I{r}+I{r}*Thirteenth/12+Transport_Allow+Health_TopUp)')
+        style(c, fmt=NUM if j in (4, 7) else ("0" if j in (5, 6) else None), color=BLACK if str(v).startswith("=") else BLUE, fill=IN_FILL)
+    H.cell(r, 11, f'=IF(I{r}="",0,I{r}*(1+Employer_Charges))')
     style(H.cell(r, 11), fmt=NUM)
     H.cell(r, 12, note).font = F(color=GREY)
+    for col_, src in ((13, "I"), (14, "K")):
+        style(H.cell(r, col_, f'=IF(N({src}{r})=0,0,{src}{r}/FX_EUR)'), fmt=EURN, color=GREY)
 dv_dep.add(f"B{H0}:B{HN}")
 dv_cty.add(f"D{H0}:D{HN}")
 dv_cat.add(f"E{H0}:E{HN}")
 dv_yn.add(f"J{H0}:J{HN}")
-H.cell(HN + 2, 2, "Employer cost = gross + IPRES (+ managers' supplement) + CSS + IPM + CFCE + 13th month + transport + private health (rates on Assumptions, section 8). Côte d'Ivoire staff use the same rates as an approximation (CNPS rates differ).").font = F(italic=True, color=GREY)
+H.cell(HN + 2, 2, "Employer cost = gross salary × (1 + employer charges), 30% on Assumptions section 8. Customer support, developers, field sales reps and credit analysts grow with volume: see the Staff sheet and the ratios on Assumptions section 8.").font = F(italic=True, color=GREY)
 H.freeze_panes = "D5"
 HR = lambda col: f"'Hiring plan'!${col}${H0}:${col}${HN}"
 
@@ -493,7 +456,7 @@ HR = lambda col: f"'Hiring plan'!${col}${H0}:${col}${HN}"
 class TS:
     def __init__(self, nm, desc):
         self.ws = wb.create_sheet(nm)
-        self.name, self.r, self.k = nm, 7, {}
+        self.name, self.r, self.k, self.secs = nm, 7, {}, set()
         ws = self.ws
         title(ws, nm, desc)
         for rr, lab in ((3, "Month #"), (4, "Month"), (5, "Year")):
@@ -524,6 +487,7 @@ class TS:
         self.r += 1
         c = self.ws.cell(self.r, 1, text)
         c.font = F(bold=True)
+        self.secs.add(self.r)
         for col in range(1, C0 + NM):
             self.ws.cell(self.r, col).fill = SEC_FILL
         self.r += 1
@@ -579,16 +543,51 @@ for k in range(len(HIRES) + SPARE):
     S.ws.cell(r, 1, f"=A{hc_rows[k]}")
     cost_rows.append(r)
 CO1, CON = cost_rows[0], cost_rows[-1]
+# Roles that grow with volume: rows are reserved here and their formulas written once the client and credit sheets exist (fill_volume_team below).
+VD = [("support", "Customer support agents", "Operations & support", "SN", "Salary_Support"),
+      ("devs", "Developers", "Engineering & product", "SN", "Salary_Dev"),
+      ("reps_sn", "Field sales reps, Senegal", "Sales & partnerships", "SN", "Salary_Rep_SN"),
+      ("reps_ci", "Field sales reps, Côte d'Ivoire", "Sales & partnerships", "CI", "Salary_Rep_CI"),
+      ("credit", "Credit analysts and collections", "Credit", "SN", "Salary_Credit")]
+S.sec("Team that grows with volume")
+for key, lab, dep, cty, sal in VD:
+    S.line(f"vd_{key}", f"{lab} · {cty}", lambda c, p, i: "=0", unit="people", total="max")
+for key, lab, dep, cty, sal in VD:
+    S.line(f"vdc_{key}", f"Employer cost: {lab}",
+           lambda c, p, i, key=key, sal=sal: f"={c}{S.k['vd_' + key]}*{sal}*(1+Employer_Charges)*(1+Salary_Raise)^({c}$5-1)")
+S.line("vd_hires", "New hires in these roles", lambda c, p, i: "=" + "+".join(
+    (f"{c}{S.k['vd_' + key]}" if i == 0 else f"MAX(0,{c}{S.k['vd_' + key]}-{p}{S.k['vd_' + key]})") for key, *_ in VD), unit="people")
+vd_sum = lambda c, pred: "+".join(f"{c}{S.k['vd_' + key]}" for key, lab, dep, cty, sal in VD if pred(dep, cty)) or "0"
+vdc_sum = lambda c, pred: "+".join(f"{c}{S.k['vdc_' + key]}" for key, lab, dep, cty, sal in VD if pred(dep, cty)) or "0"
 S.sec("Summary")
-S.line("hc_total", "Total headcount", lambda c, p, i: f"=SUM({c}{HC1}:{c}{HCN})", unit="people", total="last", bold=True)
-S.line("hc_sn", "Headcount, Senegal", lambda c, p, i: f"=SUMIF({HR('D')},\"SN\",{c}{HC1}:{c}{HCN})", unit="people", total="last")
-S.line("hc_ci", "Headcount, Côte d'Ivoire", lambda c, p, i: f"=SUMIF({HR('D')},\"CI\",{c}{HC1}:{c}{HCN})", unit="people", total="last")
-S.line("reps_sn", "Field sales reps, Senegal", lambda c, p, i: f"=SUMIFS({c}{HC1}:{c}{HCN},{HR('E')},\"Sales rep\",{HR('D')},\"SN\")", unit="people", total="last")
-S.line("reps_ci", "Field sales reps, Côte d'Ivoire", lambda c, p, i: f"=SUMIFS({c}{HC1}:{c}{HCN},{HR('E')},\"Sales rep\",{HR('D')},\"CI\")", unit="people", total="last")
-S.line("hires", "New hires this month", lambda c, p, i: f"=SUMPRODUCT(--({HR('G')}={c}$3),{HR('F')})", unit="people")
+S.line("hc_total", "Total headcount", lambda c, p, i: f"=SUM({c}{HC1}:{c}{HCN})+{vd_sum(c, lambda d, t: True)}", unit="people", total="last", bold=True)
+S.line("hc_sn", "Headcount, Senegal", lambda c, p, i: f"=SUMIF({HR('D')},\"SN\",{c}{HC1}:{c}{HCN})+{vd_sum(c, lambda d, t: t == 'SN')}", unit="people", total="last")
+S.line("hc_ci", "Headcount, Côte d'Ivoire", lambda c, p, i: f"=SUMIF({HR('D')},\"CI\",{c}{HC1}:{c}{HCN})+{vd_sum(c, lambda d, t: t == 'CI')}", unit="people", total="last")
+S.line("hc_eng", "Engineering headcount (CTO and developers)", lambda c, p, i: f"=SUMIF({HR('B')},\"Engineering & product\",{c}{HC1}:{c}{HCN})+{c}{S.k['vd_devs']}", unit="people", total="last")
+S.line("reps_sn", "Field sales reps, Senegal", lambda c, p, i: f"=SUMIFS({c}{HC1}:{c}{HCN},{HR('E')},\"Sales rep\",{HR('D')},\"SN\")+{c}{S.k['vd_reps_sn']}", unit="people", total="last")
+S.line("reps_ci", "Field sales reps, Côte d'Ivoire", lambda c, p, i: f"=SUMIFS({c}{HC1}:{c}{HCN},{HR('E')},\"Sales rep\",{HR('D')},\"CI\")+{c}{S.k['vd_reps_ci']}", unit="people", total="last")
+S.line("hires", "New hires this month", lambda c, p, i: f"=SUMPRODUCT(--({HR('G')}={c}$3),{HR('F')})+{c}{S.k['vd_hires']}", unit="people")
 for d in DEPTS:
-    S.line(f"dep_{d}", f"Staff cost: {d}", lambda c, p, i, d=d: f"=SUMIF({HR('B')},\"{d}\",{c}{CO1}:{c}{CON})")
-S.line("staff_total", "Total staff cost", lambda c, p, i: f"=SUM({c}{CO1}:{c}{CON})", bold=True)
+    S.line(f"dep_{d}", f"Staff cost: {d}", lambda c, p, i, d=d: f"=SUMIF({HR('B')},\"{d}\",{c}{CO1}:{c}{CON})+{vdc_sum(c, lambda dd, t, d=d: dd == d)}")
+S.line("staff_total", "Total staff cost", lambda c, p, i: f"=SUM({c}{CO1}:{c}{CON})+{vdc_sum(c, lambda d, t: True)}", bold=True)
+
+
+def fill_volume_team():
+    """Write the volume-driven headcount formulas (needs the Clients & revenue and Credit sheets)."""
+    first_loan = "MIN(Start_Factoring,Start_Bridge,Start_Line,Start_Term)-Credit_Lead_Months"
+    for i, c in enumerate(COLS):
+        p = COLS[i - 1] if i else None
+        prv = lambda sheet, key: f"{sheet.ref(key, p)}" if p else "0"
+        f = {
+            "support": f"=IF({c}$3>=Support_Start,MAX(Support_Min,ROUNDUP({R.ref('act_total', c)}/Clients_per_Support+{R.ref('emp_acc', c)}/EmpAcc_per_Support,0)),0)",
+            "devs": f"=Devs_Min+ROUNDDOWN({R.ref('act_total', c)}/Clients_per_Dev,0)",
+            "reps_sn": f"=IF({c}$3>=Reps_Start,MAX(Reps_Min_SN,ROUNDUP({prv(R, 'act_sn')}/Clients_per_Rep,0)),0)",
+            "reps_ci": f"=IF({c}$3>=CI_Office_Start,MAX(Reps_Min_CI,ROUNDUP({prv(R, 'act_ci')}/Clients_per_Rep,0)),0)",
+            "credit": f"=IF({c}$3>={first_loan},MAX(1,ROUNDUP({prv(K, 'book')}/Book_per_Credit,0)),0)",
+        }
+        for key, *_ in VD:
+            S.ws[f"{c}{S.k['vd_' + key]}"] = f[key]
+
 
 # =====================================================================================
 # SALES & MARKETING
@@ -622,7 +621,7 @@ M.line("new_g", "of which Grande", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_
 M.line("new_partner", "New clients from partners (for referral fees)", lambda c, p, i: f"={c}{M.k['part_sn']}+{c}{M.k['part_ci']}", unit="clients", fmt=NUM1)
 M.sec("Sales and marketing budget (non-staff)")
 M.line("c_digital", "Digital ads", lambda c, p, i: f"={c}{M.k['dig_b_sn']}+{c}{M.k['dig_b_ci']}")
-M.line("c_brand", "Brand, website, launch events, PR", lambda c, p, i: f"={yr('Brand_PR', c)}/12")
+M.line("c_brand", "Brand, launch events, PR", lambda c, p, i: f"={yr('Brand_PR', c)}/12")
 M.line("c_events", "Events, sponsorships, sales materials", lambda c, p, i: f"={yr('Events', c)}/12")
 M.line("c_referral", "Referral fees to partners", lambda c, p, i: f"={c}{M.k['new_partner']}*Referral_Fee")
 M.line("c_transport", "Field sales transport", lambda c, p, i: f"=({c}{M.k['reps_sn']}+{c}{M.k['reps_ci']})*Rep_Transport")
@@ -684,7 +683,7 @@ R.line("rev_total", "Revenue excluding credit", lambda c, p, i: f"={c}{R.k['rev_
 # =====================================================================================
 # CREDIT
 # =====================================================================================
-K = TS("Credit", "Loan book by product, interest, cost of funds, losses and the share Tabax keeps. The partner SFD is the lender of record until the own SFD funds the book.")
+K = TS("Credit", "Loan book by product, interest, cost of funds, losses and the share Tabax keeps. A partner SFD lends until Tabax's own SFD (Senegal) takes over; Côte d'Ivoire loans stay with a partner.")
 K.sec("Base")
 K.line("act", "Active clients", lambda c, p, i: f"={R.ref('act_total', c)}", unit="clients", total="last", color=GREEN)
 K.line("emp", "Employee salary accounts", lambda c, p, i: f"={R.ref('emp_acc', c)}", unit="accounts", total="last", color=GREEN)
@@ -708,10 +707,13 @@ K.line("cof", "Cost of funds", lambda c, p, i: f"=-{c}{K.k['avg']}*CoF/12")
 K.line("losses", "Credit losses", lambda c, p, i: "=-(" + "+".join(f"{c}{K.k['avg_' + pk]}*CoR_{pk}" for pk, *_ in PRODS) + f")*CoR_Mult/12")
 K.line("servicing", "External servicing and collections", lambda c, p, i: f"=-{c}{K.k['avg']}*Servicing/12")
 K.line("margin", "Net credit margin", lambda c, p, i: f"=SUM({c}{K.k['interest']}:{c}{K.k['servicing']})", bold=True)
-K.line("share", "Share kept by Tabax", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,1,Partner_Share)", unit="%", fmt=PCT, total=None)
+K.line("sn_part", "Senegal share of clients (own SFD lends there only)", lambda c, p, i: f"=IFERROR({R.ref('act_sn', c)}/({R.ref('act_sn', c)}+{R.ref('act_ci', c)}),1)", unit="%", fmt=PCT, total=None)
+K.line("share", "Share of the margin kept by Tabax", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,{c}{K.k['sn_part']}+(1-{c}{K.k['sn_part']})*Partner_Share,Partner_Share)", unit="%", fmt=PCT, total=None)
 K.line("net", "Net credit income to Tabax", lambda c, p, i: f"={c}{K.k['margin']}*{c}{K.k['share']}", bold=True)
 K.sec("Cash tied up by credit")
-K.line("locked", "First-loss reserve or equity in the loan book", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,{c}{K.k['book']}*Capital_Ratio,{c}{K.k['book']}*First_Loss)", total="last")
+K.line("locked", "First-loss reserve (partner loans) and equity in the own SFD's loans", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,{c}{K.k['book']}*({c}{K.k['sn_part']}*Capital_Ratio+(1-{c}{K.k['sn_part']})*First_Loss),{c}{K.k['book']}*First_Loss)", total="last")
+
+fill_volume_team()
 
 # =====================================================================================
 # COSTS
@@ -738,25 +740,22 @@ for d in DEPTS:
     C.line(f"s_{d}", d, lambda c, p, i, d=d: f"={S.ref('dep_' + d, c)}", color=GREEN)
 C.line("s_total", "Total staff", lambda c, p, i: f"=SUM({c}{C.k['s_' + DEPTS[0]]}:{c}{C.k['s_' + DEPTS[-1]]})", bold=True)
 C.sec("Office and equipment")
-C.line("o_cowork", "Coworking before the office opens", lambda c, p, i: f"=IF({c}$3<Office_Start,Coworking_Monthly,0)")
-C.line("o_rent", "Dakar office rent and charges", lambda c, p, i: f"=IF({c}$3>=Office_Start,{yr('Office_m2', c)}*{yr('Office_Price_Arr', c)},0)")
-C.line("o_elec", "Electricity", lambda c, p, i: f"=IF({c}$3>=Office_Start,{yr('Electricity', c)},0)")
-C.line("o_net", "Internet", lambda c, p, i: f"=IF({c}$3>=Office_Start,{yr('Internet', c)},0)")
-C.line("o_clean", "Cleaning, security, supplies", lambda c, p, i: f"=IF({c}$3>=Office_Start,{yr('Cleaning', c)},0)")
-C.line("o_abj", "Abidjan office", lambda c, p, i: f"=IF({c}$3>=CI_Office_Start,{yr('Abidjan_Office', c)},0)")
+C.line("o_regus_sn", "Dakar office (Regus, all included)", lambda c, p, i: f"=IF({c}$3>=Office_Start,{S.ref('hc_sn', c)}*Regus_EUR*FX_EUR,0)")
+C.line("o_regus_ci", "Abidjan office (Regus, all included)", lambda c, p, i: f"=IF({c}$3>=CI_Office_Start,{S.ref('hc_ci', c)}*Regus_EUR*FX_EUR,0)")
 C.line("o_phone", "Phones and data plans", lambda c, p, i: f"={S.ref('hc_total', c)}*Phone_Cost")
-C.line("o_total", "Total office and equipment", lambda c, p, i: f"=SUM({c}{C.k['o_cowork']}:{c}{C.k['o_phone']})", bold=True)
+C.line("o_total", "Total office and equipment", lambda c, p, i: f"=SUM({c}{C.k['o_regus_sn']}:{c}{C.k['o_phone']})", bold=True)
 C.sec("Technology")
-C.line("t_ledger", "Core ledger / banking platform", lambda c, p, i: f"={yr('Ledger_USD', c)}*FX_USD/12")
+C.line("t_maak", "Maak platform lease (option 1)", lambda c, p, i: f"=IF(Maak_Option=1,Maak_Lease_EUR*FX_EUR/12,0)")
 C.line("t_cloud", "Cloud hosting", lambda c, p, i: f"=IF({c}$3>=Cloud_Start,{yr('Cloud_USD', c)}*FX_USD,0)")
 C.line("t_monitor", "Transaction monitoring and sanctions screening", lambda c, p, i: f"={yr('Monitoring_USD', c)}*FX_USD/12")
-C.line("t_backoffice", "Back-office and internal tools", lambda c, p, i: f"={yr('Backoffice_USD', c)}*FX_USD/12")
-C.line("t_tools", "Software tools per employee", lambda c, p, i: f"={S.ref('hc_total', c)}*Tools_USD*FX_USD")
+C.line("t_workspace", "Gmail and ClickUp (every employee)", lambda c, p, i: f"={S.ref('hc_total', c)}*(Gmail_USD+ClickUp_USD)*FX_USD")
+C.line("t_claude", "Claude Enterprise seats (CTO, developers, 2 shared)", lambda c, p, i: f"=({S.ref('hc_eng', c)}+Claude_Shared)*Claude_USD*FX_USD")
+C.line("t_web", "Website tool and domain", lambda c, p, i: f"=(Website_USD+Domain_USD/12)*FX_USD")
 C.line("t_freelance", "Freelance QA, DevOps, design", lambda c, p, i: f"={yr('Freelance', c)}/12")
-C.line("t_security", "Penetration tests and PCI DSS", lambda c, p, i: f"={yr('Security_USD', c)}*FX_USD/12")
+C.line("t_audit", "Tech audit", lambda c, p, i: f"=IF(AND({c}$3>=Audit_Month,MOD({c}$3-Audit_Month,12)=0),Tech_Audit_USD*FX_USD,0)")
 C.line("t_proc_setup", "Card processor set-up fee", lambda c, p, i: f"=IF({c}$3=Proc_Setup_Month,Proc_Setup_USD*FX_USD,0)")
 C.line("t_proc_min", "Card processor minimum (top-up above per-card fees)", lambda c, p, i: f"=IF({c}$3>=Proc_Min_Start,MAX(0,{yr('Proc_Min_USD', c)}*FX_USD-{c}{C.k['v_cardproc']}),0)")
-C.line("t_total", "Total technology", lambda c, p, i: f"=SUM({c}{C.k['t_ledger']}:{c}{C.k['t_proc_min']})", bold=True)
+C.line("t_total", "Total technology", lambda c, p, i: f"=SUM({c}{C.k['t_maak']}:{c}{C.k['t_proc_min']})", bold=True)
 C.sec("Bank and SFD partners")
 C.line("p_setup_sn", "Partner bank set-up, Senegal", lambda c, p, i: f"=IF({c}$3=Bank_Setup_Month,Bank_Setup_SN,0)")
 C.line("p_min_sn", "Partner bank platform minimum, Senegal", lambda c, p, i: f"=IF({c}$3>=Launch_SN,{yr('Bank_Min_SN', c)},0)")
@@ -766,9 +765,8 @@ C.line("p_sfd", "Partner SFD integration and fees", lambda c, p, i: f"=IF({c}$3=
 C.line("p_total", "Total bank and SFD partners", lambda c, p, i: f"=SUM({c}{C.k['p_setup_sn']}:{c}{C.k['p_sfd']})", bold=True)
 C.sec("Legal, regulatory and audit")
 C.line("l_company", "Company set-up (Senegal, Côte d'Ivoire)", lambda c, p, i: f"=IF({c}$3=1,Company_Setup_SN,0)+IF({c}$3=CI_Company_Month,Company_Setup_CI,0)")
-C.line("l_lic_sn", "Payment licence file, Senegal", lambda c, p, i: f"=IF({c}$3<=Licence_File_SN_Months,Licence_File_SN/Licence_File_SN_Months,0)")
-C.line("l_lic_ci", "Payment licence file, Côte d'Ivoire", lambda c, p, i: f"=IF(AND({c}$3>=CI_Licence_File_Start,{c}$3<CI_Licence_File_Start+Licence_File_CI_Months),Licence_File_CI/Licence_File_CI_Months,0)")
-C.line("l_sfd", "SFD project (licence or acquisition due diligence)", lambda c, p, i: f"={yr('SFD_Project', c)}/12")
+C.line("l_sfd", "SFD acquisition: due diligence, counsel, approval file", lambda c, p, i: f"={yr('SFD_Project', c)}/12")
+C.line("l_sfd_run", "Own SFD running costs", lambda c, p, i: f"=IF({c}$3>=SFD_Acq_Month,{yr('SFD_Running', c)}/12,0)")
 C.line("l_counsel", "Ongoing legal counsel", lambda c, p, i: f"={yr('Legal_Counsel', c)}")
 C.line("l_auditor", "Statutory auditor", lambda c, p, i: f"={yr('Auditor', c)}/12")
 C.line("l_accountant", "External accountant and tax adviser", lambda c, p, i: f"={yr('Accountant_Ext', c)}")
@@ -777,7 +775,7 @@ C.line("l_data", "Data-protection filings", lambda c, p, i: f"={yr('Data_Protect
 C.line("l_insurance", "Insurance", lambda c, p, i: f"={yr('Insurance_USD', c)}*FX_USD/12")
 C.line("l_total", "Total legal, regulatory and audit", lambda c, p, i: f"=SUM({c}{C.k['l_company']}:{c}{C.k['l_insurance']})", bold=True)
 C.sec("Sales and marketing (non-staff)")
-for key, lab in (("c_digital", "Digital ads"), ("c_brand", "Brand, website, launch events, PR"), ("c_events", "Events, sponsorships, sales materials"),
+for key, lab in (("c_digital", "Digital ads"), ("c_brand", "Brand, launch events, PR"), ("c_events", "Events, sponsorships, sales materials"),
                  ("c_referral", "Referral fees to partners"), ("c_transport", "Field sales transport")):
     C.line("m_" + key, lab, lambda c, p, i, key=key: f"={M.ref(key, c)}", color=GREEN)
 C.line("m_total", "Total sales and marketing (non-staff)", lambda c, p, i: f"=SUM({c}{C.k['m_c_digital']}:{c}{C.k['m_c_transport']})", bold=True)
@@ -793,8 +791,7 @@ C.line("f_cont", "Contingency", lambda c, p, i: f"={c}{C.k['f_before']}*Continge
 C.line("f_total", "Total fixed costs", lambda c, p, i: f"={c}{C.k['f_before']}+{c}{C.k['f_cont']}", bold=True)
 C.sec("Capex and depreciation")
 C.line("cx_laptops", "Laptops and equipment for new hires", lambda c, p, i: f"={S.ref('hires', c)}*Laptop_Cost")
-C.line("cx_fitout", "Office fit-out and furniture", lambda c, p, i: f"=IF({c}$3=IF({c}$5=1,Office_Start,({c}$5-1)*12+1),{yr('Fitout', c)},0)")
-C.line("cx_total", "Total capex", lambda c, p, i: f"={c}{C.k['cx_laptops']}+{c}{C.k['cx_fitout']}", bold=True)
+C.line("cx_total", "Total capex", lambda c, p, i: f"={c}{C.k['cx_laptops']}", bold=True)
 C.line("dep", "Depreciation", lambda c, p, i: f"=SUM(OFFSET({c}{C.k['cx_total']},0,1-MIN(Dep_Months,{c}$3),1,MIN(Dep_Months,{c}$3)))/Dep_Months")
 
 # =====================================================================================
@@ -836,17 +833,14 @@ P.line("be_flag", "Month number if EBITDA is positive (999 otherwise)", lambda c
 # =====================================================================================
 # CASH FLOW
 # =====================================================================================
-Q = TS("Cash flow", "Monthly cash: operating result, capex, cash set aside (licence capital, collateral, credit), funding rounds and the closing balance.")
+Q = TS("Cash flow", "Monthly cash: operating result, capex, cash set aside (card collateral, credit), the SFD acquisition, funding rounds and the closing balance.")
 Q.sec("Operations")
 Q.line("ni", "Net income", lambda c, p, i: f"={P.ref('ni', c)}", color=GREEN)
 Q.line("dep", "Add back depreciation", lambda c, p, i: f"={P.ref('dep', c)}", color=GREEN)
 Q.line("capex", "Capex", lambda c, p, i: f"=-{C.ref('cx_total', c)}")
 Q.sec("Cash set aside (restricted)")
-Q.line("lic_sn", "Licence capital, Senegal", lambda c, p, i: f"=-IF({c}$3=Licence_SN_Month,Licence_Capital_SN,0)")
-Q.line("lic_ci", "Licence capital, Côte d'Ivoire", lambda c, p, i: f"=-IF({c}$3=Licence_CI_Month,Licence_Capital_CI,0)")
 Q.line("collat", "Card programme collateral", lambda c, p, i: f"=-IF({c}$3=Collateral_Month,Card_Collateral,0)")
-Q.line("deposit", "Office deposit", lambda c, p, i: f"=-IF({c}$3=Office_Start,Office_Deposit_Months*{C.ref('o_rent', c)},0)")
-Q.line("sfd", "Own SFD licence or acquisition", lambda c, p, i: f"=-IF({c}$3=SFD_Acq_Month,SFD_Acquisition,0)")
+Q.line("sfd", "Acquisition of a microfinance company (SFD)", lambda c, p, i: f"=-IF({c}$3=SFD_Acq_Month,SFD_Acquisition,0)")
 Q.line("credit", "Change in cash tied up by credit", lambda c, p, i: f"=-{K.ref('locked', c)}" if i == 0 else f"=-({K.ref('locked', c)}-{K.ref('locked', p)})")
 Q.line("before", "Cash flow before funding", lambda c, p, i: f"=SUM({c}{Q.k['ni']}:{c}{Q.k['credit']})", bold=True)
 Q.line("cum_before", "Cumulative cash flow before funding", lambda c, p, i: f"={c}{Q.k['before']}" if i == 0 else f"={p}{Q.r}+{c}{Q.k['before']}", total="last")
@@ -857,16 +851,69 @@ Q.sec("Cash balance")
 Q.line("open", "Opening cash", lambda c, p, i: "=Opening_Cash" if i == 0 else f"={p}{Q.r + 1}", total=None)
 Q.line("close", "Closing cash", lambda c, p, i: f"={c}{Q.k['open']}+{c}{Q.k['net']}", total="last", bold=True, fill=TOT_FILL)
 Q.line("restricted", "Cash set aside so far (not included in closing cash)",
-       lambda c, p, i: f"=-SUM({FC}{Q.k['lic_sn']}:{c}{Q.k['lic_sn']})-SUM({FC}{Q.k['lic_ci']}:{c}{Q.k['lic_ci']})-SUM({FC}{Q.k['collat']}:{c}{Q.k['collat']})-SUM({FC}{Q.k['deposit']}:{c}{Q.k['deposit']})+{K.ref('locked', c)}",
+       lambda c, p, i: f"=-SUM({FC}{Q.k['collat']}:{c}{Q.k['collat']})+{K.ref('locked', c)}",
        total="last")
 Q.line("burn", "Monthly burn (average of the last 3 months, if negative)", lambda c, p, i: f"=MAX(0,-AVERAGE({c}{Q.k['before']}))" if i < 2 else f"=MAX(0,-AVERAGE({COLS[i - 2]}{Q.k['before']}:{c}{Q.k['before']}))", total=None)
 Q.line("runway", "Runway at that burn (months)", lambda c, p, i: f"=IF({c}{Q.k['burn']}=0,\"cash positive\",{c}{Q.k['close']}/{c}{Q.k['burn']})", unit="months", fmt=NUM1, total=None)
 
 # =====================================================================================
+# EURO TWINS of the monthly sheets: every FCFA line divided by the euro parity
+# =====================================================================================
+def euro_twin(ts):
+    src = ts.ws
+    ws = wb.create_sheet(f"{ts.name} (€)")
+    title(ws, f"{ts.name} (€)", f"Every amount of the '{ts.name}' sheet in euros (FCFA ÷ FCFA per euro on Assumptions). Edit the FCFA sheets and Assumptions, not this one.")
+    for rr_, lab in ((3, "Month #"), (4, "Month"), (5, "Year")):
+        ws.cell(rr_, 1, lab).font = F(bold=True)
+    ws["D3"] = "Total / end"
+    ws["D3"].font = F(bold=True)
+    for c in COLS:
+        for rr_, fm in ((3, "0"), (4, DATEF), (5, '"Y"0')):
+            cell = ws[f"{c}{rr_}"]
+            cell.value = f"='{ts.name}'!{c}{rr_}"
+            cell.number_format = fm
+            cell.font = F(bold=True)
+            cell.fill = SEC_FILL
+            cell.alignment = Alignment(horizontal="center")
+        ws.column_dimensions[c].width = 11
+    ws.column_dimensions["A"].width = 50
+    ws.column_dimensions["B"].width = 8
+    ws.column_dimensions["C"].width = 3
+    ws.column_dimensions["D"].width = 14
+    ws.freeze_panes = "E6"
+    out = 7
+    for r in range(7, ts.r):
+        lab = src.cell(r, 1).value
+        unit = src.cell(r, 2).value
+        if r in ts.secs:
+            out += 1
+            ws.cell(out, 1, lab).font = F(bold=True)
+            for col in range(1, C0 + NM):
+                ws.cell(out, col).fill = SEC_FILL
+            out += 1
+            continue
+        if unit != "FCFA":
+            continue
+        bold = bool(src.cell(r, 1).font and src.cell(r, 1).font.b)
+        ws.cell(out, 1, f"='{ts.name}'!A{r}" if str(lab).startswith("=") else lab).font = F(bold=bold)
+        ws.cell(out, 2, "€").font = F(color=GREY)
+        if src[f"D{r}"].value is not None:
+            ws[f"D{out}"] = f"='{ts.name}'!D{r}/FX_EUR"
+            style(ws[f"D{out}"], fmt=NUM, bold=True, fill=TOT_FILL)
+        for c in COLS:
+            ws[f"{c}{out}"] = f"='{ts.name}'!{c}{r}/FX_EUR"
+            style(ws[f"{c}{out}"], fmt=NUM, bold=bold)
+        out += 1
+    return ws.title
+
+
+TWINS = {t.name: euro_twin(t) for t in (S, M, R, K, C, P, Q)}
+
+# =====================================================================================
 # P&L ANNUAL (with cash and euros)
 # =====================================================================================
 Y = wb.create_sheet("P&L annual")
-title(Y, "P&L annual", "Years 1–5, summed from the monthly sheets. Euro view at the bottom.")
+title(Y, "P&L annual", "Years 1–5, summed from the monthly sheets. FCFA in columns D–I, euros in columns K–P.")
 Y.column_dimensions["A"].width = 50
 Y.column_dimensions["B"].width = 14
 Y.column_dimensions["C"].width = 3
@@ -895,10 +942,11 @@ def y_sec(text):
     yrow[0] += 1
 
 
-def y_sum(key, label, sheet, srckey, fmt=NUM, bold=False, total=True):
+def y_sum(key, label, sheet, srckey, fmt=NUM, bold=False, total=True, unit="FCFA"):
     r = yrow[0]
     YK[key] = r
     Y.cell(r, 1, label).font = F(bold=bold)
+    Y.cell(r, 2, unit).font = F(color=GREY)
     src = sheet.k[srckey]
     for j in range(5):
         col = CL(4 + j)
@@ -911,10 +959,11 @@ def y_sum(key, label, sheet, srckey, fmt=NUM, bold=False, total=True):
     return r
 
 
-def y_end(key, label, sheet, srckey, fmt=NUM, bold=False):
+def y_end(key, label, sheet, srckey, fmt=NUM, bold=False, unit="FCFA"):
     r = yrow[0]
     YK[key] = r
     Y.cell(r, 1, label).font = F(bold=bold)
+    Y.cell(r, 2, unit).font = F(color=GREY)
     src = sheet.k[srckey]
     for j in range(5):
         col = CL(4 + j)
@@ -924,10 +973,11 @@ def y_end(key, label, sheet, srckey, fmt=NUM, bold=False):
     return r
 
 
-def y_f(key, label, fn, fmt=NUM, bold=False, total=None, fill=None):
+def y_f(key, label, fn, fmt=NUM, bold=False, total=None, fill=None, unit=None):
     r = yrow[0]
     YK[key] = r
     Y.cell(r, 1, label).font = F(bold=bold)
+    Y.cell(r, 2, unit if unit is not None else ("%" if fmt == PCT else "FCFA")).font = F(color=GREY)
     for j in range(5):
         col = CL(4 + j)
         Y[f"{col}{r}"] = fn(col)
@@ -942,12 +992,12 @@ def y_f(key, label, fn, fmt=NUM, bold=False, total=None, fill=None):
     return r
 
 
-y_sec("Revenue (FCFA)")
+y_sec("Revenue")
 for key in ("rev_sub", "rev_fx", "rev_ic", "rev_dep", "rev_cards", "rev_over", "rev_pl", "rev_credit"):
     lab = P.ws.cell(P.k[key], 1).value
     y_sum(key, lab, P, key)
 y_sum("revenue", "Total revenue", P, "revenue", bold=True)
-y_f("growth", "Revenue growth", lambda col: "=0" if col == "D" else f"=IFERROR({col}{YK['revenue']}/{CL(ord(col) - 65)}{YK['revenue']}-1,0)", fmt=PCT)
+y_f("growth", "Revenue growth", lambda col: "=0" if col == "D" else f"=IFERROR({col}{YK['revenue']}/{CL(ord(col) - 65)}{YK['revenue']}-1,0)", fmt=PCT, unit="%")
 y_sec("Cost of revenue")
 for key in ("d_bank", "d_cards", "d_pay", "d_msg"):
     y_sum(key, P.ws.cell(P.k[key], 1).value, P, key)
@@ -964,29 +1014,42 @@ y_sum("dep", "Depreciation", P, "dep")
 y_f("ebit", "Operating result (EBIT)", lambda col: f"={col}{YK['ebitda']}-{col}{YK['dep']}", bold=True, total="sum")
 y_sum("tax", "Corporate income tax", P, "tax")
 y_f("ni", "Net income", lambda col: f"={col}{YK['ebit']}-{col}{YK['tax']}", bold=True, total="sum", fill=TOT_FILL)
-y_sec("Cash and funding (FCFA)")
+y_sec("Cash and funding")
 y_sum("cf_before", "Cash flow before funding", Q, "before")
 y_sum("equity", "Equity raised", Q, "equity")
 y_end("cash", "Closing cash (end of year)", Q, "close", bold=True)
 y_sec("Operating figures (end of year)")
-y_end("clients", "Active clients", R, "act_total", bold=True)
-y_end("clients_sn", "of which Senegal (approx.)", R, "act_sn")
-y_end("clients_ci", "of which Côte d'Ivoire (approx.)", R, "act_ci")
-y_sum("new_clients", "New clients in the year", M, "new_total")
-y_end("headcount", "Headcount", S, "hc_total")
+y_end("clients", "Active clients", R, "act_total", bold=True, unit="clients")
+y_end("clients_sn", "of which Senegal (approx.)", R, "act_sn", unit="clients")
+y_end("clients_ci", "of which Côte d'Ivoire (approx.)", R, "act_ci", unit="clients")
+y_sum("new_clients", "New clients in the year", M, "new_total", unit="clients")
+y_end("headcount", "Headcount", S, "hc_total", unit="people")
 y_end("book", "Loan book", K, "book")
-y_end("emp_acc", "Employee salary accounts", R, "emp_acc")
-y_sec("In euros (thousands)")
-for key, lab in (("revenue", "Total revenue"), ("gm", "Gross margin"), ("opex", "Total operating expenses"), ("ebitda", "EBITDA"), ("ni", "Net income"),
-                 ("equity", "Equity raised"), ("cash", "Closing cash (end of year)"), ("book", "Loan book (end of year)")):
-    y_f("eur_" + key, lab + " (€k)", lambda col, key=key: f"={col}{YK[key]}/FX_EUR/1000", fmt=NUM, bold=key in ("revenue", "ebitda"),
-        total="sum" if key not in ("cash", "book") else None)
+y_end("emp_acc", "Employee salary accounts (B2C)", R, "emp_acc", unit="accounts")
+# euro twin columns K..P for every FCFA row
+Y.column_dimensions["J"].width = 3
+for j in range(6):
+    col = CL(11 + j)
+    Y.column_dimensions[col].width = 16
+    Y[f"{col}4"] = f"Y{j + 1} (€)" if j < 5 else "5 years (€)"
+    style(Y[f"{col}4"], bold=True, fill=SEC_FILL, align="center")
+    if j < 5:
+        Y[f"{col}5"] = f"={CL(4 + j)}5"
+        style(Y[f"{col}5"], fmt="0", bold=True, fill=SEC_FILL, align="center")
+for r in range(6, yrow[0]):
+    if Y.cell(r, 2).value == "FCFA":
+        bold = bool(Y.cell(r, 1).font and Y.cell(r, 1).font.b)
+        for j in range(6):
+            src = CL(4 + j)
+            if Y[f"{src}{r}"].value is not None:
+                Y[f"{CL(11 + j)}{r}"] = f"={src}{r}/FX_EUR"
+                style(Y[f"{CL(11 + j)}{r}"], fmt=EURN, bold=bold)
 
 # =====================================================================================
 # KPIs and unit economics
 # =====================================================================================
 U = wb.create_sheet("Unit economics")
-title(U, "Unit economics and KPIs", "Per-client economics and efficiency ratios by year.")
+title(U, "Unit economics and KPIs", "Per-client economics and efficiency ratios by year. Euros in columns J–N.")
 U.column_dimensions["A"].width = 58
 U.column_dimensions["B"].width = 14
 U.column_dimensions["C"].width = 3
@@ -1034,7 +1097,6 @@ u("arpa", "Revenue per active client (ARPA), incl. credit", lambda col: f"=IFERR
 u("arpa_sub", "of which subscription", lambda col: f"=IFERROR('P&L annual'!{col}{YK['rev_sub']}/{col}{UK['avg_clients']}/12,0)", unit="FCFA / month")
 u("cost_serve", "Cost to serve per client", lambda col: f"=IFERROR('P&L annual'!{col}{YK['cogs']}/{col}{UK['avg_clients']}/12,0)", unit="FCFA / month")
 u("contrib", "Contribution per client (gross margin)", lambda col: f"={col}{UK['arpa']}-{col}{UK['cost_serve']}", unit="FCFA / month", bold=True)
-u("contrib_eur", "Contribution per client in euros", lambda col: f"={col}{UK['contrib']}/FX_EUR", unit="€ / month", fmt=NUM1)
 u_sec("Acquisition")
 u("sm_spend", "Sales and marketing spend (staff + budget)", lambda col: f"={ysum(M, 'c_total', col)}+{ysum(M, 'sm_staff', col)}", unit="FCFA")
 u("cac", "Blended cost to acquire a client (CAC)", lambda col: f"=IFERROR({col}{UK['sm_spend']}/{col}{UK['new']},0)", unit="FCFA", bold=True)
@@ -1051,6 +1113,18 @@ u_sec("Credit")
 u("credit_share", "Credit income as % of revenue", lambda col: f"=IFERROR('P&L annual'!{col}{YK['rev_credit']}/'P&L annual'!{col}{YK['revenue']},0)", unit="%", fmt=PCT)
 u("book_client", "Loan book per active client (end of year)", lambda col: f"=IFERROR('P&L annual'!{col}{YK['book']}/'P&L annual'!{col}{YK['clients']},0)", unit="FCFA")
 u("deposit_rev", "Bank income share on balances as % of revenue", lambda col: f"=IFERROR('P&L annual'!{col}{YK['rev_dep']}/'P&L annual'!{col}{YK['revenue']},0)", unit="%", fmt=PCT)
+U.column_dimensions["I"].width = 3
+for j in range(5):
+    col = CL(10 + j)
+    U.column_dimensions[col].width = 16
+    U[f"{col}4"] = f"Y{j + 1} (€)"
+    style(U[f"{col}4"], bold=True, fill=SEC_FILL, align="center")
+for r in range(6, urow[0]):
+    unit = U.cell(r, 2).value or ""
+    if unit.startswith("FCFA"):
+        for j in range(5):
+            U[f"{CL(10 + j)}{r}"] = f"={CL(4 + j)}{r}/FX_EUR"
+            style(U[f"{CL(10 + j)}{r}"], fmt=EURN)
 
 # =====================================================================================
 # MARKET
@@ -1070,7 +1144,7 @@ MKK = {}
 def mk_head(text, years=False):
     r = mrow[0] + 1
     MK.cell(r, 1, text)
-    heads = ["Unit", "", "Value"] if not years else ["Unit", ""] + [f"Y{j + 1}" for j in range(5)]
+    heads = ["Unit", "", "Value", "€ equivalent"] if not years else ["Unit", ""] + [f"Y{j + 1}" for j in range(5)]
     for j, h in enumerate(heads):
         MK.cell(r, 2 + j, h)
     MK.cell(r, 9, "Source / note")
@@ -1087,6 +1161,8 @@ def mk_in(key, label, v, unit, fmt, note):
     MK.cell(r, 1, label).font = F()
     MK.cell(r, 2, unit).font = F(color=GREY)
     style(MK.cell(r, 4, v), fmt=fmt, color=BLUE, fill=IN_FILL)
+    if unit.startswith("FCFA"):
+        style(MK.cell(r, 5, f"=D{r}/FX_EUR"), fmt=EURN, color=GREY)
     MK.cell(r, 9, note).font = F(color=GREY)
     mrow[0] += 1
 
@@ -1133,6 +1209,7 @@ MK.cell(r, 1, "Senegal: what target companies pay for business accounts today").
 MK.cell(r, 2, "FCFA / year").font = F(color=GREY)
 MK.cell(r, 4, f"=D{MKK['sn_sam']}*D{MKK['bank_fee']}*12")
 style(MK.cell(r, 4), fmt=NUM)
+style(MK.cell(r, 5, f"=D{r}/FX_EUR"), fmt=EURN)
 MK.cell(r, 9, "Account fees only; transfer, card and payout fees come on top. Wave Business charges 1% on bulk payouts.").font = F(color=GREY)
 mrow[0] += 1
 
@@ -1140,7 +1217,7 @@ mrow[0] += 1
 # DASHBOARD
 # =====================================================================================
 D = wb.create_sheet("Dashboard")
-title(D, "Tabax business plan: dashboard", "Key results for the scenario selected on Assumptions. Amounts in FCFA unless stated.")
+title(D, "Tabax business plan: dashboard", "Key results for the scenario selected on Assumptions. FCFA in columns B–H, euros in column D (headline) and J–N (year by year).")
 D.column_dimensions["A"].width = 48
 D.column_dimensions["B"].width = 18
 D.column_dimensions["C"].width = 3
@@ -1161,9 +1238,9 @@ heads = [
     ("First month with positive EBITDA", f"=IF(MIN('P&L monthly'!{FC}{be_row}:{LC}{be_row})=999,\"not reached\",MIN('P&L monthly'!{FC}{be_row}:{LC}{be_row}))", "0", "month #"),
     ("   which is", f"=IF(ISNUMBER(B7),DATE(YEAR(Start_Date),MONTH(Start_Date)+B7-1,1),\"-\")", "mmm yyyy", ""),
     ("Peak funding need (lowest cumulative cash flow before funding)", f"=-MIN(0,MIN('Cash flow'!{FC}{cum_row}:{LC}{cum_row}))", NUM, "FCFA"),
-    ("   in euros", "=B9/FX_EUR", NUM, "€"),
+    ("   in euros", "=B9/FX_EUR", EURN, "€"),
     ("Equity raised in the plan", f"=SUM('Cash flow'!{FC}{Q.k['equity']}:{LC}{Q.k['equity']})", NUM, "FCFA"),
-    ("   in euros", "=B11/FX_EUR", NUM, "€"),
+    ("   in euros", "=B11/FX_EUR", EURN, "€"),
     ("Lowest closing cash", f"=MIN('Cash flow'!{FC}{close_row}:{LC}{close_row})", NUM, "FCFA"),
     ("   in month", f"=MATCH(B13,'Cash flow'!{FC}{close_row}:{LC}{close_row},0)", "0", "month #"),
     ("Cash at the end of year 5", f"='Cash flow'!{LC}{close_row}", NUM, "FCFA"),
@@ -1174,8 +1251,16 @@ for j, (lab, fml, fm, unit) in enumerate(heads):
     D.cell(r, 2, fml)
     style(D.cell(r, 2), fmt=fm, bold=True)
     D.cell(r, 3, unit).font = F(color=GREY)
-D["D13"] = '=IF(B13<0,"Cash goes negative: raise more or earlier (Assumptions, section 10)","OK: cash stays positive")'
-style(D["D13"], bold=True, color="C00000")
+for r_ in (13, 15):
+    D.cell(r_, 4, f"=B{r_}/FX_EUR")
+    style(D.cell(r_, 4), fmt=EURN, bold=True)
+D["E13"] = '=IF(B13<0,"Cash goes negative: raise more or earlier (Assumptions, section 11)","OK: cash stays positive")'
+for r_, lab, fml, fm in ((16, "Technology from Maak", '=IF(Maak_Option=1,"Lease (option 1)","Equity stake (option 2)")', None),
+                         (17, "   Maak's stake in Tabax", "=IF(Maak_Option=2,Maak_Equity_Pct,0)", PCT)):
+    D.cell(r_, 1, lab).font = F()
+    D.cell(r_, 2, fml)
+    style(D.cell(r_, 2), fmt=fm, bold=True)
+style(D["E13"], bold=True, color="C00000")
 D["A18"] = "Year by year"
 style(D["A18"], bold=True)
 for col in range(1, 10):
@@ -1188,21 +1273,34 @@ for j in range(5):
 dash = [("Active clients (end of year)", "clients", NUM), ("New clients in the year", "new_clients", NUM), ("Headcount (end of year)", "headcount", NUM),
         ("Total revenue", "revenue", NUM), ("Gross margin", "gm", NUM), ("Gross margin %", "gm_pct", PCT), ("Total operating expenses", "opex", NUM),
         ("EBITDA", "ebitda", NUM), ("EBITDA margin", "ebitda_pct", PCT), ("Net income", "ni", NUM), ("Closing cash", "cash", NUM),
-        ("Loan book (end of year)", "book", NUM), ("Revenue (€k)", "eur_revenue", NUM), ("EBITDA (€k)", "eur_ebitda", NUM), ("Net income (€k)", "eur_ni", NUM)]
+        ("Loan book (end of year)", "book", NUM)]
+DUNIT = {"clients": "clients", "new_clients": "clients", "headcount": "people", "gm_pct": "%", "ebitda_pct": "%"}
+for jj in range(5):
+    D[f"{CL(10 + jj)}19"] = f"=\"Y\"&{jj + 1}&\" (€)\""
+    style(D[f"{CL(10 + jj)}19"], bold=True, fill=SEC_FILL, align="center")
+    D.column_dimensions[CL(10 + jj)].width = 16
 for j, (lab, key, fm) in enumerate(dash):
     r = 20 + j
     D.cell(r, 1, lab).font = F(bold=key in ("revenue", "ebitda", "clients"))
+    D.cell(r, 2, DUNIT.get(key, "FCFA")).font = F(color=GREY)
     for jj in range(5):
         col = CL(4 + jj)
         D[f"{col}{r}"] = f"='P&L annual'!{col}{YK[key]}"
         style(D[f"{col}{r}"], fmt=fm, bold=key in ("revenue", "ebitda", "clients"), color=GREEN)
-for j, (lab, key, fm) in enumerate([("Revenue per active client a month (ARPA)", "arpa", NUM), ("Blended CAC", "cac", NUM), ("CAC payback (months)", "payback", NUM1)]):
+        if DUNIT.get(key, "FCFA") == "FCFA":
+            D[f"{CL(10 + jj)}{r}"] = f"={col}{r}/FX_EUR"
+            style(D[f"{CL(10 + jj)}{r}"], fmt=EURN, bold=key in ("revenue", "ebitda"))
+for j, (lab, key, fm, un) in enumerate([("Revenue per active client a month (ARPA)", "arpa", NUM, "FCFA / month"), ("Blended CAC", "cac", NUM, "FCFA / client"), ("CAC payback (months)", "payback", NUM1, "months")]):
     r = 20 + len(dash) + j
     D.cell(r, 1, lab).font = F()
+    D.cell(r, 2, un).font = F(color=GREY)
     for jj in range(5):
         col = CL(4 + jj)
         D[f"{col}{r}"] = f"='Unit economics'!{col}{UK[key]}"
         style(D[f"{col}{r}"], fmt=fm, color=GREEN)
+        if un.startswith("FCFA"):
+            D[f"{CL(10 + jj)}{r}"] = f"={col}{r}/FX_EUR"
+            style(D[f"{CL(10 + jj)}{r}"], fmt=EURN)
 chk = 20 + len(dash) + 4
 D.cell(chk, 1, "Checks").font = F(bold=True)
 for col in range(1, 10):
@@ -1232,21 +1330,56 @@ for key, lab in (("revenue", "Revenue"), ("opex", "Operating expenses"), ("ebitd
     ch.add_data(Reference(Y, min_col=4, max_col=8, min_row=YK[key], max_row=YK[key]), from_rows=True, titles_from_data=False)
     ch.series[-1].tx = SeriesLabel(v=lab)
 ch.set_categories(Reference(Y, min_col=4, max_col=8, min_row=5, max_row=5))
-D.add_chart(ch, "K4")
+D.add_chart(ch, "P4")
 lc = LineChart()
 lc.title = "Active clients by month"
 lc.height, lc.width = 8, 17
 lc.add_data(Reference(R.ws, min_col=C0, max_col=C0 + NM - 1, min_row=R.k["act_total"], max_row=R.k["act_total"]), from_rows=True, titles_from_data=False)
 lc.series[0].tx = SeriesLabel(v="Active clients")
 lc.set_categories(Reference(R.ws, min_col=C0, max_col=C0 + NM - 1, min_row=3, max_row=3))
-D.add_chart(lc, "K21")
+D.add_chart(lc, "P21")
 cc = LineChart()
 cc.title = "Closing cash by month (FCFA)"
 cc.height, cc.width = 8, 17
 cc.add_data(Reference(Q.ws, min_col=C0, max_col=C0 + NM - 1, min_row=Q.k["close"], max_row=Q.k["close"]), from_rows=True, titles_from_data=False)
 cc.series[0].tx = SeriesLabel(v="Closing cash")
 cc.set_categories(Reference(Q.ws, min_col=C0, max_col=C0 + NM - 1, min_row=3, max_row=3))
-D.add_chart(cc, "K38")
+D.add_chart(cc, "P38")
+
+# =====================================================================================
+# REGULATORY PATH (text, stage months linked to the timing inputs)
+# =====================================================================================
+sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
+from reg_data import REG_NOTES, REG
+G = wb.create_sheet("Regulatory path")
+title(G, "Regulatory path", "What each stage needs from regulators (BCEAO / WAEMU, Senegal, Côte d'Ivoire) and where its cost sits in the model. Not legal advice: confirm with local counsel.")
+for col, w in {"A": 34, "B": 30, "C": 22, "D": 70, "E": 55, "F": 40, "G": 16}.items():
+    G.column_dimensions[col].width = w
+gr = 4
+for note in REG_NOTES:
+    G.cell(gr, 1, "Note: " + note).font = F(italic=True, color=GREY)
+    gr += 1
+gr += 1
+for j, h in enumerate(["Stage", "When", "Topic", "Requirement", "Authority and legal basis", "In the model", "Status"]):
+    c = G.cell(gr, 1 + j, h)
+    c.font = F(bold=True, color=WHITE)
+    c.fill = HEAD_FILL
+gr += 1
+for stage, when, summary, items in REG:
+    G.cell(gr, 1, stage).font = F(bold=True)
+    G.cell(gr, 2, when).font = F(bold=True)
+    G.cell(gr, 4, summary).font = F(italic=True)
+    for col in range(1, 8):
+        G.cell(gr, col).fill = SEC_FILL
+        G.cell(gr, col).alignment = Alignment(wrap_text=True, vertical="top")
+    gr += 1
+    for topic, req, auth, model, status in items:
+        for j, val in enumerate([topic, req, auth, model, status]):
+            c = G.cell(gr, 3 + j, val)
+            c.font = F(bold=j == 0, color=GREY if j == 2 else BLACK)
+            c.alignment = Alignment(wrap_text=True, vertical="top")
+        gr += 1
+G.freeze_panes = "A7"
 
 # =====================================================================================
 # COVER
@@ -1263,14 +1396,14 @@ lines = [
     ("How to use", ""),
     ("1. Pick a scenario", "Assumptions › cell D4: 1 = Prudent, 2 = Base, 3 = Ambitious. Rows with three values switch with it."),
     ("2. Change any input", "Inputs are blue on a cream background (Assumptions, Hiring plan, Market). Everything else is a formula: do not type over it."),
-    ("3. Change the team", "Hiring plan: one line per hire (headcount, start month, end month, gross salary). Field sales reps drive client acquisition."),
-    ("4. Check the cash", "Dashboard › checks. If cash goes negative, raise more or earlier (Assumptions, section 10)."),
+    ("3. Change the team", "Hiring plan: the fixed roles (founder, CTO, financial expert, sales lead, marketing, country manager, compliance officer). Support, developers, field sales reps and credit analysts grow with clients and the loan book: ratios on Assumptions, section 8."),
+    ("4. Check the cash", "Dashboard › checks. If cash goes negative, raise more or earlier (Assumptions, section 11)."),
     ("", ""),
     ("Tabs", ""),
     ("Dashboard", "Headline numbers, year-by-year summary and checks."),
-    ("Assumptions", "Every hypothesis with its source: timing, acquisition, pricing, usage per client, cost to serve, credit, staff charges, fixed costs by year, funding."),
-    ("Hiring plan", "Roles, start months and salaries (employer cost computed with Senegal's charges)."),
-    ("Staff", "Headcount and employer cost by month, by department and country."),
+    ("Assumptions", "Every hypothesis with its source: timing, acquisition, pricing, usage per client, cost to serve, credit, team and tools, Maak, fixed costs by year, funding."),
+    ("Hiring plan", "Fixed roles, start months and salaries (employer cost = gross + 30% charges)."),
+    ("Staff", "Headcount and employer cost by month: fixed roles plus the team that grows with volume."),
     ("Sales & marketing", "New clients by channel (field sales, partners, digital) and country; marketing budget; cost to acquire a client."),
     ("Clients & revenue", "Active clients by plan, usage (cards, balances, payroll, payouts) and every non-credit revenue line."),
     ("Credit", "Loan book by product, interest, cost of funds, losses and the share kept by Tabax; cash tied up by credit."),
@@ -1280,6 +1413,8 @@ lines = [
     ("Cash flow", "Monthly cash, cash set aside, funding rounds, runway."),
     ("Unit economics", "ARPA, cost to serve, contribution, CAC, payback, lifetime value, efficiency and credit ratios."),
     ("Market", "Formal employers in Senegal and Côte d'Ivoire, target market and penetration."),
+    ("Sheets ending in (€)", "The same monthly sheet with every amount in euros. Annual sheets, Dashboard, Assumptions and Hiring plan show euros in extra columns."),
+    ("Regulatory path", "What each stage requires from regulators, and where its cost sits in the model."),
     ("", ""),
     ("Colour code", ""),
     ("Blue on cream", "Input: change freely."),
@@ -1287,10 +1422,11 @@ lines = [
     ("Green", "Link to another sheet."),
     ("", ""),
     ("Main caveats", ""),
-    ("Estimates to replace", "Partner bank fees, card processor fees and minimums, interchange, the deposit income share, licence-file legal fees, insurance and the cost of wallet payouts have no public price. Replace them with term sheets and quotes."),
+    ("Estimates to replace", "Partner bank fees, card processor fees and minimums, interchange, the deposit income share, the changes to Maak's platform, the SFD acquisition price and running costs, insurance and the cost of wallet payouts have no public price. Replace them with term sheets and quotes."),
     ("Taxes", "Amounts exclude VAT and the 17% tax on financial activities (TAF), which apply to fees. Corporate tax is simplified (30%, losses carried forward without limit)."),
-    ("Côte d'Ivoire", "Staff charges use Senegal's rates; the number of formal employers is an estimate."),
-    ("Credit", "Loans are made by a partner microfinance institution (SFD) at 0.063% a day (23% a year, under the 24% cap), then by Tabax's own SFD. The loan book itself is funded by debt lines, not equity."),
+    ("Côte d'Ivoire", "Same 30% employer charges as Senegal; the number of formal employers is an estimate."),
+    ("Credit", "No loans before month 18. A partner microfinance institution (SFD) lends at 23% a year, under the 24% SFD usury cap. Tabax buys an SFD around month 24 and lends from it in Senegal; Côte d'Ivoire loans stay with a partner. The loan book is funded by debt lines, not equity."),
+    ("Licences", "Tabax holds no licence of its own until the SFD acquisition: partners hold the accounts, cards and loans. See Regulatory path."),
     ("Sources", "Business model v2, Cost breakdown in euros, Senegal launch plan and the research notes in this project, plus IPRES/ANSD 2024 and CEPICI 2025 for the market."),
 ]
 for j, (a, b) in enumerate(lines):
@@ -1301,7 +1437,10 @@ for j, (a, b) in enumerate(lines):
     CV.cell(r, 2).alignment = Alignment(vertical="top")
 
 # sheet order
-order = ["Cover", "Dashboard", "Assumptions", "Hiring plan", "Staff", "Sales & marketing", "Clients & revenue", "Credit", "Costs", "P&L monthly", "P&L annual", "Cash flow", "Unit economics", "Market"]
+order = ["Cover", "Dashboard", "Assumptions", "Hiring plan"]
+for nm_ in ("Staff", "Sales & marketing", "Clients & revenue", "Credit", "Costs", "P&L monthly"):
+    order += [nm_, TWINS[nm_]]
+order += ["P&L annual", "Cash flow", TWINS["Cash flow"], "Unit economics", "Market", "Regulatory path"]
 wb._sheets = [wb[n] for n in order]
 for ws in wb.worksheets:
     ws.sheet_view.showGridLines = False if ws.title in ("Cover", "Dashboard") else True
