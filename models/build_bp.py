@@ -303,7 +303,12 @@ a_in("Credit_Lead_Months", "Credit team joins this many months before the first 
 a_in("Book_per_Credit", "Credit analysts and collections: one per this loan book", 1000000000, "FCFA", NUM, "Estimate. Minimum one from the start of credit.")
 a_in("Salary_Credit", "Credit analyst: gross salary", 600000, "FCFA / month", NUM, "")
 a_in("Regus_EUR", "Office: Regus, all included", 300, "€ / employee / month", NUM, "Desk, electricity, internet, cleaning and security included (decision). Dakar from month 1, Abidjan from its opening.")
-a_in("Laptop_Cost", "Laptop and equipment per new hire (capex)", 600000, "FCFA", NUM, "")
+a_in("Laptop_Cost", "Laptop and equipment per new hire", 600000, "FCFA", NUM, "Expensed in the month of hiring (no depreciation, decision).")
+a_in("Agency_Fee_EUR", "Recruitment agency fee per senior hire", 800, "€ / hire", NUM, "Decision: about €800 per hire for the CEO, CTO, developers, financial and credit experts, country manager and compliance officer. Other roles are hired directly at no fee.")
+a_in("Agency_Dev", "Developers hired through an agency (1 = yes, 0 = no)", 1, "flag", "0", "")
+a_in("Agency_Credit", "Credit analysts hired through an agency (1 = yes, 0 = no)", 1, "flag", "0", "")
+a_in("Agency_Support", "Customer support hired through an agency (1 = yes, 0 = no)", 0, "flag", "0", "Hired directly (decision).")
+a_in("Agency_Rep", "Field sales reps hired through an agency (1 = yes, 0 = no)", 0, "flag", "0", "Hired directly.")
 a_in("Phone_Cost", "Phone and data plan per employee", 15000, "FCFA / month", NUM, "")
 a_in("Gmail_USD", "Google Workspace (Gmail) per user", 9, "USD / user / month", NUM, "Decision: about $9.")
 a_in("ClickUp_USD", "ClickUp per user", 9, "USD / user / month", NUM, "Decision: same price as Gmail.")
@@ -311,7 +316,6 @@ a_in("Claude_USD", "Claude Enterprise seat", 25, "USD / seat / month", NUM, "Dec
 a_in("Claude_Shared", "Shared Claude seats", 2, "seats", NUM, "One for support and marketing together, one for everyone else who needs it.")
 a_in("Website_USD", "Website builder", 25, "USD / month", NUM, "Decision: the group's site tool.")
 a_in("Domain_USD", "Domain name", 20, "USD / year", NUM, "")
-a_in("Dep_Months", "Depreciation period for capex", 36, "months", "0", "")
 
 a_sec("9. Technology from Maak (group company)")
 a_in("Maak_Option", "Deal with Maak (1 = lease, 2 = equity)", 1, "option", "0", "1: Tabax pays a yearly lease, lease-to-own. 2: Maak takes a small stake in Tabax instead and there is no lease cost. Either way, adapting the platform to Tabax is included.")
@@ -378,7 +382,6 @@ a_arr("Brand_PR", "Brand, launch events, PR", [16400000, 5250000, 6560000, 65600
 a_arr("Events", "Events, sponsorships, sales materials", [9840000, 19700000, 29500000, 36100000, 42600000], "FCFA / year", NUM, "")
 A.cell(arow[0], 2, "Other").font = F(bold=True)
 arow[0] += 1
-a_arr("Recruitment", "Recruitment fees (executive search, job boards)", [13300000, 21700000, 4000000, 5000000, 5000000], "FCFA / year", NUM, "Search firms charge about 30% of annual gross.")
 a_arr("Travel", "Travel (Dakar–Abidjan, regulators, partners)", [5250000, 13100000, 16400000, 19700000, 23000000], "FCFA / year", NUM, "")
 a_arr("Misc", "Company bank fees and miscellaneous", [300000, 450000, 600000, 700000, 800000], "FCFA / month", NUM, "")
 
@@ -399,7 +402,7 @@ A.freeze_panes = "C6"
 # =====================================================================================
 H = wb.create_sheet("Hiring plan")
 title(H, "Hiring plan", "One line per hire or group of identical hires. Edit headcount, start month, end month (leave blank if they stay) and gross salary. Spare lines at the bottom for new roles.")
-heads = ["#", "Department", "Role", "Country", "Category", "Headcount", "Start month", "End month", "Gross salary (FCFA / month)", "Manager (Y/N)", "Employer cost per person (FCFA / month)", "Note", "Gross salary (€ / month)", "Employer cost per person (€ / month)"]
+heads = ["#", "Department", "Role", "Country", "Category", "Headcount", "Start month", "End month", "Gross salary (FCFA / month)", "Agency hire (Y/N)", "Employer cost per person (FCFA / month)", "Note", "Gross salary (€ / month)", "Employer cost per person (€ / month)"]
 for j, h in enumerate(heads):
     c = H.cell(4, 1 + j, h)
     c.font = F(bold=True, color=WHITE)
@@ -413,8 +416,8 @@ HIRES = [
     ("Leadership", "CEO (full salary from year 2)", "SN", "", 1, 13, None, 2500000, "Y", "Founders and shareholders run the company unpaid in year 1 (decision)."),
     ("Engineering & product", "CTO (also codes)", "SN", "", 1, 1, None, 2500000, "Y", "Developers are added with volume on the Staff sheet (2 at the start)."),
     ("Finance & admin", "Financial expert (finance, partners, credit lead)", "SN", "", 1, 1, None, 1500000, "Y", "Starting team. Credit analysts are added with the loan book."),
-    ("Sales & partnerships", "Sales lead (also sells; incl. bonus)", "SN", "Sales rep", 1, 1, None, 1200000, "Y", "Plus 2 field reps from month 4, then reps grow with clients (Staff sheet)."),
-    ("Marketing", "Marketing manager (senior)", "SN", "", 1, 4, None, 900000, "Y", "Prepares the launch; runs digital ads and partnerships."),
+    ("Sales & partnerships", "Sales lead (also sells; incl. bonus)", "SN", "Sales rep", 1, 1, None, 1200000, "N", "Plus 2 field reps from month 4, then reps grow with clients (Staff sheet)."),
+    ("Marketing", "Marketing manager (senior)", "SN", "", 1, 4, None, 900000, "N", "Prepares the launch; runs digital ads and partnerships."),
     ("Marketing", "Marketing officer (junior)", "SN", "", 1, 5, None, 400000, "N", "Content, social media, events."),
     ("Leadership", "Country manager, Abidjan", "CI", "", 1, "=CI_Office_Start", None, 2800000, "Y", "Joins when the Abidjan office opens."),
     ("Compliance & risk", "Compliance officer (AML/CFT)", "SN", "", 1, "=SFD_Acq_Month", None, 1500000, "Y", "Required once Tabax holds its own licence (SFD)."),
@@ -718,7 +721,7 @@ fill_volume_team()
 # =====================================================================================
 # COSTS
 # =====================================================================================
-C = TS("Costs", "Every cost line by month: variable costs that grow with clients, then fixed costs by category, capex and depreciation.")
+C = TS("Costs", "Every cost line by month: variable costs that grow with clients, then fixed costs by category and the contingency.")
 rr = lambda key, c: R.ref(key, c)
 C.sec("Variable costs (cost to serve)")
 C.line("v_bank", "Partner bank fee per business account", lambda c, p, i: f"={rr('act_total', c)}*Bank_Fee")
@@ -743,7 +746,8 @@ C.sec("Office and equipment")
 C.line("o_regus_sn", "Dakar office (Regus, all included)", lambda c, p, i: f"=IF({c}$3>=Office_Start,{S.ref('hc_sn', c)}*Regus_EUR*FX_EUR,0)")
 C.line("o_regus_ci", "Abidjan office (Regus, all included)", lambda c, p, i: f"=IF({c}$3>=CI_Office_Start,{S.ref('hc_ci', c)}*Regus_EUR*FX_EUR,0)")
 C.line("o_phone", "Phones and data plans", lambda c, p, i: f"={S.ref('hc_total', c)}*Phone_Cost")
-C.line("o_total", "Total office and equipment", lambda c, p, i: f"=SUM({c}{C.k['o_regus_sn']}:{c}{C.k['o_phone']})", bold=True)
+C.line("o_laptops", "Laptops and equipment for new hires", lambda c, p, i: f"={S.ref('hires', c)}*Laptop_Cost")
+C.line("o_total", "Total office and equipment", lambda c, p, i: f"=SUM({c}{C.k['o_regus_sn']}:{c}{C.k['o_laptops']})", bold=True)
 C.sec("Technology")
 C.line("t_maak", "Maak platform lease (option 1)", lambda c, p, i: f"=IF(Maak_Option=1,Maak_Lease_EUR*FX_EUR/12,0)")
 C.line("t_cloud", "Cloud hosting", lambda c, p, i: f"=IF({c}$3>=Cloud_Start,{yr('Cloud_USD', c)}*FX_USD,0)")
@@ -780,19 +784,22 @@ for key, lab in (("c_digital", "Digital ads"), ("c_brand", "Brand, launch events
     C.line("m_" + key, lab, lambda c, p, i, key=key: f"={M.ref(key, c)}", color=GREEN)
 C.line("m_total", "Total sales and marketing (non-staff)", lambda c, p, i: f"=SUM({c}{C.k['m_c_digital']}:{c}{C.k['m_c_transport']})", bold=True)
 C.sec("Other")
-C.line("x_recruit", "Recruitment fees", lambda c, p, i: f"={yr('Recruitment', c)}/12")
+def _vd_new(key, c, p, i):
+    cur = S.ref('vd_' + key, c)
+    return cur if i == 0 else f"MAX(0,{cur}-{S.ref('vd_' + key, p)})"
+
+
+C.line("x_recruit", "Recruitment agency fees (senior hires)", lambda c, p, i: f"=Agency_Fee_EUR*FX_EUR*(SUMPRODUCT(--({HR('G')}={c}$3),--({HR('J')}=\"Y\"),{HR('F')})"
+       f"+Agency_Dev*{_vd_new('devs', c, p, i)}+Agency_Credit*{_vd_new('credit', c, p, i)}+Agency_Support*{_vd_new('support', c, p, i)}"
+       f"+Agency_Rep*({_vd_new('reps_sn', c, p, i)}+{_vd_new('reps_ci', c, p, i)}))")
 C.line("x_travel", "Travel", lambda c, p, i: f"={yr('Travel', c)}/12")
 C.line("x_misc", "Company bank fees and miscellaneous", lambda c, p, i: f"={yr('Misc', c)}")
 C.line("x_total", "Total other", lambda c, p, i: f"=SUM({c}{C.k['x_recruit']}:{c}{C.k['x_misc']})", bold=True)
 C.sec("Fixed costs summary")
-C.line("f_before", "Fixed costs before contingency",
+C.line("f_before", "Fixed costs before contingency (staff, office, tech, partners, legal, marketing, other)",
        lambda c, p, i: "=" + "+".join(f"{c}{C.k[k]}" for k in ("s_total", "o_total", "t_total", "p_total", "l_total", "m_total", "x_total")))
-C.line("f_cont", "Contingency", lambda c, p, i: f"={c}{C.k['f_before']}*Contingency_Pct")
+C.line("f_cont", "Contingency (5% buffer for unplanned costs)", lambda c, p, i: f"={c}{C.k['f_before']}*Contingency_Pct")
 C.line("f_total", "Total fixed costs", lambda c, p, i: f"={c}{C.k['f_before']}+{c}{C.k['f_cont']}", bold=True)
-C.sec("Capex and depreciation")
-C.line("cx_laptops", "Laptops and equipment for new hires", lambda c, p, i: f"={S.ref('hires', c)}*Laptop_Cost")
-C.line("cx_total", "Total capex", lambda c, p, i: f"={c}{C.k['cx_laptops']}", bold=True)
-C.line("dep", "Depreciation", lambda c, p, i: f"=SUM(OFFSET({c}{C.k['cx_total']},0,1-MIN(Dep_Months,{c}$3),1,MIN(Dep_Months,{c}$3)))/Dep_Months")
 
 # =====================================================================================
 # P&L MONTHLY
@@ -821,11 +828,9 @@ for key, lab, src in (("x_staff", "Staff", "s_total"), ("x_office", "Office and 
 P.line("opex", "Total operating expenses", lambda c, p, i: f"=SUM({c}{P.k['x_staff']}:{c}{P.k['x_cont']})", bold=True)
 P.line("ebitda", "EBITDA", lambda c, p, i: f"={c}{P.k['gm']}-{c}{P.k['opex']}", bold=True, fill=TOT_FILL)
 P.line("ebitda_pct", "EBITDA margin", lambda c, p, i: f"=IFERROR({c}{P.k['ebitda']}/{c}{P.k['revenue']},0)", unit="%", fmt=PCT, total=None)
-P.line("dep", "Depreciation", lambda c, p, i: f"={C.ref('dep', c)}", color=GREEN)
-P.line("ebit", "Operating result (EBIT)", lambda c, p, i: f"={c}{P.k['ebitda']}-{c}{P.k['dep']}", bold=True)
-P.line("cum_ebit", "Cumulative EBIT (for tax losses carried forward)", lambda c, p, i: f"={c}{P.k['ebit']}" if i == 0 else f"={p}{P.r}+{c}{P.k['ebit']}", total="last")
-P.line("tax", "Corporate income tax", lambda c, p, i: f"=Tax_Rate*MAX(0,{c}{P.k['cum_ebit']})" if i == 0 else f"=Tax_Rate*MAX(0,{c}{P.k['cum_ebit']})-Tax_Rate*MAX(0,{p}{P.k['cum_ebit']})")
-P.line("ni", "Net income", lambda c, p, i: f"={c}{P.k['ebit']}-{c}{P.k['tax']}", bold=True, fill=TOT_FILL)
+P.line("cum_ebitda", "Cumulative EBITDA (for tax losses carried forward)", lambda c, p, i: f"={c}{P.k['ebitda']}" if i == 0 else f"={p}{P.r}+{c}{P.k['ebitda']}", total="last")
+P.line("tax", "Corporate income tax", lambda c, p, i: f"=Tax_Rate*MAX(0,{c}{P.k['cum_ebitda']})" if i == 0 else f"=Tax_Rate*MAX(0,{c}{P.k['cum_ebitda']})-Tax_Rate*MAX(0,{p}{P.k['cum_ebitda']})")
+P.line("ni", "Net income", lambda c, p, i: f"={c}{P.k['ebitda']}-{c}{P.k['tax']}", bold=True, fill=TOT_FILL)
 P.line("cum_ni", "Cumulative net income", lambda c, p, i: f"={c}{P.k['ni']}" if i == 0 else f"={p}{P.r}+{c}{P.k['ni']}", total="last")
 P.sec("Helpers")
 P.line("be_flag", "Month number if EBITDA is positive (999 otherwise)", lambda c, p, i: f"=IF({c}{P.k['ebitda']}>0,{c}$3,999)", unit="month #", fmt="0", total=None)
@@ -833,11 +838,9 @@ P.line("be_flag", "Month number if EBITDA is positive (999 otherwise)", lambda c
 # =====================================================================================
 # CASH FLOW
 # =====================================================================================
-Q = TS("Cash flow", "Monthly cash: operating result, capex, cash set aside (card collateral, credit), the SFD acquisition, funding rounds and the closing balance.")
+Q = TS("Cash flow", "Monthly cash: net income, cash set aside (card collateral, credit), the SFD acquisition, funding rounds and the closing balance.")
 Q.sec("Operations")
 Q.line("ni", "Net income", lambda c, p, i: f"={P.ref('ni', c)}", color=GREEN)
-Q.line("dep", "Add back depreciation", lambda c, p, i: f"={P.ref('dep', c)}", color=GREEN)
-Q.line("capex", "Capex", lambda c, p, i: f"=-{C.ref('cx_total', c)}")
 Q.sec("Cash set aside (restricted)")
 Q.line("collat", "Card programme collateral", lambda c, p, i: f"=-IF({c}$3=Collateral_Month,Card_Collateral,0)")
 Q.line("sfd", "Acquisition of a microfinance company (SFD)", lambda c, p, i: f"=-IF({c}$3=SFD_Acq_Month,SFD_Acquisition,0)")
@@ -1010,10 +1013,8 @@ for key in ("x_staff", "x_office", "x_tech", "x_partners", "x_legal", "x_sm", "x
 y_sum("opex", "Total operating expenses", P, "opex", bold=True)
 y_f("ebitda", "EBITDA", lambda col: f"={col}{YK['gm']}-{col}{YK['opex']}", bold=True, total="sum", fill=TOT_FILL)
 y_f("ebitda_pct", "EBITDA margin", lambda col: f"=IFERROR({col}{YK['ebitda']}/{col}{YK['revenue']},0)", fmt=PCT, total=lambda r: f"=IFERROR(I{YK['ebitda']}/I{YK['revenue']},0)")
-y_sum("dep", "Depreciation", P, "dep")
-y_f("ebit", "Operating result (EBIT)", lambda col: f"={col}{YK['ebitda']}-{col}{YK['dep']}", bold=True, total="sum")
 y_sum("tax", "Corporate income tax", P, "tax")
-y_f("ni", "Net income", lambda col: f"={col}{YK['ebit']}-{col}{YK['tax']}", bold=True, total="sum", fill=TOT_FILL)
+y_f("ni", "Net income", lambda col: f"={col}{YK['ebitda']}-{col}{YK['tax']}", bold=True, total="sum", fill=TOT_FILL)
 y_sec("Cash and funding")
 y_sum("cf_before", "Cash flow before funding", Q, "before")
 y_sum("equity", "Equity raised", Q, "equity")
@@ -1347,6 +1348,188 @@ cc.set_categories(Reference(Q.ws, min_col=C0, max_col=C0 + NM - 1, min_row=3, ma
 D.add_chart(cc, "P38")
 
 # =====================================================================================
+# UNIT COSTS AND PRICES: what one employee, one client, one loan and each fixed item cost or earn
+# =====================================================================================
+UC = wb.create_sheet("Unit costs")
+title(UC, "Unit costs and prices", "What one of each thing costs or earns, in FCFA and euros. Every cell links to the inputs on Assumptions and Hiring plan: change them there.")
+for col, w in {"A": 46, "B": 30, "C": 12}.items():
+    UC.column_dimensions[col].width = w
+for j in range(3, 14):
+    UC.column_dimensions[CL(1 + j)].width = 15
+EUR2 = '"€"#,##0.00;-"€"#,##0.00;"-"'
+ucr = [4]
+
+
+def uc_title(text, sub=""):
+    ucr[0] += 1
+    UC.cell(ucr[0], 1, text).font = F(bold=True, size=12)
+    ucr[0] += 1
+    if sub:
+        UC.cell(ucr[0], 1, sub).font = F(italic=True, color=GREY)
+        ucr[0] += 1
+
+
+def uc_head(heads):
+    for j, h in enumerate(heads):
+        c = UC.cell(ucr[0], 1 + j, h)
+        c.font = F(bold=True, color=WHITE)
+        c.fill = HEAD_FILL
+        c.alignment = Alignment(wrap_text=True, vertical="top")
+    UC.row_dimensions[ucr[0]].height = 30
+    ucr[0] += 1
+
+
+def uc_sub(text):
+    UC.cell(ucr[0], 1, text).font = F(bold=True)
+    for col in range(1, 15):
+        UC.cell(ucr[0], col).fill = SEC_FILL
+    ucr[0] += 1
+
+
+def uc_row(vals, fmts, bold=False):
+    r = ucr[0]
+    for j, (v, fm) in enumerate(zip(vals, fmts)):
+        if v is None:
+            continue
+        c = UC.cell(r, 1 + j, v(r) if callable(v) else v)
+        style(c, fmt=fm, bold=bold, color=GREEN if isinstance(c.value, str) and "!" in c.value and j == 0 else BLACK)
+        if j == 1 and fm is None:
+            c.font = F(color=GREY)
+            c.alignment = Alignment(wrap_text=True, vertical="top")
+    ucr[0] += 1
+    return r
+
+
+# --- one employee
+uc_title("One employee, per month", "Employer cost plus what each person adds: Regus desk, phone, Gmail and ClickUp, a Claude seat for the CTO and developers. One-off at hiring: laptop, plus the agency fee for senior roles.")
+uc_head(["Role", "Country", "Agency hire", "Gross salary", "Employer charges", "Employer cost", "Office (Regus)", "Phone and data", "Gmail and ClickUp", "Claude seat",
+         "All-in per month (FCFA)", "All-in per month (€)", "One-off at hiring (FCFA)", "One-off at hiring (€)"])
+emp_f = [None, None, None, NUM, NUM, NUM, NUM, NUM, NUM, NUM, NUM, EURN, NUM, EURN]
+common = [lambda r: f"=D{r}*Employer_Charges", lambda r: f"=D{r}+E{r}", lambda r: "=Regus_EUR*FX_EUR", lambda r: "=Phone_Cost",
+          lambda r: "=(Gmail_USD+ClickUp_USD)*FX_USD"]
+tail = [lambda r: f"=SUM(F{r}:J{r})", lambda r: f"=K{r}/FX_EUR", lambda r: f"=Laptop_Cost+IF(C{r}=\"Y\",Agency_Fee_EUR*FX_EUR,0)", lambda r: f"=M{r}/FX_EUR"]
+for k in range(len(HIRES)):
+    hr = H0 + k
+    uc_row([f"='Hiring plan'!C{hr}", f"='Hiring plan'!D{hr}", f"='Hiring plan'!J{hr}", f"='Hiring plan'!I{hr}"] + common
+           + [f"=IF('Hiring plan'!B{hr}=\"Engineering & product\",Claude_USD*FX_USD,0)"] + tail, emp_f)
+for lab, cty, flag, sal, claude in (("Customer support agent", "SN", "Agency_Support", "Salary_Support", False), ("Developer", "SN", "Agency_Dev", "Salary_Dev", True),
+                                    ("Field sales rep, Senegal", "SN", "Agency_Rep", "Salary_Rep_SN", False), ("Field sales rep, Côte d'Ivoire", "CI", "Agency_Rep", "Salary_Rep_CI", False),
+                                    ("Credit analyst", "SN", "Agency_Credit", "Salary_Credit", False)):
+    uc_row([lab + " (grows with volume)", cty, f"=IF({flag}=1,\"Y\",\"N\")", f"={sal}"] + common + ["=Claude_USD*FX_USD" if claude else "=0"] + tail, emp_f)
+UC.cell(ucr[0], 1, "Company-wide, not per person: 2 shared Claude seats, the website and domain. Field reps also get the transport allowance (Sales & marketing). Pay rises 5% a year from year 2.").font = F(italic=True, color=GREY)
+ucr[0] += 1
+
+# --- one client
+uc_title("One business client, per month, by plan", "Steady state: after the free months, payment links at full adoption, no credit. Scenario inputs at their current value.")
+uc_head(["Line", "How it is calculated", "", "Petite", "Moyenne", "Grande", "Petite (€)", "Moyenne (€)", "Grande (€)"])
+PL3 = ("Petite", "Moyenne", "Grande")
+cli_f = [None, None, None, NUM, NUM, NUM, EUR2, EUR2, EUR2]
+
+
+def cli(label, how, expr, bold=False, fmt=NUM):
+    vals = [label, how, None] + [(lambda r, pl=pl: "=" + expr.replace("{P}", pl)) for pl in PL3] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"]
+    return uc_row(vals, [None, None, None, fmt, fmt, fmt, EUR2, EUR2, EUR2], bold=bold)
+
+
+uc_sub("Revenue")
+r_rev0 = cli("Subscription (after the yearly-billing discount)", "Plan price × (1 − share paying yearly × free months on yearly billing ÷ 12)", "Price_{P}*(1-Annual_Share*Annual_Free/12)")
+cli("Fees on foreign-currency card spending", "Foreign-currency card spending × FX fee", "Spend_For_{P}*FX_Fee")
+cli("Interchange share", "FCFA card spending × interchange share", "Spend_Dom_{P}*Interchange_Share")
+cli("Share of bank income on balances", "Average balance × yearly share ÷ 12", "Balance_{P}*Deposit_Share/12")
+cli("Fees on supplier payouts above the allowance", "Payouts above the allowance × fee per payout", "Overage_{P}*Overage_Fee")
+r_rev1 = cli("Payment link fees (average client)", "Collections × adoption × share by mobile money × fee", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Fee")
+r_revt = uc_row(["Revenue per client", None, None] + [(lambda r, c=c: f"=SUM({c}{r_rev0}:{c}{r_rev1})") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
+uc_sub("Cost to serve")
+r_c0 = cli("Partner bank fee per business account", "Flat fee per account", "Bank_Fee")
+cli("Card processing", "Active cards × processing fee per card", "Cards_Act_{P}*Card_Proc_Fee")
+cli("Visa / Mastercard cross-border fees", "Foreign-currency card spending × scheme rate", "Spend_For_{P}*Scheme_Rate")
+cli("Fraud and chargebacks", "All card spending × fraud rate", "(Spend_Dom_{P}+Spend_For_{P})*Fraud_Rate")
+cli("Salaries paid to mobile wallets", "Employees × average salary × share to wallets × cost rate", "Emp_{P}*Avg_Salary*Wallet_Share*Wallet_Payout_Cost")
+cli("Salaries paid to bank accounts", "Employees × share to banks × cost per transfer", "Emp_{P}*(1-Wallet_Share)*Bank_Payout_Cost")
+cli("Supplier payouts", "Payouts × cost per payout", "Supplier_{P}*Supplier_Payout_Cost")
+cli("Payment link collection costs", "Collections × adoption × share by mobile money × operator cost", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Cost")
+r_c1 = cli("SMS, WhatsApp and support tools", "Flat per client", "Notif_Cost")
+r_ct = uc_row(["Cost to serve per client", None, None] + [(lambda r, c=c: f"=SUM({c}{r_c0}:{c}{r_c1})") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
+r_cm = uc_row(["Contribution per client per month", "Revenue − cost to serve", None] + [(lambda r, c=c: f"={c}{r_revt}-{c}{r_ct}") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
+uc_row(["Contribution margin", None, None] + [(lambda r, c=c: f"=IFERROR({c}{r_cm}/{c}{r_revt},0)") for c in "DEF"], [None, None, None, PCT, PCT, PCT], bold=False)
+uc_sub("Once, when the client signs up")
+cli("Onboarding checks", "Company check (KYB) + people checked × ID check", "KYB_Cost+KYC_Cost*KYC_Persons")
+cli("Physical cards printed and delivered", "Cards ordered at sign-up × cost per card", "Cards_New_{P}*Card_Prod_Cost")
+cli("Card fees charged to the client (revenue)", "(Cards ordered − 1 free) × card fee", "MAX(0,Cards_New_{P}-1)*Card_Fee")
+cli("Referral fee (partner-channel clients only)", "Fee paid to the accountant or software partner", "Referral_Fee")
+cli("Subscription given away (free months)", "Free months × plan price", "Free_Months*Price_{P}")
+
+# --- one loan
+uc_title("One loan: 1,000,000 FCFA lent for a year", "Net margin after cost of funds, credit losses and servicing; what Tabax keeps with the partner SFD and with its own SFD; cash Tabax must lock up.")
+uc_head(["Product", "Yield", "Cost of funds", "Credit losses", "Servicing", "Net margin", "Net margin (FCFA)", "Net margin (€)", "Tabax keeps, partner phase (FCFA)",
+         "Tabax keeps, own SFD (FCFA)", "Cash locked, partner phase (FCFA)", "Cash locked, own SFD (FCFA)"])
+for pk, lab, *_ in PRODS:
+    uc_row([lab, f"=Yield_{pk}", "=CoF", f"=CoR_{pk}*CoR_Mult", "=Servicing", lambda r: f"=B{r}-C{r}-D{r}-E{r}", lambda r: f"=F{r}*1000000", lambda r: f"=G{r}/FX_EUR",
+            lambda r: f"=G{r}*Partner_Share", lambda r: f"=G{r}", "=1000000*First_Loss", "=1000000*Capital_Ratio"],
+           [None, PCT, PCT, PCT2, PCT, PCT2, NUM, EURN, NUM, NUM, NUM, NUM])
+UC.cell(ucr[0], 1, "The usury cap is 24% a year all-in (TEG) for microfinance institutions: interest plus every fee charged to the borrower.").font = F(italic=True, color=GREY)
+ucr[0] += 1
+
+# --- price list and fixed items
+uc_title("Price list and fixed items", "List prices clients pay, and the price of each fixed cost at its year-1 level (later years on Assumptions, section 10).")
+uc_head(["Item", "Unit", "Price", "In FCFA", "In €"])
+conv = lambda r, unit: f"=C{r}" if unit.startswith("FCFA") else (f"=C{r}*FX_USD" if unit.startswith("USD") else (f"=C{r}*FX_EUR" if unit.startswith("€") else None))
+
+
+def price(label, unit, expr, fmt=NUM):
+    vals = [label, unit, "=" + expr]
+    if conv(0, unit):
+        vals += [lambda r, u=unit: conv(r, u), lambda r: f"=D{r}/FX_EUR"]
+    return uc_row(vals, [None, None, fmt, NUM, EUR2])
+
+
+uc_sub("What clients pay")
+for pl in PL3:
+    price(f"Subscription, {pl}", "FCFA / month", f"Price_{pl}")
+price("Extra physical card", "FCFA / card", "Card_Fee")
+price("Fee on foreign-currency card spending", "% of spending", "FX_Fee", PCT)
+price("Supplier payout above the allowance", "FCFA / payout", "Overage_Fee")
+price("Payment link fee (mobile money)", "% of amount", "PL_Fee", PCT)
+price("Credit (factoring, payroll bridge, credit line, advances)", "% / year", "Yield_Line", PCT)
+uc_sub("Technology")
+price("Maak platform lease (option 1)", "€ / year", "IF(Maak_Option=1,Maak_Lease_EUR,0)")
+price("Cloud hosting", "USD / month", "INDEX(Cloud_USD,1,1)")
+price("Transaction monitoring and sanctions screening", "USD / year", "INDEX(Monitoring_USD,1,1)")
+price("Freelance QA, DevOps on-call, design help", "FCFA / year", "INDEX(Freelance,1,1)")
+price("Tech audit", "USD / year", "Tech_Audit_USD")
+price("Website tool", "USD / month", "Website_USD")
+price("Domain name", "USD / year", "Domain_USD")
+price("Claude Enterprise seat", "USD / seat / month", "Claude_USD")
+price("Card processor set-up (once)", "USD", "Proc_Setup_USD")
+price("Card processor monthly minimum", "USD / month", "INDEX(Proc_Min_USD,1,1)")
+uc_sub("Partners")
+price("Partner bank set-up and card programme, Senegal (once)", "FCFA", "Bank_Setup_SN")
+price("Partner bank platform minimum, Senegal", "FCFA / month", "INDEX(Bank_Min_SN,1,1)")
+price("Partner bank set-up, Côte d'Ivoire (once)", "FCFA", "Bank_Setup_CI")
+price("Partner bank platform minimum, Côte d'Ivoire (year 2)", "FCFA / month", "INDEX(Bank_Min_CI,1,2)")
+price("Partner SFD integration (once)", "FCFA", "SFD_Setup")
+price("Partner SFD running fees (year 2)", "FCFA / year", "INDEX(SFD_Annual,1,2)")
+price("Card programme collateral (cash set aside, not a cost)", "FCFA", "Card_Collateral")
+uc_sub("Legal, audit and insurance")
+price("Company set-up, Senegal (once)", "FCFA", "Company_Setup_SN")
+price("Ongoing legal counsel", "FCFA / month", "INDEX(Legal_Counsel,1,1)")
+price("External accountant and tax adviser", "FCFA / month", "INDEX(Accountant_Ext,1,1)")
+price("Statutory auditor", "FCFA / year", "INDEX(Auditor,1,1)")
+price("Data-protection filings", "FCFA / year", "INDEX(Data_Protection,1,1)")
+price("Insurance", "USD / year", "INDEX(Insurance_USD,1,1)")
+uc_sub("Sales, marketing and other")
+price("Digital ads budget, Senegal", "FCFA / month", "INDEX(Digital_SN,1,1)")
+price("Digital ads: cost per signed client", "FCFA / client", "CAC_Digital")
+price("Referral fee to partners", "FCFA / client", "Referral_Fee")
+price("Field sales transport allowance", "FCFA / rep / month", "Rep_Transport")
+price("Brand, launch events, PR", "FCFA / year", "INDEX(Brand_PR,1,1)")
+price("Events, sponsorships, sales materials", "FCFA / year", "INDEX(Events,1,1)")
+price("Travel", "FCFA / year", "INDEX(Travel,1,1)")
+price("Company bank fees and miscellaneous", "FCFA / month", "INDEX(Misc,1,1)")
+price("Recruitment agency fee (senior hire)", "€ / hire", "Agency_Fee_EUR")
+UC.freeze_panes = "B4"
+
+# =====================================================================================
 # REGULATORY PATH (text, stage months linked to the timing inputs)
 # =====================================================================================
 sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
@@ -1402,13 +1585,14 @@ lines = [
     ("Tabs", ""),
     ("Dashboard", "Headline numbers, year-by-year summary and checks."),
     ("Assumptions", "Every hypothesis with its source: timing, acquisition, pricing, usage per client, cost to serve, credit, team and tools, Maak, fixed costs by year, funding."),
-    ("Hiring plan", "Fixed roles, start months and salaries (employer cost = gross + 30% charges)."),
+    ("Unit costs", "What one of each thing costs or earns: one employee by role, one client by plan, one loan, and the price of every fixed item."),
+    ("Hiring plan", "Fixed roles, start months and salaries (employer cost = gross + 30% charges); 'Agency hire' adds the €800 agency fee."),
     ("Staff", "Headcount and employer cost by month: fixed roles plus the team that grows with volume."),
     ("Sales & marketing", "New clients by channel (field sales, partners, digital) and country; marketing budget; cost to acquire a client."),
     ("Clients & revenue", "Active clients by plan, usage (cards, balances, payroll, payouts) and every non-credit revenue line."),
     ("Credit", "Loan book by product, interest, cost of funds, losses and the share kept by Tabax; cash tied up by credit."),
-    ("Costs", "Variable costs, fixed costs by category, capex and depreciation, month by month."),
-    ("P&L monthly", "Revenue, cost of revenue, gross margin, operating expenses, EBITDA, depreciation, tax, net income."),
+    ("Costs", "Variable costs, fixed costs by category and the contingency, month by month."),
+    ("P&L monthly", "Revenue, cost of revenue, gross margin, operating expenses, EBITDA, tax, net income (no depreciation: equipment is expensed)."),
     ("P&L annual", "Years 1–5, cash and funding, operating figures and a euro view."),
     ("Cash flow", "Monthly cash, cash set aside, funding rounds, runway."),
     ("Unit economics", "ARPA, cost to serve, contribution, CAC, payback, lifetime value, efficiency and credit ratios."),
@@ -1441,6 +1625,7 @@ order = ["Cover", "Dashboard", "Assumptions", "Hiring plan"]
 for nm_ in ("Staff", "Sales & marketing", "Clients & revenue", "Credit", "Costs", "P&L monthly"):
     order += [nm_, TWINS[nm_]]
 order += ["P&L annual", "Cash flow", TWINS["Cash flow"], "Unit economics", "Market", "Regulatory path"]
+order.insert(order.index("Hiring plan"), "Unit costs")
 wb._sheets = [wb[n] for n in order]
 for ws in wb.worksheets:
     ws.sheet_view.showGridLines = False if ws.title in ("Cover", "Dashboard") else True

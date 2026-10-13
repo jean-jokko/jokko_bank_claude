@@ -273,9 +273,71 @@ def hiring_html():
         if not hc:
             continue
         rows.append(f'<tr data-comment-target><td class="u">{n}</td><td>{E(dep)}</td><th scope="row">{E(role)}</th><td>{E(cty)}</td><td>{E(cat or "")}</td>'
-                    f'<td>{fmt_num(hc, "int")}</td><td>{st}</td><td>{en or ""}</td><td>{dual(sal, "int", 1, "FCFA")}</td><td>{dual(cost, "int", 1, "FCFA")}</td><td class="note">{E(note or "")}</td></tr>')
-    th = "".join(f'<th scope="col">{h}</th>' for h in ["#", "Department", "Role", "Country", "Category", "People", "Start month", "End month", "Gross salary (FCFA / month)", "Employer cost per person (FCFA / month)", "Note"])
+                    f'<td>{fmt_num(hc, "int")}</td><td>{st}</td><td>{en or ""}</td><td>{E(mgr or "")}</td><td>{dual(sal, "int", 1, "FCFA")}</td><td>{dual(cost, "int", 1, "FCFA")}</td><td class="note">{E(note or "")}</td></tr>')
+    th = "".join(f'<th scope="col">{h}</th>' for h in ["#", "Department", "Role", "Country", "Category", "People", "Start month", "End month", "Agency hire (€800)", "Gross salary (FCFA / month)", "Employer cost per person (FCFA / month)", "Note"])
     return f'<div class="tw"><table class="hp"><thead><tr>{th}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+
+
+def blocks_html(sheet):
+    """Render a sheet made of titled blocks (title row, optional italic subtitle, dark header row, data rows)."""
+    v, f = wv[sheet], wf[sheet]
+    out, rows, cols = [], [], []
+
+    def flush():
+        if rows:
+            th = "".join(f'<th scope="col"{" class=c0" if k == 0 else ""}>{E(h)}</th>' for k, (c, h) in enumerate(cols))
+            out.append(f'<div class="tw"><table class="an uc"><thead><tr>{th}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>')
+            rows.clear()
+
+    def cell(r, c):
+        x = v.cell(r, c).value
+        fm = f.cell(r, c).number_format or ""
+        if x is None or x == "":
+            return ""
+        if isinstance(x, str):
+            return E(x)
+        if "€" in fm:
+            if abs(x) < 0.005:
+                return '<span class="z">–</span>'
+            t = f"{abs(x):,.2f}" if abs(x) < 1000 else f"{abs(x):,.0f}"
+            t = "€" + t.replace(",", NNBSP)
+            return f'<span class="neg">{MINUS}{t}</span>' if x < 0 else t
+        return fmt_num(x, kind_of(fm))
+
+    prev_title = False
+    for r in range(4, v.max_row + 1):
+        a = v.cell(r, 1)
+        font, fill = a.font, a.fill
+        is_head = fill is not None and str(fill.fgColor.rgb).endswith("1F2A44")
+        if is_head:
+            cols = [(c, v.cell(r, c).value) for c in range(1, 16) if v.cell(r, c).value not in (None, "")]
+            prev_title = False
+            continue
+        if a.value is None and all(v.cell(r, c).value is None for c in range(2, 16)):
+            continue
+        if font is not None and font.sz and float(font.sz) >= 12:
+            flush()
+            out.append(f'<h3 data-comment-target>{E(a.value)}</h3>')
+            prev_title = True
+            continue
+        if font is not None and font.i and all(v.cell(r, c).value is None for c in range(2, 16)):
+            if prev_title:
+                out.append(f'<p class="lead">{E(a.value)}</p>')
+            else:
+                flush()
+                out.append(f'<p class="lead small">{E(a.value)}</p>')
+            prev_title = False
+            continue
+        prev_title = False
+        if fill is not None and str(fill.fgColor.rgb).endswith("DCE6F2") and all(v.cell(r, c).value is None for c in range(2, 16)):
+            rows.append(f'<tr class="sec"><th scope="rowgroup" colspan="{len(cols)}">{E(a.value)}</th></tr>')
+            continue
+        bold = bool(font and font.b)
+        tds = "".join((f'<th scope="row">{cell(r, c)}</th>' if k == 0 else f'<td{" class=tx" if c == 2 and isinstance(v.cell(r, c).value, str) and len(v.cell(r, c).value) > 16 else (" class=u" if isinstance(v.cell(r, c).value, str) else "")}>{cell(r, c)}</td>')
+                      for k, (c, h) in enumerate(cols))
+        rows.append(f'<tr data-comment-target{" class=b" if bold else ""}>{tds}</tr>')
+    flush()
+    return "".join(out)
 
 
 def regulatory_html():
@@ -418,7 +480,7 @@ def cash_chart():
 
 # ------------------------------------------------------------------ page
 tabs = [
-    ("overview", "Overview"), ("assumptions", "Assumptions"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("pnlm", "P&L by month"),
+    ("overview", "Overview"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("pnlm", "P&L by month"),
     ("cash", "Cash flow"), ("costs", "Costs"), ("sales", "Sales & marketing"), ("revenue", "Clients & revenue"), ("credit", "Credit"),
     ("staff", "Staff"), ("unit", "Unit economics"), ("market", "Market"), ("regulatory", "Regulatory path"),
 ]
@@ -428,11 +490,12 @@ sections = {
                  f'<h3 data-comment-target>Three scenarios</h3><p class="lead">The scenario switch changes sales productivity, partner and digital acquisition, churn, interchange, the bank income share on balances, credit volumes and credit losses.</p>{scen_html}'
                  f'<h3 data-comment-target>Year by year (FCFA millions, euros underneath)</h3>' + annual_table("Dashboard", cols="DEFGH", head_row=19, first=20, stop_label="Checks", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
     "assumptions": ("Assumptions", "Every input of the model with its source. Values in the 'Value used' column are those of the base scenario.", assumptions_html()),
+    "unitcosts": ("Unit costs", "What one of each thing costs or earns: one employee by role, one business client by plan, one loan, and the price of every fixed item. Every figure comes from the inputs on Assumptions and Hiring plan.", blocks_html("Unit costs")),
     "hiring": ("Hiring plan", f"The fixed roles. Employer cost = gross salary + {nv('Employer_Charges'):.0%} charges. Customer support, developers, field sales reps and credit analysts grow with clients and the loan book: see the Staff tab.", hiring_html()),
     "pnl": ("P&L by year", "FCFA millions, with the euro equivalent under each amount.", annual_table("P&L annual", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
     "pnlm": ("P&L by month", "Thousands of FCFA (k FCFA), with the euro equivalent under each amount. Hover a line name to see its formula.", ts_table("P&L monthly")),
     "cash": ("Cash flow", "Thousands of FCFA, euros underneath. Cash set aside (card collateral, credit reserves, equity in the own SFD's loans) is excluded from closing cash.", ts_table("Cash flow")),
-    "costs": ("Costs", "Every cost line in thousands of FCFA, euros underneath: variable costs, fixed costs by category, capex and depreciation.", ts_table("Costs")),
+    "costs": ("Costs", "Every cost line in thousands of FCFA, euros underneath: variable costs, then fixed costs by category and the 5% contingency.", ts_table("Costs")),
     "sales": ("Sales & marketing", "New clients by channel and country, and the non-staff marketing budget (k FCFA).", ts_table("Sales & marketing")),
     "revenue": ("Clients & revenue", "Active clients by plan, usage and revenue lines except credit (k FCFA).", ts_table("Clients & revenue")),
     "credit": ("Credit", f"Loan book by product and credit income (k FCFA). No loans before month {min(nv('Start_Factoring'), nv('Start_Bridge'))}. A partner SFD lends until month {nv('Own_Funding_Month') - 1}, then Tabax's own SFD in Senegal; Côte d'Ivoire loans stay with a partner.", ts_table("Credit")),
@@ -542,6 +605,8 @@ table.hp th[scope="row"] {{ position: static; }}
 .sc .hl {{ background: var(--hl); font-weight: 600; }}
 tbody tr:hover td, tbody tr:hover th[scope="row"] {{ background: var(--hl); }}
 .stage {{ margin-top: 28px; }}
+table.uc td.tx {{ text-align: left; white-space: normal; min-width: 220px; max-width: 320px; color: var(--muted); font-size: 12px; }}
+.lead.small {{ font-size: 12px; margin-top: 6px; }}
 .stage h3 {{ margin: 0; }}
 .stage .when {{ font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 2px; }}
 .stage p {{ margin: 6px 0 10px; max-width: 85ch; }}
