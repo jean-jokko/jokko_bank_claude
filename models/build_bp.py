@@ -1,4 +1,4 @@
-"""Tabax business plan: a formula-driven Excel model (5 years, monthly)."""
+"""Kelen business plan: a formula-driven Excel model (5 years, monthly)."""
 import datetime, sys
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -15,7 +15,9 @@ FONT = "Arial"
 BLUE, GREEN, BLACK, WHITE, GREY = "0000FF", "008000", "000000", "FFFFFF", "595959"
 F = lambda bold=False, color=BLACK, size=10, italic=False: Font(name=FONT, bold=bold, color=color, size=size, italic=italic)
 FILL = lambda c: PatternFill("solid", fgColor=c)
-IN_FILL, HEAD_FILL, SEC_FILL, TOT_FILL, KEY_FILL = FILL("FFF6D5"), FILL("1F2A44"), FILL("DCE6F2"), FILL("F2F2F2"), FILL("FFFF00")
+# Kelen brand: teal 0D7377 headers, its 12% tint for section rows, the app's light neutral for totals. Inputs keep blue on cream.
+TEAL, INK = "0D7377", "0F1114"
+IN_FILL, HEAD_FILL, SEC_FILL, TOT_FILL, KEY_FILL = FILL("FFF6D5"), FILL(TEAL), FILL("E2EEEF"), FILL("F2F3F5"), FILL("FFFF00")
 NUM = '#,##0;(#,##0);"-"'
 NUM1 = '#,##0.0;(#,##0.0);"-"'
 PCT = '0.0%;(0.0%);"-"'
@@ -36,7 +38,7 @@ def equiv(unit, ref):
     if u.startswith("€"):
         return f"={ref}*FX_EUR", FCFA_F
     return None, None
-THIN = Side(style="thin", color="BFBFBF")
+THIN = Side(style="thin", color="D5D8DD")
 NM, C0 = 60, 5
 COLS = [CL(C0 + i) for i in range(NM)]
 FC, LC = COLS[0], COLS[-1]
@@ -58,7 +60,7 @@ def style(cell, fmt=None, bold=False, color=BLACK, fill=None, italic=False, alig
 
 def title(ws, text, desc):
     ws["A1"] = text
-    ws["A1"].font = F(bold=True, size=14)
+    ws["A1"].font = F(bold=True, size=14, color=TEAL)
     ws["A2"] = desc
     ws["A2"].font = F(italic=True, color=GREY)
 
@@ -152,7 +154,7 @@ a_in("CI_Office_Start", "Abidjan office (Regus) and first Côte d'Ivoire hires",
 a_in("PayLinks_Start", "Payment links go live", 18, "month #", "0", "'Bientôt' feature in the app.")
 a_in("EmpAcc_Start", "B2C launch: employee salary accounts and personal accounts", 29, "month #", "0", "Not before 2 years of commercial activity: Senegal launch + 24 months (decision).")
 a_in("SFD_Acq_Month", "Acquisition of a microfinance company (SFD) closes", 24, "month #", "0", "Around year 2 (decision). Due diligence and the change-of-control approval run during year 2.")
-a_in("Own_Funding_Month", "Own SFD lends from", 25, "month #", "0", "Before this month the partner SFD lends and Tabax keeps a share of the margin. Côte d'Ivoire loans stay with a partner: SFD licences are national.")
+a_in("Own_Funding_Month", "Own SFD lends from", 25, "month #", "0", "Before this month the partner SFD lends and Kelen keeps a share of the margin. Côte d'Ivoire loans stay with a partner: SFD licences are national.")
 a_in("Collateral_Month", "Card programme collateral at partner bank", 4, "month #", "0", "")
 a_in("Bank_Setup_Month", "Partner bank set-up fee paid, Senegal", 2, "month #", "0", "")
 a_in("CI_Bank_Setup_Month", "Partner bank set-up fee paid, Côte d'Ivoire", 16, "month #", "0", "")
@@ -228,9 +230,9 @@ a_in("Cards_Act_Grande", "Active cards (physical + virtual), Grande", 15, "cards
 a_in("PL_Coll_Petite", "Payment link collections, Petite (users)", 800000, "FCFA / month", NUM, "")
 a_in("PL_Coll_Moyenne", "Payment link collections, Moyenne (users)", 3000000, "FCFA / month", NUM, "")
 a_in("PL_Coll_Grande", "Payment link collections, Grande (users)", 10000000, "FCFA / month", NUM, "")
-a_in("Avg_Salary", "Average monthly salary paid through Tabax", 200000, "FCFA", NUM, "SME average; the formal-sector average is higher (about 380,000 FCFA).")
+a_in("Avg_Salary", "Average monthly salary paid through Kelen", 200000, "FCFA", NUM, "SME average; the formal-sector average is higher (about 380,000 FCFA).")
 a_in("Wallet_Share", "Share of salaries paid to mobile money wallets", 0.60, "%", PCT, "Senegal: 20.1% of adults receive wages on a phone vs 12.0% in an account (Global Findex 2025).")
-a_in("EmpAcc_Adoption", "Employees who open a Tabax salary account", 0.20, "%", PCT, "")
+a_in("EmpAcc_Adoption", "Employees who open a Kelen salary account", 0.20, "%", PCT, "")
 
 a_sec("6. Cost to serve (variable costs)")
 a_in("Bank_Fee", "Partner bank fee per business account", 3000, "FCFA / month", NUM, "2,000–5,000 FCFA (estimate; replace with the term sheet).")
@@ -279,7 +281,7 @@ a_in("Yield_Advance", "Salary advances: yield", 0.23, "% / year", PCT, "")
 a_in("CoR_Advance", "Salary advances: cost of risk", 0.015, "% / year", PCT2, "")
 a_in("CoF", "Cost of funds", 0.09, "% / year", PCT, "8–10% (DFI lines, local debt).")
 a_in("Servicing", "External servicing and collections", 0.01, "% / year", PCT, "Credit staff are in the hiring plan.")
-a_in("Partner_Share", "Tabax share of the net margin while the partner SFD funds", 0.50, "%", PCT, "Negotiated; Tabax provides first-loss cover.")
+a_in("Partner_Share", "Kelen share of the net margin while the partner SFD funds", 0.50, "%", PCT, "Negotiated; Kelen provides first-loss cover.")
 a_in("First_Loss", "First-loss cash reserve (partner phase)", 0.10, "% of book", PCT, "")
 a_in("Capital_Ratio", "Equity needed per FCFA lent (own SFD phase)", 0.15, "% of book", PCT, "The rest funded by debt lines (not modelled in the P&L except the cost of funds).")
 
@@ -319,9 +321,9 @@ a_in("Website_USD", "Website builder", 25, "USD / month", NUM, "Decision: the gr
 a_in("Domain_USD", "Domain name", 20, "USD / year", NUM, "")
 
 a_sec("9. Technology from Maak (group company)")
-a_in("Maak_Option", "Deal with Maak (1 = lease, 2 = equity)", 1, "option", "0", "1: Tabax pays a yearly lease, lease-to-own. 2: Maak takes a small stake in Tabax instead and there is no lease cost. Either way, adapting the platform to Tabax is included.")
-a_in("Maak_Lease_EUR", "Lease of Maak's platform (option 1)", 70000, "€ / year", NUM, "Decision: about 70k a year, paid monthly from month 1. Includes adapting the platform to Tabax's products.")
-a_in("Maak_Equity_Pct", "Maak's stake in Tabax (option 2)", 0.05, "% of Tabax", PCT, "Assumption for 'a small %'. No cash cost; shown on the Dashboard.")
+a_in("Maak_Option", "Deal with Maak (1 = lease, 2 = equity)", 1, "option", "0", "1: Kelen pays a yearly lease, lease-to-own. 2: Maak takes a small stake in Kelen instead and there is no lease cost. Either way, adapting the platform to Kelen is included.")
+a_in("Maak_Lease_EUR", "Lease of Maak's platform (option 1)", 70000, "€ / year", NUM, "Decision: about 70k a year, paid monthly from month 1. Includes adapting the platform to Kelen's products.")
+a_in("Maak_Equity_Pct", "Maak's stake in Kelen (option 2)", 0.05, "% of Kelen", PCT, "Assumption for 'a small %'. No cash cost; shown on the Dashboard.")
 a_in("Tech_Audit_USD", "Tech audit", 10000, "USD", NUM, "Reference price (decision). Before launch, then once a year.")
 
 a_sec("10. Fixed costs by year", kind="arr")
@@ -330,7 +332,7 @@ arow[0] += 1
 a_arr("Cloud_USD", "Cloud hosting", [3000, 5000, 8000, 10000, 12000], "USD / month", NUM, "Check whether Maak's lease includes hosting. No AWS/GCP region in WAEMU; CDP authorisation for data abroad.")
 a_arr("Monitoring_USD", "Transaction monitoring and sanctions screening", [6000, 15000, 30000, 40000, 50000], "USD / year", NUM, "")
 a_arr("Freelance", "Freelance QA testing and DevOps on-call", [7900000, 9800000, 5900000, 5900000, 5900000], "FCFA / year", NUM, "Design is done in-house with Claude Design (decision). About €12k in year 1, €15k in year 2, then €9k a year.")
-a_arr("Proc_Min_USD", "Card processor monthly minimum", [5000, 5000, 7500, 10000, 12000], "USD / month", NUM, "Tabax pays the higher of this minimum and the per-card fees.")
+a_arr("Proc_Min_USD", "Card processor monthly minimum", [5000, 5000, 7500, 10000, 12000], "USD / month", NUM, "Kelen pays the higher of this minimum and the per-card fees.")
 r_proc = arow[0]
 A.cell(r_proc, 2, "Card processor set-up fee (one-off)").font = F()
 A.cell(r_proc, 3, "USD").font = F(color=GREY)
@@ -421,7 +423,7 @@ HIRES = [
     ("Marketing", "Marketing manager (senior)", "SN", "", 1, 4, None, 900000, "N", "Prepares the launch; runs digital ads and partnerships."),
     ("Marketing", "Marketing officer (junior)", "SN", "", 1, 5, None, 400000, "N", "Content, social media, events."),
     ("Leadership", "Country manager, Abidjan", "CI", "", 1, "=CI_Office_Start", None, 2800000, "Y", "Joins when the Abidjan office opens."),
-    ("Compliance & risk", "Compliance officer (AML/CFT)", "SN", "", 1, "=SFD_Acq_Month", None, 1500000, "Y", "Required once Tabax holds its own licence (SFD)."),
+    ("Compliance & risk", "Compliance officer (AML/CFT)", "SN", "", 1, "=SFD_Acq_Month", None, 1500000, "Y", "Required once Kelen holds its own licence (SFD)."),
 ]
 SPARE = 20
 H0 = 5
@@ -668,7 +670,7 @@ R.line("cards_active", "Active cards", lambda c, p, i: f"={mix3(c, 'Cards_Act')}
 R.line("spend_dom", "Card spending in FCFA", lambda c, p, i: f"={mix3(c, 'Spend_Dom')}")
 R.line("spend_for", "Card spending in foreign currencies", lambda c, p, i: f"={mix3(c, 'Spend_For')}")
 R.line("balances", "Client balances (average)", lambda c, p, i: f"={mix3(c, 'Balance')}", total="last")
-R.line("payroll", "Salaries paid through Tabax", lambda c, p, i: f"={c}{R.k['employees']}*Avg_Salary")
+R.line("payroll", "Salaries paid through Kelen", lambda c, p, i: f"={c}{R.k['employees']}*Avg_Salary")
 R.line("supplier", "Supplier payouts", lambda c, p, i: f"={mix3(c, 'Supplier')}", unit="payouts")
 R.line("overage", "Supplier payouts above the allowance", lambda c, p, i: f"={mix3(c, 'Overage')}", unit="payouts")
 R.line("pl_adopt", "Payment links: share of clients using them", lambda c, p, i: f"=IF({c}$3>=PayLinks_Start,MIN(1,({c}$3-PayLinks_Start+1)/PL_Ramp)*PL_Adoption,0)", unit="%", fmt=PCT, total=None)
@@ -689,7 +691,7 @@ R.line("rev_total", "Revenue excluding credit", lambda c, p, i: f"={c}{R.k['rev_
 # =====================================================================================
 # CREDIT
 # =====================================================================================
-K = TS("Credit", "Loan book by product, interest, cost of funds, losses and the share Tabax keeps. A partner SFD lends until Tabax's own SFD (Senegal) takes over; Côte d'Ivoire loans stay with a partner.")
+K = TS("Credit", "Loan book by product, interest, cost of funds, losses and the share Kelen keeps. A partner SFD lends until Kelen's own SFD (Senegal) takes over; Côte d'Ivoire loans stay with a partner.")
 K.sec("Base")
 K.line("act", "Active clients", lambda c, p, i: f"={R.ref('act_total', c)}", unit="clients", total="last", color=GREEN)
 K.line("emp", "Employee salary accounts", lambda c, p, i: f"={R.ref('emp_acc', c)}", unit="accounts", total="last", color=GREEN)
@@ -714,8 +716,8 @@ K.line("losses", "Credit losses", lambda c, p, i: "=-(" + "+".join(f"{c}{K.k['av
 K.line("servicing", "External servicing and collections", lambda c, p, i: f"=-{c}{K.k['avg']}*Servicing/12")
 K.line("margin", "Net credit margin", lambda c, p, i: f"=SUM({c}{K.k['interest']}:{c}{K.k['servicing']})", bold=True)
 K.line("sn_part", "Senegal share of clients (own SFD lends there only)", lambda c, p, i: f"=IFERROR({R.ref('act_sn', c)}/({R.ref('act_sn', c)}+{R.ref('act_ci', c)}),1)", unit="%", fmt=PCT, total=None)
-K.line("share", "Share of the margin kept by Tabax", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,{c}{K.k['sn_part']}+(1-{c}{K.k['sn_part']})*Partner_Share,Partner_Share)", unit="%", fmt=PCT, total=None)
-K.line("net", "Net credit income to Tabax", lambda c, p, i: f"={c}{K.k['margin']}*{c}{K.k['share']}", bold=True)
+K.line("share", "Share of the margin kept by Kelen", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,{c}{K.k['sn_part']}+(1-{c}{K.k['sn_part']})*Partner_Share,Partner_Share)", unit="%", fmt=PCT, total=None)
+K.line("net", "Net credit income to Kelen", lambda c, p, i: f"={c}{K.k['margin']}*{c}{K.k['share']}", bold=True)
 K.sec("Cash tied up by credit")
 K.line("locked", "First-loss reserve (partner loans) and equity in the own SFD's loans", lambda c, p, i: f"=IF({c}$3>=Own_Funding_Month,{c}{K.k['book']}*({c}{K.k['sn_part']}*Capital_Ratio+(1-{c}{K.k['sn_part']})*First_Loss),{c}{K.k['book']}*First_Loss)", total="last")
 
@@ -1134,7 +1136,7 @@ for r in range(6, urow[0]):
 # MARKET
 # =====================================================================================
 MK = wb.create_sheet("Market")
-title(MK, "Market", "How many companies Tabax can serve, and the share of them the plan reaches. Blue cells are inputs with their sources.")
+title(MK, "Market", "How many companies Kelen can serve, and the share of them the plan reaches. Blue cells are inputs with their sources.")
 MK.column_dimensions["A"].width = 60
 MK.column_dimensions["B"].width = 16
 MK.column_dimensions["C"].width = 3
@@ -1189,21 +1191,21 @@ mk_in("sn_growth", "Growth in formal employers", 0.049, "% / year", PCT, "2023 �
 mk_in("sn_staff", "Declared private-sector employees (IPRES, 2024)", 577171, "people", NUM, "Same source. Base for employee salary accounts.")
 mk_in("sn_new", "New companies registered a year (APIX)", 26000, "companies / year", NUM, "AllAfrica / APS, Sep 2025.")
 mk_in("sn_units", "Economic units (ANSD census 2016, 97% informal)", 407882, "units", NUM, "ANSD RGE 2016. A new census (RGE-2) is under way, results 2027–28.")
-mk_in("sn_target", "Share of formal employers in Tabax's target (2–500 staff, urban, digital)", 0.50, "%", PCT, "Assumption. Core target: Dakar, Thiès, Saint-Louis.")
+mk_in("sn_target", "Share of formal employers in Kelen's target (2–500 staff, urban, digital)", 0.50, "%", PCT, "Assumption. Core target: Dakar, Thiès, Saint-Louis.")
 mk_head("Côte d'Ivoire: inputs")
 mk_in("ci_emp", "Formal employers (estimate)", 60000, "companies", NUM, "ESTIMATE: no published CNPS count of contributing employers was found. About 1.5× Senegal, as Côte d'Ivoire's economy is about twice as large. Replace with the CNPS annual report.")
 mk_in("ci_growth", "Growth in formal employers", 0.05, "% / year", PCT, "Assumption.")
 mk_in("ci_new", "New companies created a year (CEPICI, 2025)", 26948, "companies / year", NUM, "CEPICI 2025 review (Feb 2026): 26,948 companies created, +6%. https://fr.allafrica.com/stories/202602200240.html")
-mk_in("ci_target", "Share of formal employers in Tabax's target", 0.50, "%", PCT, "Assumption. Core target: Abidjan.")
+mk_in("ci_target", "Share of formal employers in Kelen's target", 0.50, "%", PCT, "Assumption. Core target: Abidjan.")
 mk_head("Addressable market and plan penetration (end of year)", years=True)
 start_year = 2024
 mk_y("sn_market", "Senegal: formal employers", lambda col, y: f"=$D${MKK['sn_emp']}*(1+$D${MKK['sn_growth']})^(YEAR(Start_Date)+{y - 1}-{start_year})", "companies")
 mk_y("sn_sam", "Senegal: target companies (serviceable market)", lambda col, y: f"={col}{MKK['sn_market']}*$D${MKK['sn_target']}", "companies", bold=True)
-mk_y("sn_clients", "Senegal: Tabax active clients", lambda col, y: f"='P&L annual'!{col}{YK['clients_sn']}", "clients")
+mk_y("sn_clients", "Senegal: Kelen active clients", lambda col, y: f"='P&L annual'!{col}{YK['clients_sn']}", "clients")
 mk_y("sn_share", "Senegal: share of target companies", lambda col, y: f"=IFERROR({col}{MKK['sn_clients']}/{col}{MKK['sn_sam']},0)", "%", fmt=PCT, bold=True)
 mk_y("ci_market", "Côte d'Ivoire: formal employers", lambda col, y: f"=$D${MKK['ci_emp']}*(1+$D${MKK['ci_growth']})^(YEAR(Start_Date)+{y - 1}-{start_year})", "companies")
 mk_y("ci_sam", "Côte d'Ivoire: target companies (serviceable market)", lambda col, y: f"={col}{MKK['ci_market']}*$D${MKK['ci_target']}", "companies", bold=True)
-mk_y("ci_clients", "Côte d'Ivoire: Tabax active clients", lambda col, y: f"='P&L annual'!{col}{YK['clients_ci']}", "clients")
+mk_y("ci_clients", "Côte d'Ivoire: Kelen active clients", lambda col, y: f"='P&L annual'!{col}{YK['clients_ci']}", "clients")
 mk_y("ci_share", "Côte d'Ivoire: share of target companies", lambda col, y: f"=IFERROR({col}{MKK['ci_clients']}/{col}{MKK['ci_sam']},0)", "%", fmt=PCT, bold=True)
 mk_y("emp_share", "Employee salary accounts vs declared employees in Senegal", lambda col, y: f"=IFERROR('P&L annual'!{col}{YK['emp_acc']}/$D${MKK['sn_staff']},0)", "%", fmt=PCT2)
 mk_head("Revenue pool today (indicative)")
@@ -1221,7 +1223,7 @@ mrow[0] += 1
 # DASHBOARD
 # =====================================================================================
 D = wb.create_sheet("Dashboard")
-title(D, "Tabax business plan: dashboard", "Key results for the scenario selected on Assumptions. FCFA in columns B–H, euros in column D (headline) and J–N (year by year).")
+title(D, "Kelen business plan: dashboard", "Key results for the scenario selected on Assumptions. FCFA in columns B–H, euros in column D (headline) and J–N (year by year).")
 D.column_dimensions["A"].width = 48
 D.column_dimensions["B"].width = 18
 D.column_dimensions["C"].width = 3
@@ -1260,7 +1262,7 @@ for r_ in (13, 15):
     style(D.cell(r_, 4), fmt=EURN, bold=True)
 D["E13"] = '=IF(B13<0,"Cash goes negative: raise more or earlier (Assumptions, section 11)","OK: cash stays positive")'
 for r_, lab, fml, fm in ((16, "Technology from Maak", '=IF(Maak_Option=1,"Lease (option 1)","Equity stake (option 2)")', None),
-                         (17, "   Maak's stake in Tabax", "=IF(Maak_Option=2,Maak_Equity_Pct,0)", PCT)):
+                         (17, "   Maak's stake in Kelen", "=IF(Maak_Option=2,Maak_Equity_Pct,0)", PCT)):
     D.cell(r_, 1, lab).font = F()
     D.cell(r_, 2, fml)
     style(D.cell(r_, 2), fmt=fm, bold=True)
@@ -1349,6 +1351,13 @@ cc.add_data(Reference(Q.ws, min_col=C0, max_col=C0 + NM - 1, min_row=Q.k["close"
 cc.series[0].tx = SeriesLabel(v="Closing cash")
 cc.set_categories(Reference(Q.ws, min_col=C0, max_col=C0 + NM - 1, min_row=3, max_row=3))
 D.add_chart(cc, "P38")
+for chart_, colours in ((ch, (TEAL, "9AA3AF", INK)), (lc, (TEAL,)), (cc, (TEAL,))):
+    for ser, col in zip(chart_.series, colours):
+        ser.graphicalProperties.solidFill = col
+        ser.graphicalProperties.line.solidFill = col
+        if chart_ is not ch:
+            ser.graphicalProperties.line.width = 28575
+            ser.smooth = False
 
 # =====================================================================================
 # UNIT COSTS AND PRICES: what one employee, one client, one loan and each fixed item cost or earn
@@ -1365,7 +1374,7 @@ ucr = [4]
 
 def uc_title(text, sub=""):
     ucr[0] += 1
-    UC.cell(ucr[0], 1, text).font = F(bold=True, size=12)
+    UC.cell(ucr[0], 1, text).font = F(bold=True, size=12, color=TEAL)
     ucr[0] += 1
     if sub:
         UC.cell(ucr[0], 1, sub).font = F(italic=True, color=GREY)
@@ -1481,9 +1490,9 @@ cli("Referral fee (partner-channel clients only)", "Fee paid to the accountant o
 cli("Subscription given away (free months)", "Free months × plan price", "Free_Months*Price_{P}")
 
 # --- one loan
-uc_title("One loan: 1,000,000 FCFA lent for a year", "Net margin after cost of funds, credit losses and servicing; what Tabax keeps with the partner SFD and with its own SFD; cash Tabax must lock up.")
-uc_head(["Product", "Yield", "Cost of funds", "Credit losses", "Servicing", "Net margin", "Net margin a year", "Tabax keeps, partner phase",
-         "Tabax keeps, own SFD", "Cash locked, partner phase", "Cash locked, own SFD"])
+uc_title("One loan: 1,000,000 FCFA lent for a year", "Net margin after cost of funds, credit losses and servicing; what Kelen keeps with the partner SFD and with its own SFD; cash Kelen must lock up.")
+uc_head(["Product", "Yield", "Cost of funds", "Credit losses", "Servicing", "Net margin", "Net margin a year", "Kelen keeps, partner phase",
+         "Kelen keeps, own SFD", "Cash locked, partner phase", "Cash locked, own SFD"])
 for pk, lab, *_ in PRODS:
     uc_row([lab, f"=Yield_{pk}", "=CoF", f"=CoR_{pk}*CoR_Mult", "=Servicing", lambda r: f"=B{r}-C{r}-D{r}-E{r}", lambda r: f"=F{r}*1000000",
             lambda r: f"=G{r}*Partner_Share", lambda r: f"=G{r}", "=1000000*First_Loss", "=1000000*Capital_Ratio"],
@@ -1595,8 +1604,8 @@ CV = wb.create_sheet("Cover")
 CV.column_dimensions["A"].width = 3
 CV.column_dimensions["B"].width = 30
 CV.column_dimensions["C"].width = 110
-CV["B2"] = "Tabax (working name): business plan model"
-CV["B2"].font = F(bold=True, size=16)
+CV["B2"] = "Kelen: business plan model"
+CV["B2"].font = F(bold=True, size=16, color=TEAL)
 CV["B3"] = "B2B neobank for SMEs in Senegal, then Côte d'Ivoire. Five years, monthly, every figure driven by formulas."
 CV["B3"].font = F(italic=True, color=GREY)
 lines = [
@@ -1614,7 +1623,7 @@ lines = [
     ("Staff", "Headcount and employer cost by month: fixed roles plus the team that grows with volume."),
     ("Sales & marketing", "New clients by channel (field sales, partners, digital) and country; marketing budget; cost to acquire a client."),
     ("Clients & revenue", "Active clients by plan, usage (cards, balances, payroll, payouts) and every non-credit revenue line."),
-    ("Credit", "Loan book by product, interest, cost of funds, losses and the share kept by Tabax; cash tied up by credit."),
+    ("Credit", "Loan book by product, interest, cost of funds, losses and the share kept by Kelen; cash tied up by credit."),
     ("Costs", "Variable costs, fixed costs by category and the contingency, month by month."),
     ("P&L monthly", "Revenue, cost of revenue, gross margin, operating expenses, EBITDA, tax, net income (no depreciation: equipment is expensed)."),
     ("P&L annual", "Years 1–5, cash and funding, operating figures and a euro view."),
@@ -1633,8 +1642,8 @@ lines = [
     ("Estimates to replace", "Partner bank fees, card processor fees and minimums, interchange, the deposit income share, the changes to Maak's platform, the SFD acquisition price and running costs, insurance and the cost of wallet payouts have no public price. Replace them with term sheets and quotes."),
     ("Taxes", "Amounts exclude VAT and the 17% tax on financial activities (TAF), which apply to fees. Corporate tax is simplified (30%, losses carried forward without limit)."),
     ("Côte d'Ivoire", "Same 30% employer charges as Senegal; the number of formal employers is an estimate."),
-    ("Credit", "No loans before month 18. A partner microfinance institution (SFD) lends at 23% a year, under the 24% SFD usury cap. Tabax buys an SFD around month 24 and lends from it in Senegal; Côte d'Ivoire loans stay with a partner. The loan book is funded by debt lines, not equity."),
-    ("Licences", "Tabax holds no licence of its own until the SFD acquisition: partners hold the accounts, cards and loans. See Regulatory path."),
+    ("Credit", "No loans before month 18. A partner microfinance institution (SFD) lends at 23% a year, under the 24% SFD usury cap. Kelen buys an SFD around month 24 and lends from it in Senegal; Côte d'Ivoire loans stay with a partner. The loan book is funded by debt lines, not equity."),
+    ("Licences", "Kelen holds no licence of its own until the SFD acquisition: partners hold the accounts, cards and loans. See Regulatory path."),
     ("Sources", "Business model v2, Cost breakdown in euros, Senegal launch plan and the research notes in this project, plus IPRES/ANSD 2024 and CEPICI 2025 for the market."),
 ]
 for j, (a, b) in enumerate(lines):
@@ -1653,6 +1662,7 @@ order.insert(order.index("Hiring plan"), "Unit costs")
 wb._sheets = [wb[n] for n in order]
 for ws in wb.worksheets:
     ws.sheet_view.showGridLines = False if ws.title in ("Cover", "Dashboard") else True
+    ws.sheet_properties.tabColor = TEAL
 wb.active = 0
 wb.save(OUT)
 print("saved", OUT)

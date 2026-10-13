@@ -1,4 +1,4 @@
-"""Render the Tabax business plan workbook as one commentable artifact page (values + formulas)."""
+"""Render the Kelen business plan workbook as one commentable artifact page (values + formulas)."""
 import base64, datetime, html, sys
 from openpyxl import load_workbook
 
@@ -500,7 +500,7 @@ tabs = [
     ("staff", "Staff"), ("unit", "Unit economics"), ("market", "Market"), ("regulatory", "Regulatory path"),
 ]
 sections = {
-    "overview": ("Overview", f"Base scenario. Five years from {nv('Start_Date'):%B %Y}, Senegal first, Côte d'Ivoire from month {nv('Launch_CI')}. Partners hold the licences until Tabax buys a microfinance company (SFD) in month {nv('SFD_Acq_Month')}.",
+    "overview": ("Overview", f"Base scenario. Five years from {nv('Start_Date'):%B %Y}, Senegal first, Côte d'Ivoire from month {nv('Launch_CI')}. Partners hold the licences until Kelen buys a microfinance company (SFD) in month {nv('SFD_Acq_Month')}.",
                  f'<div class="kpis">{kpi_html}</div><div class="charts">{bar_chart()}{cash_chart()}</div>'
                  f'<h3 data-comment-target>Three scenarios</h3><p class="lead">The scenario switch changes sales productivity, partner and digital acquisition, churn, interchange, the bank income share on balances, credit volumes and credit losses.</p>{scen_html}'
                  f'<h3 data-comment-target>Year by year (FCFA millions, euros underneath)</h3>' + annual_table("Dashboard", cols="DEFGH", head_row=19, first=20, stop_label="Checks", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
@@ -513,7 +513,7 @@ sections = {
     "costs": ("Costs", "Every cost line in thousands of FCFA, euros underneath: variable costs, then fixed costs by category and the 5% contingency.", ts_table("Costs")),
     "sales": ("Sales & marketing", "New clients by channel and country, and the non-staff marketing budget (k FCFA).", ts_table("Sales & marketing")),
     "revenue": ("Clients & revenue", "Active clients by plan, usage and revenue lines except credit (k FCFA).", ts_table("Clients & revenue")),
-    "credit": ("Credit", f"Loan book by product and credit income (k FCFA). No loans before month {min(nv('Start_Factoring'), nv('Start_Bridge'))}. A partner SFD lends until month {nv('Own_Funding_Month') - 1}, then Tabax's own SFD in Senegal; Côte d'Ivoire loans stay with a partner.", ts_table("Credit")),
+    "credit": ("Credit", f"Loan book by product and credit income (k FCFA). No loans before month {min(nv('Start_Factoring'), nv('Start_Bridge'))}. A partner SFD lends until month {nv('Own_Funding_Month') - 1}, then Kelen's own SFD in Senegal; Côte d'Ivoire loans stay with a partner.", ts_table("Credit")),
     "staff": ("Staff", "The team that grows with volume (support per client, developers per client, field reps per client in each country, credit analysts per loan book), then headcount and employer cost by department (k FCFA).", ts_table("Staff", from_label="Team that grows with volume")),
     "unit": ("Unit economics", "Per-client economics and efficiency ratios by year.", annual_table("Unit economics", cols="DEFGH", first=6)),
     "regulatory": ("Regulatory path", "What each stage of the plan needs from regulators in the WAEMU (BCEAO zone), Senegal and Côte d'Ivoire, and where its cost sits in the model.", regulatory_html()),
@@ -528,68 +528,74 @@ panels = "".join(
 xlsx_b64 = base64.b64encode(open(XLSX, "rb").read()).decode()
 today = datetime.date.today().strftime("%d %B %Y").lstrip("0")
 
-page = f"""<title>Tabax Business Plan</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+page = f"""<title>Kelen Business Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap">
 <style>
 /* Layout: a working financial file. Header with the five numbers that matter, tabs mirroring the Excel sheets, wide tables that scroll inside their own frame with a sticky first column. */
+/* Kelen V5 teal: the app's light neutrals, glass cards with a white edge, teal for actions and the active tab, Geist throughout. */
 :root {{
-  --bg: #F6F7F9; --surface: #FFFFFF; --ink: #161616; --muted: #5A6170; --line: #E3E6EB; --soft: #EEF1F5;
-  --accent: #6FB6EE; --accent-ink: #1C5F96; --neg: #B42318; --hl: #E8F3FC;
-  --ok: #1E7F3C; --okbg: #DDF0E1; --tbc: #8A5A00; --tbcbg: #FFF1D6;
-  --display: 'Epilogue', 'Helvetica Neue', Arial, sans-serif; --body: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --bg: #F2F3F5; --surface: #FFFFFF; --card: rgba(255,255,255,0.72); --edge: #FFFFFF; --shadow: 0 6px 16px rgba(15,17,20,0.05);
+  --ink: #0F1114; --muted: #5E6470; --line: #E6E8EC; --soft: #F6F7F8;
+  --accent: #0D7377; --on-accent: #FFFFFF; --accent-ink: #0D7377; --bar: #0D7377; --input: #2453D6; --neg: #B42318; --hl: #E2EEEF;
+  --ok: #12804E; --okbg: #E0F2E8; --tbc: #8A5A00; --tbcbg: #FFF1D6;
+  --display: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif; --body: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{
-  --bg: #0F1216; --surface: #161A20; --ink: #ECEFF3; --muted: #9AA3AF; --line: #2A3038; --soft: #1C2128;
-  --accent: #6FB6EE; --accent-ink: #8FC9F5; --neg: #FF8A80; --hl: #17283A;
+  --bg: #0E1114; --surface: #171B20; --card: #171B20; --edge: rgba(255,255,255,0.06); --shadow: none;
+  --ink: #ECEFF3; --muted: #9AA3AF; --line: #262C34; --soft: #1C2128;
+  --accent: #0D7377; --on-accent: #FFFFFF; --accent-ink: #5CC8C2; --bar: #2AA7A3; --input: #8FB0FF; --neg: #FF8A80; --hl: #13302F;
   --ok: #8FD6A3; --okbg: #17301F; --tbc: #F5C76B; --tbcbg: #3A2D12; color-scheme: dark; }} }}
 :root[data-theme="dark"] {{
-  --bg: #0F1216; --surface: #161A20; --ink: #ECEFF3; --muted: #9AA3AF; --line: #2A3038; --soft: #1C2128;
-  --accent: #6FB6EE; --accent-ink: #8FC9F5; --neg: #FF8A80; --hl: #17283A;
+  --bg: #0E1114; --surface: #171B20; --card: #171B20; --edge: rgba(255,255,255,0.06); --shadow: none;
+  --ink: #ECEFF3; --muted: #9AA3AF; --line: #262C34; --soft: #1C2128;
+  --accent: #0D7377; --on-accent: #FFFFFF; --accent-ink: #5CC8C2; --bar: #2AA7A3; --input: #8FB0FF; --neg: #FF8A80; --hl: #13302F;
   --ok: #8FD6A3; --okbg: #17301F; --tbc: #F5C76B; --tbcbg: #3A2D12; color-scheme: dark; }}
-body {{ background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }}
+body {{ background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }}
 .wrap {{ max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }}
 header.top {{ display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-end; justify-content: space-between; }}
-.eyebrow {{ font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }}
-.eyebrow i {{ width: 10px; height: 10px; border-radius: 3px; background: var(--accent); box-shadow: inset 0 0 0 2px var(--ink); }}
-h1 {{ font-family: var(--display); font-weight: 800; font-size: clamp(26px, 4vw, 38px); letter-spacing: -.02em; margin: 6px 0 4px; text-wrap: balance; }}
+.eyebrow {{ font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
+.mark {{ display: inline-flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.2px; text-transform: none; color: var(--ink); }}
+.mark i {{ width: 9px; height: 9px; border-radius: 5px; background: var(--accent); }}
+h1 {{ font-family: var(--display); font-weight: 600; font-size: clamp(26px, 4vw, 38px); letter-spacing: -.025em; margin: 10px 0 4px; text-wrap: balance; }}
 .sub {{ color: var(--muted); margin: 0; max-width: 70ch; }}
 .actions {{ display: flex; gap: 8px; flex-wrap: wrap; }}
-.btn {{ font: inherit; font-weight: 600; border: 1.5px solid var(--ink); background: var(--accent); color: #161616; border-radius: 20px; height: 38px; padding: 0 16px; cursor: pointer; }}
-.btn.ghost {{ background: var(--surface); color: var(--ink); border-color: var(--line); }}
+.btn {{ font: inherit; font-weight: 600; border: 0; background: var(--accent); color: var(--on-accent); border-radius: 22px; height: 44px; padding: 0 20px; cursor: pointer; }}
+.btn.ghost {{ background: var(--card); color: var(--ink); border: 1px solid var(--edge); box-shadow: var(--shadow); }}
 .btn:focus-visible, nav button:focus-visible, .cbtn:focus-visible {{ outline: 3px solid var(--accent); outline-offset: 2px; }}
 .status {{ font-size: 13px; color: var(--muted); min-height: 1.2em; }}
 nav.tabs {{ position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); margin-top: 20px; padding-block: 8px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 4px; }}
 @media (max-width: 760px) {{ nav.tabs {{ flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }} }}
-nav.tabs button {{ font: inherit; font-weight: 600; font-size: 13px; color: var(--muted); background: none; border: 0; border-radius: 16px; padding: 7px 12px; white-space: nowrap; cursor: pointer; }}
-nav.tabs button[aria-selected="true"] {{ background: var(--ink); color: var(--bg); }}
+nav.tabs button {{ font: inherit; font-weight: 500; font-size: 13px; color: var(--muted); background: none; border: 0; border-radius: 18px; padding: 8px 13px; white-space: nowrap; cursor: pointer; }}
+nav.tabs button:hover {{ color: var(--ink); background: var(--hl); }}
+nav.tabs button[aria-selected="true"] {{ background: var(--accent); color: var(--on-accent); font-weight: 600; }}
 .panel {{ margin-top: 20px; }}
 .ph {{ display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; }}
 .ph > div {{ min-width: 0; }}
-h2 {{ font-family: var(--display); font-weight: 800; font-size: 24px; margin: 0; letter-spacing: -.01em; }}
+h2 {{ font-family: var(--display); font-weight: 600; font-size: 24px; margin: 0; letter-spacing: -.02em; }}
 h3 {{ font-family: var(--display); font-weight: 600; font-size: 17px; margin: 28px 0 8px; }}
 .lead {{ color: var(--muted); margin: 4px 0 12px; max-width: 80ch; }}
-.cbtn {{ font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-ink); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px 12px; cursor: pointer; }}
+.cbtn {{ font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-ink); background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow); border-radius: 18px; padding: 7px 14px; cursor: pointer; }}
 .kpis {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-block: 8px 16px; }}
-.kpi {{ background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; min-width: 0; }}
-.kl {{ font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }}
-.kv {{ font-family: var(--display); font-weight: 800; font-size: 24px; margin-top: 4px; font-variant-numeric: tabular-nums; }}
+.kpi {{ background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow); border-radius: 20px; padding: 14px 16px; min-width: 0; }}
+.kl {{ font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }}
+.kv {{ font-family: var(--display); font-weight: 500; font-size: 26px; letter-spacing: -.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }}
 .ks {{ font-size: 12px; color: var(--muted); }}
 .charts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }}
-.chart {{ margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; min-width: 0; }}
+.chart {{ margin: 0; background: var(--card); border: 1px solid var(--edge); box-shadow: var(--shadow); border-radius: 20px; padding: 14px 16px; min-width: 0; }}
 .chart figcaption {{ font-weight: 600; font-size: 13px; margin-bottom: 6px; }}
 .chart svg {{ width: 100%; height: auto; display: block; }}
 .chart .grid {{ stroke: var(--line); stroke-width: 1; }}
 .chart .zero {{ stroke: var(--muted); stroke-width: 1.2; }}
 .chart .ax {{ fill: var(--muted); font-size: 11px; font-family: var(--body); }}
-.chart .b1 {{ fill: var(--accent); }}
+.chart .b1 {{ fill: var(--bar); }}
 .chart .b2 {{ fill: var(--ink); }}
 .chart .line {{ fill: none; stroke: var(--accent-ink); stroke-width: 2; }}
 .chart .area {{ fill: var(--hl); }}
 .chart .dot {{ fill: var(--neg); }}
 .legend {{ display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 4px; }}
 .legend i {{ display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }}
-.legend i.b1 {{ background: var(--accent); }} .legend i.b2 {{ background: var(--ink); }}
-.tw {{ overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); max-width: 100%; }}
+.legend i.b1 {{ background: var(--bar); }} .legend i.b2 {{ background: var(--ink); }}
+.tw {{ overflow-x: auto; border: 1px solid var(--edge); box-shadow: var(--shadow); border-radius: 16px; background: var(--surface); max-width: 100%; }}
 .tw + .tw {{ margin-top: 12px; }}
 table {{ border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; width: max-content; min-width: 100%; }}
 th, td {{ padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; font-weight: 400; }}
@@ -600,10 +606,10 @@ th[scope="row"][title] {{ cursor: help; text-decoration: underline dotted var(--
 td.u, th.u {{ text-align: left; color: var(--muted); font-size: 12px; }}
 td.t, th.t {{ font-weight: 600; background: var(--soft); }}
 tr.b th, tr.b td {{ font-weight: 600; }}
-tr.b th[scope="row"] {{ font-weight: 700; }}
-tr.sec th {{ text-align: left; background: var(--soft); font-weight: 700; color: var(--ink); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; position: static; }}
+tr.b th[scope="row"] {{ font-weight: 600; }}
+tr.sec th {{ text-align: left; background: var(--hl); font-weight: 600; color: var(--accent-ink); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; position: static; }}
 tr.sec th {{ position: sticky; left: 0; }}
-tr.sub th {{ text-align: left; font-weight: 700; padding-top: 12px; }}
+tr.sub th {{ text-align: left; font-weight: 600; padding-top: 12px; }}
 th.yr {{ color: var(--ink); }}
 .fy {{ font-weight: 400; color: var(--muted); }}
 .neg {{ color: var(--neg); }}
@@ -611,7 +617,7 @@ th.yr {{ color: var(--ink); }}
 .kv .eur {{ display: none; }}
 .kpi .ks {{ margin-top: 2px; }}
 .z {{ color: var(--muted); }}
-td.in {{ color: var(--accent-ink); }}
+td.in {{ color: var(--input); }}
 td.used {{ font-weight: 600; }}
 td.note, th.note {{ text-align: left; white-space: normal; min-width: 280px; max-width: 520px; color: var(--muted); font-size: 12px; }}
 table.as th[scope="row"] {{ min-width: 260px; }}
@@ -625,7 +631,7 @@ table.uc td.tx {{ text-align: left; white-space: normal; min-width: 220px; max-w
 .stage h3 {{ margin: 0; }}
 .stage .when {{ font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 2px; }}
 .stage p {{ margin: 6px 0 10px; max-width: 85ch; }}
-.rgw {{ border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }}
+.rgw {{ border: 1px solid var(--edge); box-shadow: var(--shadow); border-radius: 16px; background: var(--surface); overflow: hidden; }}
 table.rg {{ width: 100%; min-width: 0; table-layout: fixed; }}
 table.rg col.k1 {{ width: 15%; }} table.rg col.k2 {{ width: 40%; }} table.rg col.k3 {{ width: 20%; }} table.rg col.k4 {{ width: 15%; }} table.rg col.k5 {{ width: 10%; }}
 table.rg th, table.rg td {{ text-align: left; white-space: normal; vertical-align: top; overflow-wrap: anywhere; }}
@@ -649,8 +655,8 @@ footer {{ margin-top: 40px; color: var(--muted); font-size: 12px; max-width: 90c
 <div class="wrap">
 <header class="top">
   <div>
-    <div class="eyebrow"><i></i>Tabax (working name) · business plan · base scenario</div>
-    <h1>Tabax business plan</h1>
+    <div class="eyebrow"><span class="mark"><i></i>kelen</span><span>Business plan · base scenario</span></div>
+    <h1>Kelen business plan</h1>
     <p class="sub">B2B neobank for SMEs in Senegal, then Côte d'Ivoire. Five years, month by month, from the Excel model of {today}. Comment on any line: Claude updates the Excel formulas and republishes this page.</p>
   </div>
   <div>
@@ -694,7 +700,7 @@ footer {{ margin-top: 40px; color: var(--muted); font-size: 12px; max-width: 90c
         var bytes = new Uint8Array(raw.length);
         for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
         st.textContent = '';
-        dl.save({{filename: 'Tabax business plan.xlsx', data: new Blob([bytes])}}).then(function () {{
+        dl.save({{filename: 'Kelen business plan.xlsx', data: new Blob([bytes])}}).then(function () {{
           st.textContent = 'Excel model saved.';
         }}, function (err) {{
           var code = err && err.code;
