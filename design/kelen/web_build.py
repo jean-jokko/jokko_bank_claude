@@ -809,7 +809,7 @@ soon_page("Financing.dc.html", "Financing", "Financement", "Un seul prix : 0,063
 ]))
 
 add("LoanOffer.dc.html", "Prêt équipement", shell("Financing", "Prêt équipement", "".join([
-    cols(card(stack(label("Montant"), amount_input("2 000 000"), gap=8) + chips(["1 000 000", "2 000 000", "5 000 000", "10 000 000"], 1)
+    cols(card(amount_input("2 000 000") + chips(["1 000 000", "2 000 000", "5 000 000", "10 000 000"], 1)
               + stack(label("Durée"), segmented(["6 mois", "12 mois", "18 mois", "24 mois"], 0), gap=8), pad="22px", gap=16),
          stack(kv([("Mensualité", "356 048 FCFA"), ("Coût total du crédit", "136 288 FCFA"), ("Taux (TEG)", "23 % par an"), ("Total remboursé", "2 136 288 FCFA")]),
                note("Prélèvement automatique le 5 de chaque mois sur le compte principal. Remboursement anticipé sans pénalité.", "soft", "calendar"), gap=14),
