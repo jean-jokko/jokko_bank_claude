@@ -286,8 +286,13 @@ def blocks_html(sheet):
     def flush():
         if rows:
             th = "".join(f'<th scope="col"{" class=c0" if k == 0 else ""}>{E(h)}</th>' for k, (c, h) in enumerate(cols))
-            out.append(f'<div class="tw"><table class="an uc"><thead><tr>{th}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>')
+            body = "".join(x if isinstance(x, str) else render(x) for x in rows)
+            out.append(f'<div class="tw"><table class="an uc"><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>')
             rows.clear()
+
+    def render(x):
+        tds = "".join((f'<th scope="row">{h}</th>' if k == 0 else f'<td{x["cls"][k]}>{h}</td>') for k, h in enumerate(x["cells"]))
+        return f'<tr data-comment-target{" class=b" if x["bold"] else ""}>{tds}</tr>'
 
     def cell(r, c):
         x = v.cell(r, c).value
@@ -308,6 +313,16 @@ def blocks_html(sheet):
     for r in range(4, v.max_row + 1):
         a = v.cell(r, 1)
         font, fill = a.font, a.fill
+        if isinstance(a.value, str) and a.value.strip() == "in €":
+            last = next((x for x in reversed(rows) if not isinstance(x, str)), None)
+            if last is not None:
+                for k, (c, h) in enumerate(cols):
+                    e = v.cell(r, c).value
+                    if isinstance(e, (int, float)) and abs(e) >= 0.005:
+                        t = f"{abs(e):,.2f}" if abs(e) < 1000 else f"{abs(e):,.0f}"
+                        t = f"{MINUS if e < 0 else ''}€" + t.replace(",", NNBSP)
+                        last["cells"][k] += f'<span class="eur">{t}</span>'
+            continue
         is_head = fill is not None and str(fill.fgColor.rgb).endswith("1F2A44")
         if is_head:
             cols = [(c, v.cell(r, c).value) for c in range(1, 16) if v.cell(r, c).value not in (None, "")]
@@ -333,9 +348,9 @@ def blocks_html(sheet):
             rows.append(f'<tr class="sec"><th scope="rowgroup" colspan="{len(cols)}">{E(a.value)}</th></tr>')
             continue
         bold = bool(font and font.b)
-        tds = "".join((f'<th scope="row">{cell(r, c)}</th>' if k == 0 else f'<td{" class=tx" if c == 2 and isinstance(v.cell(r, c).value, str) and len(v.cell(r, c).value) > 16 else (" class=u" if isinstance(v.cell(r, c).value, str) else "")}>{cell(r, c)}</td>')
-                      for k, (c, h) in enumerate(cols))
-        rows.append(f'<tr data-comment-target{" class=b" if bold else ""}>{tds}</tr>')
+        cls = [(" class=tx" if c == 2 and isinstance(v.cell(r, c).value, str) and len(v.cell(r, c).value) > 16 else (" class=u" if isinstance(v.cell(r, c).value, str) else ""))
+               for c, h in cols]
+        rows.append({"cells": [cell(r, c) for c, h in cols], "cls": cls, "bold": bold})
     flush()
     return "".join(out)
 

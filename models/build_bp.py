@@ -1354,7 +1354,7 @@ D.add_chart(cc, "P38")
 # UNIT COSTS AND PRICES: what one employee, one client, one loan and each fixed item cost or earn
 # =====================================================================================
 UC = wb.create_sheet("Unit costs")
-title(UC, "Unit costs and prices", "What one of each thing costs or earns, in FCFA and euros. Every cell links to the inputs on Assumptions and Hiring plan: change them there.")
+title(UC, "Unit costs and prices", "What one of each thing costs or earns, in FCFA with the euro amount on the 'in €' line underneath. Every cell links to the inputs on Assumptions and Hiring plan: change them there.")
 for col, w in {"A": 46, "B": 30, "C": 12}.items():
     UC.column_dimensions[col].width = w
 for j in range(3, 14):
@@ -1389,7 +1389,8 @@ def uc_sub(text):
     ucr[0] += 1
 
 
-def uc_row(vals, fmts, bold=False):
+def uc_row(vals, fmts, bold=False, eur=None):
+    """One row; with eur (column letters), an 'in €' row underneath converts those FCFA cells."""
     r = ucr[0]
     for j, (v, fm) in enumerate(zip(vals, fmts)):
         if v is None:
@@ -1400,62 +1401,78 @@ def uc_row(vals, fmts, bold=False):
             c.font = F(color=GREY)
             c.alignment = Alignment(wrap_text=True, vertical="top")
     ucr[0] += 1
+    if eur:
+        r2 = ucr[0]
+        UC.cell(r2, 1, "   in €").font = F(italic=True, color=GREY)
+        for col in eur:
+            UC[f"{col}{r2}"] = f"=IF(ISNUMBER({col}{r}),{col}{r}/FX_EUR,\"\")"
+            style(UC[f"{col}{r2}"], fmt=EUR2, italic=True, color=GREY)
+        ucr[0] += 1
     return r
 
 
 # --- one employee
 uc_title("One employee, per month", "Employer cost plus what each person adds: Regus desk, phone, Gmail and ClickUp, a Claude seat for the CTO and developers. One-off at hiring: a laptop (a MacBook for the CTO and developers), plus the agency fee for senior roles.")
 uc_head(["Role", "Country", "Agency hire", "Gross salary", "Employer charges", "Employer cost", "Office (Regus)", "Phone and data", "Gmail and ClickUp", "Claude seat",
-         "All-in per month (FCFA)", "All-in per month (€)", "One-off at hiring (FCFA)", "One-off at hiring (€)"])
-emp_f = [None, None, None, NUM, NUM, NUM, NUM, NUM, NUM, NUM, NUM, EURN, NUM, EURN]
+         "All-in per month", "One-off at hiring"])
+emp_f = [None, None, None, NUM, NUM, NUM, NUM, NUM, NUM, NUM, NUM, NUM]
+EMP_EUR = list("DEFGHIJKL")
 common = [lambda r: f"=D{r}*Employer_Charges", lambda r: f"=D{r}+E{r}", lambda r: "=Regus_EUR*FX_EUR", lambda r: "=Phone_Cost",
           lambda r: "=(Gmail_USD+ClickUp_USD)*FX_USD"]
-tail = lambda eng: [lambda r: f"=SUM(F{r}:J{r})", lambda r: f"=K{r}/FX_EUR",
-                    lambda r: f"=IF({eng},Laptop_Dev_USD*FX_USD,Laptop_EUR*FX_EUR)+IF(C{r}=\"Y\",Agency_Fee_EUR*FX_EUR,0)", lambda r: f"=M{r}/FX_EUR"]
+tail = lambda eng: [lambda r: f"=SUM(F{r}:J{r})",
+                    lambda r: f"=IF({eng},Laptop_Dev_USD*FX_USD,Laptop_EUR*FX_EUR)+IF(C{r}=\"Y\",Agency_Fee_EUR*FX_EUR,0)"]
 for k in range(len(HIRES)):
     hr = H0 + k
     uc_row([f"='Hiring plan'!C{hr}", f"='Hiring plan'!D{hr}", f"='Hiring plan'!J{hr}", f"='Hiring plan'!I{hr}"] + common
-           + [f"=IF('Hiring plan'!B{hr}=\"Engineering & product\",Claude_USD*FX_USD,0)"] + tail(f"'Hiring plan'!B{hr}=\"Engineering & product\""), emp_f)
+           + [f"=IF('Hiring plan'!B{hr}=\"Engineering & product\",Claude_USD*FX_USD,0)"] + tail(f"'Hiring plan'!B{hr}=\"Engineering & product\""), emp_f, eur=EMP_EUR)
 for lab, cty, flag, sal, claude in (("Customer support agent", "SN", "Agency_Support", "Salary_Support", False), ("Developer", "SN", "Agency_Dev", "Salary_Dev", True),
                                     ("Field sales rep, Senegal", "SN", "Agency_Rep", "Salary_Rep_SN", False), ("Field sales rep, Côte d'Ivoire", "CI", "Agency_Rep", "Salary_Rep_CI", False),
                                     ("Credit analyst", "SN", "Agency_Credit", "Salary_Credit", False)):
-    uc_row([lab + " (grows with volume)", cty, f"=IF({flag}=1,\"Y\",\"N\")", f"={sal}"] + common + ["=Claude_USD*FX_USD" if claude else "=0"] + tail("TRUE" if claude else "FALSE"), emp_f)
+    uc_row([lab + " (grows with volume)", cty, f"=IF({flag}=1,\"Y\",\"N\")", f"={sal}"] + common + ["=Claude_USD*FX_USD" if claude else "=0"] + tail("TRUE" if claude else "FALSE"), emp_f, eur=EMP_EUR)
 UC.cell(ucr[0], 1, "Company-wide, not per person: 2 shared Claude seats, the website and domain. Field reps also get the transport allowance (Sales & marketing). Pay rises 5% a year from year 2.").font = F(italic=True, color=GREY)
 ucr[0] += 1
 
 # --- one client
 uc_title("One business client, per month, by plan", "Steady state: after the free months, payment links at full adoption, no credit. Scenario inputs at their current value.")
-uc_head(["Line", "How it is calculated", "", "Petite", "Moyenne", "Grande", "Petite (€)", "Moyenne (€)", "Grande (€)"])
+uc_head(["Line", "How it is calculated", "", "Petite", "Moyenne", "Grande"])
 PL3 = ("Petite", "Moyenne", "Grande")
-cli_f = [None, None, None, NUM, NUM, NUM, EUR2, EUR2, EUR2]
+cli_f = [None, None, None, NUM, NUM, NUM]
 
 
 def cli(label, how, expr, bold=False, fmt=NUM):
-    vals = [label, how, None] + [(lambda r, pl=pl: "=" + expr.replace("{P}", pl)) for pl in PL3] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"]
-    return uc_row(vals, [None, None, None, fmt, fmt, fmt, EUR2, EUR2, EUR2], bold=bold)
+    vals = [label, how, None] + [(lambda r, pl=pl: "=" + expr.replace("{P}", pl)) for pl in PL3]
+    return uc_row(vals, [None, None, None, fmt, fmt, fmt], bold=bold, eur=list("DEF"))
+
+
+def cli_tot(label, how, fn, bold=True):
+    return uc_row([label, how, None] + [(lambda r, c=c: fn(c)) for c in "DEF"], cli_f, bold=bold, eur=list("DEF"))
 
 
 uc_sub("Revenue")
-r_rev0 = cli("Subscription (after the yearly-billing discount)", "Plan price × (1 − share paying yearly × free months on yearly billing ÷ 12)", "Price_{P}*(1-Annual_Share*Annual_Free/12)")
-cli("Fees on foreign-currency card spending", "Foreign-currency card spending × FX fee", "Spend_For_{P}*FX_Fee")
-cli("Interchange share", "FCFA card spending × interchange share", "Spend_Dom_{P}*Interchange_Share")
-cli("Share of bank income on balances", "Average balance × yearly share ÷ 12", "Balance_{P}*Deposit_Share/12")
-cli("Fees on supplier payouts above the allowance", "Payouts above the allowance × fee per payout", "Overage_{P}*Overage_Fee")
-r_rev1 = cli("Payment link fees (average client)", "Collections × adoption × share by mobile money × fee", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Fee")
-r_revt = uc_row(["Revenue per client", None, None] + [(lambda r, c=c: f"=SUM({c}{r_rev0}:{c}{r_rev1})") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
+rev_rows = [
+    cli("Subscription (after the yearly-billing discount)", "Plan price × (1 − share paying yearly × free months on yearly billing ÷ 12)", "Price_{P}*(1-Annual_Share*Annual_Free/12)"),
+    cli("Fees on foreign-currency card spending", "Foreign-currency card spending × FX fee", "Spend_For_{P}*FX_Fee"),
+    cli("Interchange share", "FCFA card spending × interchange share", "Spend_Dom_{P}*Interchange_Share"),
+    cli("Share of bank income on balances", "Average balance × yearly share ÷ 12", "Balance_{P}*Deposit_Share/12"),
+    cli("Fees on supplier payouts above the allowance", "Payouts above the allowance × fee per payout", "Overage_{P}*Overage_Fee"),
+    cli("Payment link fees (average client)", "Collections × adoption × share by mobile money × fee", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Fee"),
+]
+r_revt = cli_tot("Revenue per client", None, lambda c: "=" + "+".join(f"{c}{x}" for x in rev_rows))
 uc_sub("Cost to serve")
-r_c0 = cli("Partner bank fee per business account", "Flat fee per account", "Bank_Fee")
-cli("Card processing", "Active cards × processing fee per card", "Cards_Act_{P}*Card_Proc_Fee")
-cli("Visa / Mastercard cross-border fees", "Foreign-currency card spending × scheme rate", "Spend_For_{P}*Scheme_Rate")
-cli("Fraud and chargebacks", "All card spending × fraud rate", "(Spend_Dom_{P}+Spend_For_{P})*Fraud_Rate")
-cli("Salaries paid to mobile wallets", "Employees × average salary × share to wallets × cost rate", "Emp_{P}*Avg_Salary*Wallet_Share*Wallet_Payout_Cost")
-cli("Salaries paid to bank accounts", "Employees × share to banks × cost per transfer", "Emp_{P}*(1-Wallet_Share)*Bank_Payout_Cost")
-cli("Supplier payouts", "Payouts × cost per payout", "Supplier_{P}*Supplier_Payout_Cost")
-cli("Payment link collection costs", "Collections × adoption × share by mobile money × operator cost", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Cost")
-r_c1 = cli("SMS, WhatsApp and support tools", "Flat per client", "Notif_Cost")
-r_ct = uc_row(["Cost to serve per client", None, None] + [(lambda r, c=c: f"=SUM({c}{r_c0}:{c}{r_c1})") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
-r_cm = uc_row(["Contribution per client per month", "Revenue − cost to serve", None] + [(lambda r, c=c: f"={c}{r_revt}-{c}{r_ct}") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
-uc_row(["Contribution margin", None, None] + [(lambda r, c=c: f"=IFERROR({c}{r_cm}/{c}{r_revt},0)") for c in "DEF"], [None, None, None, PCT, PCT, PCT], bold=False)
+cost_rows = [
+    cli("Partner bank fee per business account", "Flat fee per account", "Bank_Fee"),
+    cli("Card processing", "Active cards × processing fee per card", "Cards_Act_{P}*Card_Proc_Fee"),
+    cli("Visa / Mastercard cross-border fees", "Foreign-currency card spending × scheme rate", "Spend_For_{P}*Scheme_Rate"),
+    cli("Fraud and chargebacks", "All card spending × fraud rate", "(Spend_Dom_{P}+Spend_For_{P})*Fraud_Rate"),
+    cli("Salaries paid to mobile wallets", "Employees × average salary × share to wallets × cost rate", "Emp_{P}*Avg_Salary*Wallet_Share*Wallet_Payout_Cost"),
+    cli("Salaries paid to bank accounts", "Employees × share to banks × cost per transfer", "Emp_{P}*(1-Wallet_Share)*Bank_Payout_Cost"),
+    cli("Supplier payouts", "Payouts × cost per payout", "Supplier_{P}*Supplier_Payout_Cost"),
+    cli("Payment link collection costs", "Collections × adoption × share by mobile money × operator cost", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Cost"),
+    cli("SMS, WhatsApp and support tools", "Flat per client", "Notif_Cost"),
+]
+r_ct = cli_tot("Cost to serve per client", None, lambda c: "=" + "+".join(f"{c}{x}" for x in cost_rows))
+r_cm = cli_tot("Contribution per client per month", "Revenue − cost to serve", lambda c: f"={c}{r_revt}-{c}{r_ct}")
+uc_row(["Contribution margin", None, None] + [(lambda r, c=c: f"=IFERROR({c}{r_cm}/{c}{r_revt},0)") for c in "DEF"], [None, None, None, PCT, PCT, PCT])
 uc_sub("Once, when the client signs up")
 cli("Onboarding check tools", "Company screening + people checked × ID check (our team's review time is in salaries)", "KYB_Cost+KYC_Cost*KYC_Persons")
 cli("Physical cards printed and delivered", "Cards ordered at sign-up × cost per card", "Cards_New_{P}*Card_Prod_Cost")
@@ -1465,26 +1482,26 @@ cli("Subscription given away (free months)", "Free months × plan price", "Free_
 
 # --- one loan
 uc_title("One loan: 1,000,000 FCFA lent for a year", "Net margin after cost of funds, credit losses and servicing; what Tabax keeps with the partner SFD and with its own SFD; cash Tabax must lock up.")
-uc_head(["Product", "Yield", "Cost of funds", "Credit losses", "Servicing", "Net margin", "Net margin (FCFA)", "Net margin (€)", "Tabax keeps, partner phase (FCFA)",
-         "Tabax keeps, own SFD (FCFA)", "Cash locked, partner phase (FCFA)", "Cash locked, own SFD (FCFA)"])
+uc_head(["Product", "Yield", "Cost of funds", "Credit losses", "Servicing", "Net margin", "Net margin a year", "Tabax keeps, partner phase",
+         "Tabax keeps, own SFD", "Cash locked, partner phase", "Cash locked, own SFD"])
 for pk, lab, *_ in PRODS:
-    uc_row([lab, f"=Yield_{pk}", "=CoF", f"=CoR_{pk}*CoR_Mult", "=Servicing", lambda r: f"=B{r}-C{r}-D{r}-E{r}", lambda r: f"=F{r}*1000000", lambda r: f"=G{r}/FX_EUR",
+    uc_row([lab, f"=Yield_{pk}", "=CoF", f"=CoR_{pk}*CoR_Mult", "=Servicing", lambda r: f"=B{r}-C{r}-D{r}-E{r}", lambda r: f"=F{r}*1000000",
             lambda r: f"=G{r}*Partner_Share", lambda r: f"=G{r}", "=1000000*First_Loss", "=1000000*Capital_Ratio"],
-           [None, PCT, PCT, PCT2, PCT, PCT2, NUM, EURN, NUM, NUM, NUM, NUM])
+           [None, PCT, PCT, PCT2, PCT, PCT2, NUM, NUM, NUM, NUM, NUM], eur=list("GHIJK"))
 UC.cell(ucr[0], 1, "The usury cap is 24% a year all-in (TEG) for microfinance institutions: interest plus every fee charged to the borrower.").font = F(italic=True, color=GREY)
 ucr[0] += 1
 
 # --- price list and fixed items
 uc_title("Price list and fixed items", "List prices clients pay, and the price of each fixed cost at its year-1 level (later years on Assumptions, section 10).")
-uc_head(["Item", "Unit", "Price", "In FCFA", "In €"])
+uc_head(["Item", "Unit", "Price", "In FCFA"])
 conv = lambda r, unit: f"=C{r}" if unit.startswith("FCFA") else (f"=C{r}*FX_USD" if unit.startswith("USD") else (f"=C{r}*FX_EUR" if unit.startswith("€") else None))
 
 
 def price(label, unit, expr, fmt=NUM):
     vals = [label, unit, "=" + expr]
     if conv(0, unit):
-        vals += [lambda r, u=unit: conv(r, u), lambda r: f"=D{r}/FX_EUR"]
-    return uc_row(vals, [None, None, fmt, NUM, EUR2])
+        vals += [lambda r, u=unit: conv(r, u)]
+    return uc_row(vals, [None, None, fmt, NUM], eur=["D"] if conv(0, unit) else None)
 
 
 uc_sub("What clients pay")
