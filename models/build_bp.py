@@ -234,8 +234,8 @@ a_in("EmpAcc_Adoption", "Employees who open a Tabax salary account", 0.20, "%", 
 
 a_sec("6. Cost to serve (variable costs)")
 a_in("Bank_Fee", "Partner bank fee per business account", 3000, "FCFA / month", NUM, "2,000–5,000 FCFA (estimate; replace with the term sheet).")
-a_in("KYB_Cost", "Company checks at onboarding (KYB)", 12000, "FCFA / company", NUM, "€8–30 per company (cost breakdown).")
-a_in("KYC_Cost", "ID check per person", 900, "FCFA", NUM, "Sumsub incl. AML screening, about €1.2–1.6.")
+a_in("KYB_Cost", "Company screening tool at onboarding (sanctions, adverse media)", 1500, "FCFA / company", NUM, "Tool fee only (estimate, about €2): our support team reviews the company documents (RCCM, NINEA, statutes), and that time is in their salaries.")
+a_in("KYC_Cost", "ID check tool per person (document, face match, sanctions)", 900, "FCFA", NUM, "Tool fee only: Sumsub-type service, about €1.2–1.6 per check.")
 a_in("KYC_Persons", "People checked per new company", 2, "people", NUM, "Directors and beneficial owners.")
 a_in("Card_Proc_Fee", "Card processing per active card", 1000, "FCFA / month", NUM, "€0.76–2.29 (estimate; processor quote needed).")
 a_in("Card_Prod_Cost", "Physical card printed and delivered", 4500, "FCFA", NUM, "3,000–6,000 FCFA.")
@@ -303,13 +303,14 @@ a_in("Credit_Lead_Months", "Credit team joins this many months before the first 
 a_in("Book_per_Credit", "Credit analysts and collections: one per this loan book", 1000000000, "FCFA", NUM, "Estimate. Minimum one from the start of credit.")
 a_in("Salary_Credit", "Credit analyst: gross salary", 600000, "FCFA / month", NUM, "")
 a_in("Regus_EUR", "Office: Regus, all included", 300, "€ / employee / month", NUM, "Desk, electricity, internet, cleaning and security included (decision). Dakar from month 1, Abidjan from its opening.")
-a_in("Laptop_Cost", "Laptop and equipment per new hire", 600000, "FCFA", NUM, "Expensed in the month of hiring (no depreciation, decision).")
+a_in("Laptop_EUR", "Laptop per new hire (non-developers)", 500, "€ / hire", NUM, "Decision: at most €500. Expensed in the month of hiring (no depreciation).")
+a_in("Laptop_Dev_USD", "MacBook per new developer and the CTO", 2000, "USD / hire", NUM, "Decision: about $2,000.")
 a_in("Agency_Fee_EUR", "Recruitment agency fee per senior hire", 800, "€ / hire", NUM, "Decision: about €800 per hire for the CEO, CTO, developers, financial and credit experts, country manager and compliance officer. Other roles are hired directly at no fee.")
 a_in("Agency_Dev", "Developers hired through an agency (1 = yes, 0 = no)", 1, "flag", "0", "")
 a_in("Agency_Credit", "Credit analysts hired through an agency (1 = yes, 0 = no)", 1, "flag", "0", "")
 a_in("Agency_Support", "Customer support hired through an agency (1 = yes, 0 = no)", 0, "flag", "0", "Hired directly (decision).")
 a_in("Agency_Rep", "Field sales reps hired through an agency (1 = yes, 0 = no)", 0, "flag", "0", "Hired directly.")
-a_in("Phone_Cost", "Phone and data plan per employee", 15000, "FCFA / month", NUM, "")
+a_in("Phone_Cost", "Phone and data plan per employee", 5000, "FCFA / month", NUM, "Decision: about 5,000 FCFA.")
 a_in("Gmail_USD", "Google Workspace (Gmail) per user", 9, "USD / user / month", NUM, "Decision: about $9.")
 a_in("ClickUp_USD", "ClickUp per user", 9, "USD / user / month", NUM, "Decision: same price as Gmail.")
 a_in("Claude_USD", "Claude Enterprise seat", 25, "USD / seat / month", NUM, "Decision. One seat per developer and the CTO, plus the shared seats below.")
@@ -328,7 +329,7 @@ A.cell(arow[0], 2, "Technology").font = F(bold=True)
 arow[0] += 1
 a_arr("Cloud_USD", "Cloud hosting", [3000, 5000, 8000, 10000, 12000], "USD / month", NUM, "Check whether Maak's lease includes hosting. No AWS/GCP region in WAEMU; CDP authorisation for data abroad.")
 a_arr("Monitoring_USD", "Transaction monitoring and sanctions screening", [6000, 15000, 30000, 40000, 50000], "USD / year", NUM, "")
-a_arr("Freelance", "Freelance QA, DevOps on-call, design help", [15700000, 19700000, 11800000, 11800000, 11800000], "FCFA / year", NUM, "")
+a_arr("Freelance", "Freelance QA testing and DevOps on-call", [7900000, 9800000, 5900000, 5900000, 5900000], "FCFA / year", NUM, "Design is done in-house with Claude Design (decision). About €12k in year 1, €15k in year 2, then €9k a year.")
 a_arr("Proc_Min_USD", "Card processor monthly minimum", [5000, 5000, 7500, 10000, 12000], "USD / month", NUM, "Tabax pays the higher of this minimum and the per-card fees.")
 r_proc = arow[0]
 A.cell(r_proc, 2, "Card processor set-up fee (one-off)").font = F()
@@ -570,6 +571,8 @@ S.line("hc_eng", "Engineering headcount (CTO and developers)", lambda c, p, i: f
 S.line("reps_sn", "Field sales reps, Senegal", lambda c, p, i: f"=SUMIFS({c}{HC1}:{c}{HCN},{HR('E')},\"Sales rep\",{HR('D')},\"SN\")+{c}{S.k['vd_reps_sn']}", unit="people", total="last")
 S.line("reps_ci", "Field sales reps, Côte d'Ivoire", lambda c, p, i: f"=SUMIFS({c}{HC1}:{c}{HCN},{HR('E')},\"Sales rep\",{HR('D')},\"CI\")+{c}{S.k['vd_reps_ci']}", unit="people", total="last")
 S.line("hires", "New hires this month", lambda c, p, i: f"=SUMPRODUCT(--({HR('G')}={c}$3),{HR('F')})+{c}{S.k['vd_hires']}", unit="people")
+S.line("hires_eng", "of which CTO and developers (MacBooks)", lambda c, p, i: f"=SUMPRODUCT(--({HR('G')}={c}$3),--({HR('B')}=\"Engineering & product\"),{HR('F')})+"
+       + (f"{c}{S.k['vd_devs']}" if i == 0 else f"MAX(0,{c}{S.k['vd_devs']}-{p}{S.k['vd_devs']})"), unit="people")
 for d in DEPTS:
     S.line(f"dep_{d}", f"Staff cost: {d}", lambda c, p, i, d=d: f"=SUMIF({HR('B')},\"{d}\",{c}{CO1}:{c}{CON})+{vdc_sum(c, lambda dd, t, d=d: dd == d)}")
 S.line("staff_total", "Total staff cost", lambda c, p, i: f"=SUM({c}{CO1}:{c}{CON})+{vdc_sum(c, lambda d, t: True)}", bold=True)
@@ -725,7 +728,7 @@ C = TS("Costs", "Every cost line by month: variable costs that grow with clients
 rr = lambda key, c: R.ref(key, c)
 C.sec("Variable costs (cost to serve)")
 C.line("v_bank", "Partner bank fee per business account", lambda c, p, i: f"={rr('act_total', c)}*Bank_Fee")
-C.line("v_onboard", "Onboarding checks (KYB, ID checks, employee accounts)",
+C.line("v_onboard", "Onboarding check tools (company screening, ID checks)",
        lambda c, p, i: f"={M.ref('new_total', c)}*(KYB_Cost+KYC_Cost*KYC_Persons)+MAX(0,{rr('emp_acc', c)}-{'0' if i == 0 else rr('emp_acc', p)})*KYC_Cost")
 C.line("v_cardproc", "Card processing (per active card)", lambda c, p, i: f"={rr('cards_active', c)}*Card_Proc_Fee")
 C.line("v_cardprod", "Physical cards printed and delivered", lambda c, p, i: f"={rr('cards_issued', c)}*Card_Prod_Cost")
@@ -746,7 +749,7 @@ C.sec("Office and equipment")
 C.line("o_regus_sn", "Dakar office (Regus, all included)", lambda c, p, i: f"=IF({c}$3>=Office_Start,{S.ref('hc_sn', c)}*Regus_EUR*FX_EUR,0)")
 C.line("o_regus_ci", "Abidjan office (Regus, all included)", lambda c, p, i: f"=IF({c}$3>=CI_Office_Start,{S.ref('hc_ci', c)}*Regus_EUR*FX_EUR,0)")
 C.line("o_phone", "Phones and data plans", lambda c, p, i: f"={S.ref('hc_total', c)}*Phone_Cost")
-C.line("o_laptops", "Laptops and equipment for new hires", lambda c, p, i: f"={S.ref('hires', c)}*Laptop_Cost")
+C.line("o_laptops", "Laptops for new hires (MacBooks for the CTO and developers)", lambda c, p, i: f"=({S.ref('hires', c)}-{S.ref('hires_eng', c)})*Laptop_EUR*FX_EUR+{S.ref('hires_eng', c)}*Laptop_Dev_USD*FX_USD")
 C.line("o_total", "Total office and equipment", lambda c, p, i: f"=SUM({c}{C.k['o_regus_sn']}:{c}{C.k['o_laptops']})", bold=True)
 C.sec("Technology")
 C.line("t_maak", "Maak platform lease (option 1)", lambda c, p, i: f"=IF(Maak_Option=1,Maak_Lease_EUR*FX_EUR/12,0)")
@@ -755,7 +758,7 @@ C.line("t_monitor", "Transaction monitoring and sanctions screening", lambda c, 
 C.line("t_workspace", "Gmail and ClickUp (every employee)", lambda c, p, i: f"={S.ref('hc_total', c)}*(Gmail_USD+ClickUp_USD)*FX_USD")
 C.line("t_claude", "Claude Enterprise seats (CTO, developers, 2 shared)", lambda c, p, i: f"=({S.ref('hc_eng', c)}+Claude_Shared)*Claude_USD*FX_USD")
 C.line("t_web", "Website tool and domain", lambda c, p, i: f"=(Website_USD+Domain_USD/12)*FX_USD")
-C.line("t_freelance", "Freelance QA, DevOps, design", lambda c, p, i: f"={yr('Freelance', c)}/12")
+C.line("t_freelance", "Freelance QA testing and DevOps on-call", lambda c, p, i: f"={yr('Freelance', c)}/12")
 C.line("t_audit", "Tech audit", lambda c, p, i: f"=IF(AND({c}$3>=Audit_Month,MOD({c}$3-Audit_Month,12)=0),Tech_Audit_USD*FX_USD,0)")
 C.line("t_proc_setup", "Card processor set-up fee", lambda c, p, i: f"=IF({c}$3=Proc_Setup_Month,Proc_Setup_USD*FX_USD,0)")
 C.line("t_proc_min", "Card processor minimum (top-up above per-card fees)", lambda c, p, i: f"=IF({c}$3>=Proc_Min_Start,MAX(0,{yr('Proc_Min_USD', c)}*FX_USD-{c}{C.k['v_cardproc']}),0)")
@@ -1401,21 +1404,22 @@ def uc_row(vals, fmts, bold=False):
 
 
 # --- one employee
-uc_title("One employee, per month", "Employer cost plus what each person adds: Regus desk, phone, Gmail and ClickUp, a Claude seat for the CTO and developers. One-off at hiring: laptop, plus the agency fee for senior roles.")
+uc_title("One employee, per month", "Employer cost plus what each person adds: Regus desk, phone, Gmail and ClickUp, a Claude seat for the CTO and developers. One-off at hiring: a laptop (a MacBook for the CTO and developers), plus the agency fee for senior roles.")
 uc_head(["Role", "Country", "Agency hire", "Gross salary", "Employer charges", "Employer cost", "Office (Regus)", "Phone and data", "Gmail and ClickUp", "Claude seat",
          "All-in per month (FCFA)", "All-in per month (€)", "One-off at hiring (FCFA)", "One-off at hiring (€)"])
 emp_f = [None, None, None, NUM, NUM, NUM, NUM, NUM, NUM, NUM, NUM, EURN, NUM, EURN]
 common = [lambda r: f"=D{r}*Employer_Charges", lambda r: f"=D{r}+E{r}", lambda r: "=Regus_EUR*FX_EUR", lambda r: "=Phone_Cost",
           lambda r: "=(Gmail_USD+ClickUp_USD)*FX_USD"]
-tail = [lambda r: f"=SUM(F{r}:J{r})", lambda r: f"=K{r}/FX_EUR", lambda r: f"=Laptop_Cost+IF(C{r}=\"Y\",Agency_Fee_EUR*FX_EUR,0)", lambda r: f"=M{r}/FX_EUR"]
+tail = lambda eng: [lambda r: f"=SUM(F{r}:J{r})", lambda r: f"=K{r}/FX_EUR",
+                    lambda r: f"=IF({eng},Laptop_Dev_USD*FX_USD,Laptop_EUR*FX_EUR)+IF(C{r}=\"Y\",Agency_Fee_EUR*FX_EUR,0)", lambda r: f"=M{r}/FX_EUR"]
 for k in range(len(HIRES)):
     hr = H0 + k
     uc_row([f"='Hiring plan'!C{hr}", f"='Hiring plan'!D{hr}", f"='Hiring plan'!J{hr}", f"='Hiring plan'!I{hr}"] + common
-           + [f"=IF('Hiring plan'!B{hr}=\"Engineering & product\",Claude_USD*FX_USD,0)"] + tail, emp_f)
+           + [f"=IF('Hiring plan'!B{hr}=\"Engineering & product\",Claude_USD*FX_USD,0)"] + tail(f"'Hiring plan'!B{hr}=\"Engineering & product\""), emp_f)
 for lab, cty, flag, sal, claude in (("Customer support agent", "SN", "Agency_Support", "Salary_Support", False), ("Developer", "SN", "Agency_Dev", "Salary_Dev", True),
                                     ("Field sales rep, Senegal", "SN", "Agency_Rep", "Salary_Rep_SN", False), ("Field sales rep, Côte d'Ivoire", "CI", "Agency_Rep", "Salary_Rep_CI", False),
                                     ("Credit analyst", "SN", "Agency_Credit", "Salary_Credit", False)):
-    uc_row([lab + " (grows with volume)", cty, f"=IF({flag}=1,\"Y\",\"N\")", f"={sal}"] + common + ["=Claude_USD*FX_USD" if claude else "=0"] + tail, emp_f)
+    uc_row([lab + " (grows with volume)", cty, f"=IF({flag}=1,\"Y\",\"N\")", f"={sal}"] + common + ["=Claude_USD*FX_USD" if claude else "=0"] + tail("TRUE" if claude else "FALSE"), emp_f)
 UC.cell(ucr[0], 1, "Company-wide, not per person: 2 shared Claude seats, the website and domain. Field reps also get the transport allowance (Sales & marketing). Pay rises 5% a year from year 2.").font = F(italic=True, color=GREY)
 ucr[0] += 1
 
@@ -1453,7 +1457,7 @@ r_ct = uc_row(["Cost to serve per client", None, None] + [(lambda r, c=c: f"=SUM
 r_cm = uc_row(["Contribution per client per month", "Revenue − cost to serve", None] + [(lambda r, c=c: f"={c}{r_revt}-{c}{r_ct}") for c in "DEF"] + [(lambda r, c=c: f"={c}{r}/FX_EUR") for c in "DEF"], cli_f, bold=True)
 uc_row(["Contribution margin", None, None] + [(lambda r, c=c: f"=IFERROR({c}{r_cm}/{c}{r_revt},0)") for c in "DEF"], [None, None, None, PCT, PCT, PCT], bold=False)
 uc_sub("Once, when the client signs up")
-cli("Onboarding checks", "Company check (KYB) + people checked × ID check", "KYB_Cost+KYC_Cost*KYC_Persons")
+cli("Onboarding check tools", "Company screening + people checked × ID check (our team's review time is in salaries)", "KYB_Cost+KYC_Cost*KYC_Persons")
 cli("Physical cards printed and delivered", "Cards ordered at sign-up × cost per card", "Cards_New_{P}*Card_Prod_Cost")
 cli("Card fees charged to the client (revenue)", "(Cards ordered − 1 free) × card fee", "MAX(0,Cards_New_{P}-1)*Card_Fee")
 cli("Referral fee (partner-channel clients only)", "Fee paid to the accountant or software partner", "Referral_Fee")
@@ -1495,7 +1499,10 @@ uc_sub("Technology")
 price("Maak platform lease (option 1)", "€ / year", "IF(Maak_Option=1,Maak_Lease_EUR,0)")
 price("Cloud hosting", "USD / month", "INDEX(Cloud_USD,1,1)")
 price("Transaction monitoring and sanctions screening", "USD / year", "INDEX(Monitoring_USD,1,1)")
-price("Freelance QA, DevOps on-call, design help", "FCFA / year", "INDEX(Freelance,1,1)")
+price("Freelance QA testing and DevOps on-call", "FCFA / year", "INDEX(Freelance,1,1)")
+price("Laptop (non-developers)", "€ / hire", "Laptop_EUR")
+price("MacBook (CTO and developers)", "USD / hire", "Laptop_Dev_USD")
+price("Phone and data plan", "FCFA / person / month", "Phone_Cost")
 price("Tech audit", "USD / year", "Tech_Audit_USD")
 price("Website tool", "USD / month", "Website_USD")
 price("Domain name", "USD / year", "Domain_USD")
