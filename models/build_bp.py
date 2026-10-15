@@ -1290,6 +1290,148 @@ MK.cell(r, 9, "Account fees only; transfer, card and payout fees come on top. To
 mrow[0] += 1
 
 
+EUR2 = '"€"#,##0.00;-"€"#,##0.00;"-"'
+PL3 = ("Petite", "Moyenne", "Grande")
+
+# =====================================================================================
+# PLANS (the offer, as clients see it)
+# =====================================================================================
+PS = wb.create_sheet("Plans")
+PS.sheet_view.showGridLines = False
+for col, w in {"A": 44, "B": 20, "C": 20, "D": 20, "E": 70}.items():
+    PS.column_dimensions[col].width = w
+PS["A1"] = "Plans, add-ons and commissions"
+PS["A1"].font = F(bold=True, size=14, color=TEAL)
+PS["A2"] = "The offer as clients see it, for the pricing option selected on Assumptions. Every price, limit and fee links to Assumptions; feature rows are the product definition."
+PS["A2"].font = F(italic=True, color=GREY)
+psr = [4]
+
+
+def ps_title(text, sub=""):
+    psr[0] += 1
+    PS.cell(psr[0], 1, text).font = F(bold=True, size=12, color=TEAL)
+    psr[0] += 1
+    if sub:
+        PS.cell(psr[0], 1, sub).font = F(italic=True, color=GREY)
+        psr[0] += 1
+
+
+def ps_head(heads):
+    for j, h in enumerate(heads):
+        c = PS.cell(psr[0], 1 + j, h)
+        c.font = F(bold=True, color=WHITE)
+        c.fill = HEAD_FILL
+        c.alignment = Alignment(wrap_text=True, vertical="top")
+    psr[0] += 1
+
+
+def ps_sub(text, ncol=5):
+    PS.cell(psr[0], 1, text).font = F(bold=True)
+    for col in range(1, ncol + 1):
+        PS.cell(psr[0], col).fill = SEC_FILL
+    psr[0] += 1
+
+
+def ps_row(vals, fmt=None, eur=None, bold=False):
+    r = psr[0]
+    for j, v in enumerate(vals):
+        if v is None:
+            continue
+        c = PS.cell(r, 1 + j, v)
+        if isinstance(v, str) and v.startswith("="):
+            style(c, fmt=fmt, bold=bold)
+        else:
+            c.font = F(bold=bold and j == 0, color=GREY if j == len(vals) - 1 and j >= 2 else BLACK)
+            c.alignment = Alignment(wrap_text=True, vertical="top")
+    psr[0] += 1
+    if eur:
+        r2 = psr[0]
+        PS.cell(r2, 1, "   in €").font = F(italic=True, color=GREY)
+        for col in eur:
+            PS[f"{col}{r2}"] = f"=IF(ISNUMBER({col}{r}),{col}{r}/FX_EUR,\"\")"
+            style(PS[f"{col}{r2}"], fmt=EUR2, italic=True, color=GREY)
+        psr[0] += 1
+    return r
+
+
+three = lambda base: [f"={base}_Petite", f"={base}_Moyenne", f"={base}_Grande"]
+ps_title("The three plans", "Clients choose by what they need, not by staff count. Salaries never count as transfers and are always included.")
+ps_head(["What is included", "Essentiel", "Pro", "Business", "Notes"])
+ps_sub("Price")
+ps_row(["Monthly price"] + three("Price") + ["FCFA a month, excluding VAT. Option A / B / C on Assumptions."], NUM, eur=list("BCD"), bold=True)
+ps_row(["Yearly billing (price for 12 months)", "=Price_Petite*(12-Annual_Free)", "=Price_Moyenne*(12-Annual_Free)", "=Price_Grande*(12-Annual_Free)", "=\"Pay yearly and get \"&Annual_Free&\" months free.\""], NUM, eur=list("BCD"))
+ps_row(["Free trial", "=Free_Months&\" month free\"", "=Free_Months&\" month free\"", "=Free_Months&\" month free\"", "Every new client, every plan."])
+ps_sub("Limits")
+ps_row(["Users included"] + three("Users_Incl") + ["Essentiel: 1 main user + 1 invited free. More users: add-on below."], NUM)
+ps_row(["Transfers out a month"] + three("Transfers_Incl") + ["Payments to suppliers and other transfers. Salaries never count. Incoming transfers are free and unlimited."], NUM)
+ps_row(["Salaries", "Free, any number", "Free, any number", "Free, any number", "To any bank account or wallet (Wave, Orange Money, Mixx…)."])
+ps_row(["Salaries free up to"] + three("Payroll_Free") + ["FCFA of payroll a month. Above it, salaries to wallets cost the add-on fee below; salaries to bank accounts stay free."], NUM, eur=list("BCD"))
+ps_row(["Physical cards"] + three("Cards_Phys_Incl") + ["Visa cards for staff. More cards: add-on below."], NUM)
+ps_row(["Virtual cards", "2", "10", "Unlimited", "For online payments: ads, software, subscriptions."])
+ps_row(["Sub-accounts", "1", "5", "Unlimited", "Separate balances by project, site or budget."])
+ps_sub("Features")
+for lab, a, b, c, note in (
+        ("Business account with its own IBAN", "✓", "✓", "✓", "Held at the partner bank."),
+        ("Salary payments to any bank or wallet", "✓", "✓", "✓", "Bulk runs, scheduled paydays, status per employee."),
+        ("Import a payroll file (KayFay, Sage, Excel…)", "✓", "✓", "✓", ""),
+        ("Invoices and payment links (Wave, Orange Money, card)", "✓", "✓", "✓", "1% commission on mobile-money collections."),
+        ("Approvals (double signature)", "—", "✓", "✓ multi-level, custom rules", "Locked on Essentiel: tapping it shows an \"Unlock with Pro\" button."),
+        ("Accounting module (accountant access, receipts, SYSCOHADA export)", "—", "✓", "✓", "Locked on Essentiel."),
+        ("Spend control (limits and budgets per card or person)", "—", "Basic", "Full", ""),
+        ("API and several companies under one login", "—", "—", "✓", ""),
+        ("Support", "Chat", "Priority", "Dedicated adviser", ""),
+        ("Payroll module (payslips and declarations)", "Paid option", "Paid option", "Paid option", "Per payslip: see add-ons."),
+        ("International supplier payments", "✓", "✓", "✓", "Fee per payment: see commissions."),
+):
+    ps_row([lab, a, b, c, note])
+
+ps_title("Add-ons", "Paid only when a client goes beyond its plan or chooses an option. Upgrade prompts appear at 80% and 100% of each limit.")
+ps_head(["Add-on", "Price", "Unit", "", "When it applies"])
+for lab, nm, unit, fm, note in (
+        ("Extra user", "Extra_User_Fee", "FCFA / month", NUM, "Each user beyond the plan."),
+        ("Extra physical card", "Extra_Card_Fee", "FCFA / month", NUM, "Each physical card beyond the plan."),
+        ("Extra physical card, printing and delivery", "Card_Fee", "FCFA, one-off", NUM, "When the extra card is ordered."),
+        ("Transfer above the plan allowance", "Overage_Fee", "FCFA / transfer", NUM, "Each transfer beyond the monthly allowance. Banks charge 3,000–5,000."),
+        ("Salaries to wallets above the free amount", "Payroll_Over_Fee", "% of amount", PCT2, "Only the part of the payroll above the plan's free amount, only to wallets. A third of Wave's 1%."),
+        ("Payroll module", "Payslip_Fee", "FCFA / payslip", NUM, "Payslip plus the monthly IPRES, CSS and income-tax declarations. Optional, every plan."),
+):
+    ps_row([lab, f"={nm}", unit, None, note], fm, eur=["B"] if fm == NUM else None)
+
+ps_title("Commissions", "Charged as a share of the amount, on top of the plan.")
+ps_head(["Commission", "Rate", "Unit", "", "What it is for"])
+for lab, nm, note in (
+        ("Payment links and QR collections (mobile money)", "PL_Fee", "When a client's customer pays an invoice by Wave or Orange Money. Card and transfer payments are free."),
+        ("Card spending in other currencies", "FX_Fee", "Ads, software and travel paid in dollars or euros. Card spending in FCFA is free."),
+        ("International supplier payments", "Intl_Fee", "Paying suppliers abroad (China, Turkey, Dubai, France)."),
+):
+    ps_row([lab, f"={nm}", "% of amount", None, note], PCT2)
+
+ps_title("Always free", "What clients never pay for.")
+ps_head(["Item", "Note"])
+for lab, note in (("Opening the account", "Online, no branch visit."), ("Salaries to bank accounts", "Any number, any amount."),
+                  ("Salaries to wallets up to the plan's free amount", ""), ("Incoming transfers", "From any bank or wallet in the WAEMU."),
+                  ("Card spending in FCFA", ""), ("Virtual cards up to the plan limit", "")):
+    ps_row([lab, note])
+
+ps_title("Paid by partners, not by clients", "Income Kelen earns from its partners; the client sees nothing.")
+ps_head(["Item", "Rate", "Unit", "", "What it is"])
+ps_row(["Interchange share on card spending in FCFA", "=Interchange_Share", "% of spending", None, "Part of the fee shops' banks pay on every card payment, shared by the partner bank."], PCT2)
+ps_row(["Share of bank income on client balances", "=Deposit_Share", "% a year", None, "Part of what the partner bank earns on the money clients keep in their accounts."], PCT2)
+
+ps_title("Credit (from month 18)", "Loans made by a partner microfinance institution, then by Kelen's own in Senegal. Rates are all-in, under the 24% cap.")
+ps_head(["Product", "Rate", "Unit", "", "What it is"])
+for pk, lab, note in (("Factoring", "Invoice financing", "Cash now against an invoice a client will pay in 30–90 days."),
+                      ("Bridge", "Payroll bridge", "Short loan to pay salaries on time when a client pays late."),
+                      ("Line", "Credit line", "Cash reserve to draw and repay, sized on the account's flows."),
+                      ("Term", "Equipment loan", "Vehicles, machines, computers; 6–24 months."),
+                      ("Advance", "Salary advance (employees)", "Part of earned salary before payday, repaid from the next salary.")):
+    ps_row([lab, f"=Yield_{pk}", "% a year", None, note], PCT)
+
+ps_title("Pricing options", "Switch on Assumptions (Pricing option). B is the base.")
+ps_head(["Plan", "A: acquisition first", "B: balanced", "C: revenue first", "Note"])
+for pl in PL3:
+    ps_row([DISP[pl], f"=OFFSET(Price_{pl},0,1)", f"=OFFSET(Price_{pl},0,2)", f"=OFFSET(Price_{pl},0,3)", "FCFA a month"], NUM, eur=list("BCD"))
+
 # =====================================================================================
 # PRICING LEVERS
 # =====================================================================================
@@ -1873,6 +2015,7 @@ lines = [
     ("", ""),
     ("Tabs", ""),
     ("Dashboard", "Headline numbers, year-by-year summary and checks."),
+    ("Plans", "The three plans with their prices, limits and features; add-ons, commissions, what is always free, partner income, credit rates and the A/B/C pricing options."),
     ("Assumptions", "Every hypothesis with its source: timing, acquisition, pricing, usage per client, cost to serve, credit, team and tools, Maak, fixed costs by year, funding."),
     ("Unit costs", "What one of each thing costs or earns: one employee by role, one client by plan, one loan, and the price of every fixed item."),
     ("Hiring plan", "Fixed roles, start months and salaries (employer cost = gross + 30% charges); 'Agency hire' adds the €800 agency fee."),
@@ -1911,7 +2054,7 @@ for j, (a, b) in enumerate(lines):
     CV.cell(r, 2).alignment = Alignment(vertical="top")
 
 # sheet order
-order = ["Cover", "Dashboard", "Assumptions", "Hiring plan"]
+order = ["Cover", "Dashboard", "Plans", "Assumptions", "Hiring plan"]
 for nm_ in ("Staff", "Sales & marketing", "Clients & revenue", "Credit", "Costs", "P&L monthly"):
     order += [nm_, TWINS[nm_]]
 order += ["P&L annual", "Pricing levers", "Cash flow", TWINS["Cash flow"], "Unit economics", "Market", "Regulatory path"]

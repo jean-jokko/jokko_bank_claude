@@ -495,7 +495,7 @@ def cash_chart():
 
 # ------------------------------------------------------------------ page
 tabs = [
-    ("overview", "Overview"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
+    ("overview", "Overview"), ("plans", "Plans & pricing"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
     ("cash", "Cash flow"), ("costs", "Costs"), ("sales", "Sales & marketing"), ("revenue", "Clients & revenue"), ("credit", "Credit"),
     ("staff", "Staff"), ("unit", "Unit economics"), ("market", "Market"), ("regulatory", "Regulatory path"),
 ]
@@ -516,6 +516,7 @@ sections = {
     "credit": ("Credit", f"Loan book by product and credit income (k FCFA). No loans before month {min(nv('Start_Factoring'), nv('Start_Bridge'))}. A partner SFD lends until month {nv('Own_Funding_Month') - 1}, then Kelen's own SFD in Senegal; Côte d'Ivoire loans stay with a partner.", ts_table("Credit")),
     "staff": ("Staff", "The team that grows with volume (support per client, developers per client, field reps per client in each country, credit analysts per loan book), then headcount and employer cost by department (k FCFA).", ts_table("Staff", from_label="Team that grows with volume")),
     "unit": ("Unit economics", "Per-client economics and efficiency ratios by year.", annual_table("Unit economics", cols="DEFGH", first=6)),
+    "plans": ("Plans & pricing", "The offer as clients see it: the three plans with their price, limits and features, then add-ons, commissions, what is always free, what partners pay, credit rates and the three pricing options. Every figure comes from Assumptions.", blocks_html("Plans")),
     "levers": ("Pricing levers", "What each change to prices, limits, fees or costs does to year-5 revenue and EBITDA, all else equal. Blue cells are the example changes; change them in the Excel file. Insurance referrals are shown here, outside the plan.", blocks_html("Pricing levers")),
     "regulatory": ("Regulatory path", "What each stage of the plan needs from regulators in the WAEMU (BCEAO zone), Senegal and Côte d'Ivoire, and where its cost sits in the model.", regulatory_html()),
     "market": ("Market", "Formal employers in Senegal and Côte d'Ivoire, the target market and the share the plan reaches.", annual_table("Market", cols="DEFGH", head_row=4, first=5)),
