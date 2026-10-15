@@ -166,9 +166,9 @@ a_in("CI_Company_Month", "Côte d'Ivoire subsidiary created", 16, "month #", "0"
 a_in("Audit_Month", "First tech audit (then every 12 months)", 4, "month #", "0", "Before launch, for the partner bank; repeated yearly.")
 
 a_sec("3. Client acquisition (sales and marketing)")
-a_in("Rep_Productivity", "New clients signed per field sales rep per month", None, "clients", NUM1, "Rep counts come from the hiring plan. A rep sells from the month after joining. Senegal B2B field sales benchmark to validate in the pilot.", scen=(7, 10, 13))
+a_in("Rep_Productivity", "New clients signed per field sales rep per month", None, "clients", NUM1, "Rep counts come from the hiring plan. A rep sells from the month after joining. Base lowered from 10 to 8 after the market analysis (Oct 2026): Julaya had about 2,800 active users in Senegal after six years. Validate in the pilot.", scen=(7, 8, 13))
 a_in("CI_Productivity", "Côte d'Ivoire rep productivity vs Senegal", 0.9, "x", "0.00", "Slightly lower at first: new market, brand unknown.")
-a_in("Partner_Base_SN", "Partner channel, Senegal: clients a month at launch", None, "clients", NUM1, "Accountants, payroll software, chambers of commerce.", scen=(6, 10, 14))
+a_in("Partner_Base_SN", "Partner channel, Senegal: clients a month at launch", None, "clients", NUM1, "Accountants, payroll software (KayFay, Sage, Odoo), chambers of commerce. Base lowered from 10 to 8 after the market analysis (Oct 2026).", scen=(6, 8, 14))
 a_in("Partner_Base_CI", "Partner channel, Côte d'Ivoire: clients a month at launch", None, "clients", NUM1, "", scen=(4, 6, 9))
 a_in("Partner_Growth", "Partner channel monthly growth", 0.06, "% / month", PCT, "")
 a_in("Partner_Cap_SN", "Partner channel cap, Senegal", 80, "clients / month", NUM, "")
@@ -186,7 +186,7 @@ a_in("Rep_Transport", "Field sales transport allowance per rep", 75000, "FCFA / 
 a_sec("4. Pricing and fees")
 a_in("Price_Petite", "Subscription, Petite (1–10 staff)", 9900, "FCFA / month", NUM, "Business model v2.")
 a_in("Price_Moyenne", "Subscription, Moyenne (11–50 staff)", 29900, "FCFA / month", NUM, "Business model v2.")
-a_in("Price_Grande", "Subscription, Grande (51+ staff)", 79900, "FCFA / month", NUM, "Business model v2.")
+a_in("Price_Grande", "Subscription, Grande (51+ staff)", 149900, "FCFA / month", NUM, "Raised from 79,900 after the market analysis (Oct 2026): salaries stay free, but a Grande client averages 120 staff, about 24M FCFA of payroll a month, which costs 240,000 FCFA a month at Wave's 1%. Wallet payout costs (PI-SPI) made 79,900 loss-making.")
 a_in("Price_Increase", "Annual price increase", 0.0, "% / year", PCT, "")
 a_in("Free_Months", "Free months for every new client", 3, "months", "0", "Launch offer: first 3 months free. Use 0 to 6.")
 a_in("Annual_Share", "Share of clients paying yearly", 0.30, "%", PCT, "")
@@ -195,7 +195,7 @@ a_in("Card_Fee", "Physical card fee (one-off; first card free)", 5000, "FCFA", N
 a_in("FX_Fee", "Fee on card spending in foreign currencies", 0.01, "%", PCT, "Business model v2. Card spending in FCFA is free.")
 a_in("Interchange_Share", "Interchange share received on FCFA card spending", None, "%", PCT2, "Placeholder: WAEMU interchange levels are not published. Negotiate with the partner bank.", scen=(0.003, 0.005, 0.007))
 a_in("Deposit_Share", "Share of bank income on client balances", None, "% / year", PCT2, "Negotiated with the partner bank; the largest non-credit lever.", scen=(0.01, 0.015, 0.02))
-a_in("Overage_Fee", "Fee per supplier payout above the allowance", 100, "FCFA", NUM, "Allowance: 50 / 200 / 1,000 payouts a month. Salaries always unlimited.")
+a_in("Overage_Fee", "Fee per supplier payout above the allowance", 300, "FCFA", NUM, "Allowance: 50 / 200 / 1,000 payouts a month. Salaries always unlimited and free. Raised from 100 to 300 (Oct 2026) so overage covers its 250 FCFA cost; banks charge 3,000–5,000 per interbank transfer.")
 a_in("PL_Fee", "Payment links: fee on mobile money collections", 0.01, "%", PCT, "")
 a_in("PL_Cost", "Payment links: operator and aggregator cost", 0.007, "%", PCT2, "0.5–1.5% (cost breakdown).")
 a_in("PL_Momo_Share", "Payment links: share collected by mobile money", 0.70, "%", PCT, "The rest by card or transfer, free.")
@@ -231,7 +231,7 @@ a_in("PL_Coll_Petite", "Payment link collections, Petite (users)", 800000, "FCFA
 a_in("PL_Coll_Moyenne", "Payment link collections, Moyenne (users)", 3000000, "FCFA / month", NUM, "")
 a_in("PL_Coll_Grande", "Payment link collections, Grande (users)", 10000000, "FCFA / month", NUM, "")
 a_in("Avg_Salary", "Average monthly salary paid through Kelen", 200000, "FCFA", NUM, "SME average; the formal-sector average is higher (about 380,000 FCFA).")
-a_in("Wallet_Share", "Share of salaries paid to mobile money wallets", 0.60, "%", PCT, "Senegal: 20.1% of adults receive wages on a phone vs 12.0% in an account (Global Findex 2025).")
+a_in("Wallet_Share", "Share of salaries paid to mobile money wallets", 0.60, "%", PCT, "Global Findex 2025: about 64% of Senegal's private wage earners are paid by phone, 33% into an account; in Côte d'Ivoire 57% are still paid in cash only (market analysis, Oct 2026).")
 a_in("EmpAcc_Adoption", "Employees who open a Kelen salary account", 0.20, "%", PCT, "")
 
 a_sec("6. Cost to serve (variable costs)")
@@ -243,9 +243,9 @@ a_in("Card_Proc_Fee", "Card processing per active card", 1000, "FCFA / month", N
 a_in("Card_Prod_Cost", "Physical card printed and delivered", 4500, "FCFA", NUM, "3,000–6,000 FCFA.")
 a_in("Scheme_Rate", "Visa / Mastercard cross-border fees", 0.005, "% of foreign spending", PCT2, "About 0.5% (assumption).")
 a_in("Fraud_Rate", "Fraud and chargebacks", 0.0015, "% of card spending", PCT2, "0.1–0.3%.")
-a_in("Wallet_Payout_Cost", "Cost of a salary paid to a wallet", 0.0025, "% of amount", PCT2, "Estimate via PI-SPI / aggregator; Wave charges businesses 1% sender-pays. Quote needed.")
+a_in("Wallet_Payout_Cost", "Cost of a salary paid to a wallet", None, "% of amount", PCT2, "Via the partner bank on PI-SPI, mandatory from 2 Nov 2026: free up to 8,000 FCFA a day per user, then 0–0.8% (BCEAO, Oct 2026). Prudent uses the 0.8% ceiling. Wave charges businesses 1%. Confirm the business tariff with the partner bank.", scen=(0.008, 0.004, 0.0025))
 a_in("Bank_Payout_Cost", "Cost of a salary paid to a bank account", 100, "FCFA / payout", NUM, "PI-SPI / interbank transfer (estimate).")
-a_in("Supplier_Payout_Cost", "Cost of a supplier payout", 100, "FCFA / payout", NUM, "Blend of PI-SPI, bank and wallet (estimate).")
+a_in("Supplier_Payout_Cost", "Cost of a supplier payout", 250, "FCFA / payout", NUM, "Online bank transfers cost 250–1,000 FCFA a line in published tariffs (SGCI, Orabank 250; UBA CI 750; BNDE bulk 1,000); PI-SPI 0–0.8% for wallets (market analysis, Oct 2026).")
 a_in("Notif_Cost", "SMS, WhatsApp and support tools per client", 400, "FCFA / month", NUM, "")
 a_in("Emp_Notif", "Messages per employee account", 50, "FCFA / month", NUM, "")
 a_in("EmpAcc_Cost", "Processing per employee account", 150, "FCFA / month", NUM, "About €0.23 (cost breakdown).")
@@ -257,7 +257,7 @@ a_in("Credit_Ramp", "Months for a product to reach full uptake", 12, "months", "
 a_in("Start_Factoring", "Factoring: start month", 18, "month #", "0", "No loans before month 18 (decision). Lowest risk: the debtor pays the invoice.")
 a_in("Uptake_Factoring", "Factoring: share of active clients using it", 0.05, "%", PCT, "")
 a_in("Avg_Factoring", "Factoring: average outstanding per user", 8000000, "FCFA", NUM, "80–90% of invoices, 30–90 days.")
-a_in("Yield_Factoring", "Factoring: yield", 0.23, "% / year", PCT, "0.063% a day = 23% a year, under the 24% SFD usury cap.")
+a_in("Yield_Factoring", "Factoring: yield", 0.23, "% / year", PCT, "0.063% a day = 23% a year. All-in: the 24% SFD cap counts fees and insurance, so no extra file fee is modelled.")
 a_in("CoR_Factoring", "Factoring: cost of risk", 0.015, "% / year", PCT2, "")
 a_in("Start_Bridge", "Payroll bridge: start month", 18, "month #", "0", "")
 a_in("Uptake_Bridge", "Payroll bridge: share of active clients", 0.03, "%", PCT, "")
@@ -391,7 +391,7 @@ a_arr("Misc", "Company bank fees and miscellaneous", [300000, 450000, 600000, 70
 a_sec("11. Cash, capital and funding")
 a_in("Opening_Cash", "Cash at month 1 before the first round", 0, "FCFA", NUM, "")
 a_in("Card_Collateral", "Card programme collateral at the partner bank", 60000000, "FCFA", NUM, "To quote.")
-a_in("SFD_Acquisition", "Acquisition of a microfinance company (SFD)", 650000000, "FCFA", NUM, "Unknown; mid-range estimate (≈ €990k). Price depends on the target's equity, book and licence.")
+a_in("SFD_Acquisition", "Acquisition of a microfinance company (SFD)", 650000000, "FCFA", NUM, "Estimate (≈ €990k) for a small Senegalese SFD. Recent deals: Microsen (9.3bn FCFA assets) to SF Capital and Kajas (5.75bn) to Witti, prices not disclosed, Kajas by capital increase; small SFDs trade at or below 1× book (market analysis, Oct 2026).")
 a_in("Seed_Month", "Seed round: month", 1, "month #", "0", "")
 a_in("Seed_Amount", "Seed round: amount", EQUITY[0], "FCFA", NUM, "Adjust to keep closing cash above zero (see Cash flow).")
 a_in("SeriesA_Month", "Series A: month", 15, "month #", "0", "")
@@ -1192,8 +1192,9 @@ mk_in("sn_staff", "Declared private-sector employees (IPRES, 2024)", 577171, "pe
 mk_in("sn_new", "New companies registered a year (APIX)", 26000, "companies / year", NUM, "AllAfrica / APS, Sep 2025.")
 mk_in("sn_units", "Economic units (ANSD census 2016, 97% informal)", 407882, "units", NUM, "ANSD RGE 2016. A new census (RGE-2) is under way, results 2027–28.")
 mk_in("sn_target", "Share of formal employers in Kelen's target (2–500 staff, urban, digital)", 0.50, "%", PCT, "Assumption. Core target: Dakar, Thiès, Saint-Louis.")
+mk_in("sn_ready", "Digital-ready SMEs (market analysis estimate, midpoint)", 24000, "companies", NUM, "Market analysis (Oct 2026): 20,000–28,000 formal employers in Dakar and other cities that already bank and pay by phone; large firms excluded. To validate in interviews.")
 mk_head("Côte d'Ivoire: inputs")
-mk_in("ci_emp", "Formal employers (estimate)", 60000, "companies", NUM, "ESTIMATE: no published CNPS count of contributing employers was found. About 1.5× Senegal, as Côte d'Ivoire's economy is about twice as large. Replace with the CNPS annual report.")
+mk_in("ci_emp", "Formal employers (CNPS declared companies)", 49000, "companies", NUM, "CNPS: about 49,000 declared companies (gouv.ci, Apr 2025; not fully verified). Was 60,000 before the market analysis (Oct 2026). https://www.gouv.ci/actualite/protection-sociale-environ-12-million-de-travailleurs-du-secteur-prive-et-pres-dun-million-de-travailleurs-independants-declares-a-la-cnps-2374")
 mk_in("ci_growth", "Growth in formal employers", 0.05, "% / year", PCT, "Assumption.")
 mk_in("ci_new", "New companies created a year (CEPICI, 2025)", 26948, "companies / year", NUM, "CEPICI 2025 review (Feb 2026): 26,948 companies created, +6%. https://fr.allafrica.com/stories/202602200240.html")
 mk_in("ci_target", "Share of formal employers in Kelen's target", 0.50, "%", PCT, "Assumption. Core target: Abidjan.")
@@ -1203,20 +1204,21 @@ mk_y("sn_market", "Senegal: formal employers", lambda col, y: f"=$D${MKK['sn_emp
 mk_y("sn_sam", "Senegal: target companies (serviceable market)", lambda col, y: f"={col}{MKK['sn_market']}*$D${MKK['sn_target']}", "companies", bold=True)
 mk_y("sn_clients", "Senegal: Kelen active clients", lambda col, y: f"='P&L annual'!{col}{YK['clients_sn']}", "clients")
 mk_y("sn_share", "Senegal: share of target companies", lambda col, y: f"=IFERROR({col}{MKK['sn_clients']}/{col}{MKK['sn_sam']},0)", "%", fmt=PCT, bold=True)
+mk_y("sn_ready_share", "Senegal: share of digital-ready SMEs (market analysis)", lambda col, y: f"=IFERROR({col}{MKK['sn_clients']}/$D${MKK['sn_ready']},0)", "%", fmt=PCT)
 mk_y("ci_market", "Côte d'Ivoire: formal employers", lambda col, y: f"=$D${MKK['ci_emp']}*(1+$D${MKK['ci_growth']})^(YEAR(Start_Date)+{y - 1}-{start_year})", "companies")
 mk_y("ci_sam", "Côte d'Ivoire: target companies (serviceable market)", lambda col, y: f"={col}{MKK['ci_market']}*$D${MKK['ci_target']}", "companies", bold=True)
 mk_y("ci_clients", "Côte d'Ivoire: Kelen active clients", lambda col, y: f"='P&L annual'!{col}{YK['clients_ci']}", "clients")
 mk_y("ci_share", "Côte d'Ivoire: share of target companies", lambda col, y: f"=IFERROR({col}{MKK['ci_clients']}/{col}{MKK['ci_sam']},0)", "%", fmt=PCT, bold=True)
 mk_y("emp_share", "Employee salary accounts vs declared employees in Senegal", lambda col, y: f"=IFERROR('P&L annual'!{col}{YK['emp_acc']}/$D${MKK['sn_staff']},0)", "%", fmt=PCT2)
 mk_head("Revenue pool today (indicative)")
-mk_in("bank_fee", "Bank business account fee (SME)", 15000, "FCFA / month", NUM, "UBA Senegal: 25,000 FCFA for SA/SARL, 10,000 for small businesses (comparison site, unverified).")
+mk_in("bank_fee", "Bank business account fee (SME)", 15000, "FCFA / month", NUM, "Published tariffs: BNDE 12,500, BIS 12,000, UBA Sénégal 25,000 (SA/PME) or 10,000 (micro); SGCI PME packs 25,000–35,000. With online banking and transfers a 10-employee SARL pays about 35,000–52,500 a month (market analysis, Oct 2026).")
 r = mrow[0]
 MK.cell(r, 1, "Senegal: what target companies pay for business accounts today").font = F()
 MK.cell(r, 2, "FCFA / year").font = F(color=GREY)
 MK.cell(r, 4, f"=D{MKK['sn_sam']}*D{MKK['bank_fee']}*12")
 style(MK.cell(r, 4), fmt=NUM)
 style(MK.cell(r, 5, f"=D{r}/FX_EUR"), fmt=EURN)
-MK.cell(r, 9, "Account fees only; transfer, card and payout fees come on top. Wave Business charges 1% on bulk payouts.").font = F(color=GREY)
+MK.cell(r, 9, "Account fees only; transfer, card and payout fees come on top. Today SMEs also pay 1% of payroll to Wave Business or Orange Money (1.5% to non-Orange wallets), and Julaya charges 0.5–1.5%.").font = F(color=GREY)
 mrow[0] += 1
 
 # =====================================================================================
@@ -1644,7 +1646,7 @@ lines = [
     ("Côte d'Ivoire", "Same 30% employer charges as Senegal; the number of formal employers is an estimate."),
     ("Credit", "No loans before month 18. A partner microfinance institution (SFD) lends at 23% a year, under the 24% SFD usury cap. Kelen buys an SFD around month 24 and lends from it in Senegal; Côte d'Ivoire loans stay with a partner. The loan book is funded by debt lines, not equity."),
     ("Licences", "Kelen holds no licence of its own until the SFD acquisition: partners hold the accounts, cards and loans. See Regulatory path."),
-    ("Sources", "Business model v2, Cost breakdown in euros, Senegal launch plan and the research notes in this project, plus IPRES/ANSD 2024 and CEPICI 2025 for the market."),
+    ("Sources", "Business model v2, Cost breakdown in euros, Senegal launch plan, the market and competitor analysis (Oct 2026, research/market) and the research notes in this project, plus IPRES/ANSD 2024, CNPS and CEPICI 2025 for the market."),
 ]
 for j, (a, b) in enumerate(lines):
     r = 5 + j
