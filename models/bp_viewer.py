@@ -323,7 +323,7 @@ def blocks_html(sheet):
                         t = f"{MINUS if e < 0 else ''}€" + t.replace(",", NNBSP)
                         last["cells"][k] += f'<span class="eur">{t}</span>'
             continue
-        is_head = fill is not None and str(fill.fgColor.rgb).endswith("1F2A44")
+        is_head = fill is not None and str(fill.fgColor.rgb)[-6:] in ("1F2A44", "0D7377")
         if is_head:
             cols = [(c, v.cell(r, c).value) for c in range(1, 16) if v.cell(r, c).value not in (None, "")]
             prev_title = False
@@ -344,7 +344,7 @@ def blocks_html(sheet):
             prev_title = False
             continue
         prev_title = False
-        if fill is not None and str(fill.fgColor.rgb).endswith("DCE6F2") and all(v.cell(r, c).value is None for c in range(2, 16)):
+        if fill is not None and str(fill.fgColor.rgb)[-6:] in ("DCE6F2", "E2EEEF") and all(v.cell(r, c).value is None for c in range(2, 16)):
             rows.append(f'<tr class="sec"><th scope="rowgroup" colspan="{len(cols)}">{E(a.value)}</th></tr>')
             continue
         bold = bool(font and font.b)
@@ -495,7 +495,7 @@ def cash_chart():
 
 # ------------------------------------------------------------------ page
 tabs = [
-    ("overview", "Overview"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("pnlm", "P&L by month"),
+    ("overview", "Overview"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
     ("cash", "Cash flow"), ("costs", "Costs"), ("sales", "Sales & marketing"), ("revenue", "Clients & revenue"), ("credit", "Credit"),
     ("staff", "Staff"), ("unit", "Unit economics"), ("market", "Market"), ("regulatory", "Regulatory path"),
 ]
@@ -516,6 +516,7 @@ sections = {
     "credit": ("Credit", f"Loan book by product and credit income (k FCFA). No loans before month {min(nv('Start_Factoring'), nv('Start_Bridge'))}. A partner SFD lends until month {nv('Own_Funding_Month') - 1}, then Kelen's own SFD in Senegal; Côte d'Ivoire loans stay with a partner.", ts_table("Credit")),
     "staff": ("Staff", "The team that grows with volume (support per client, developers per client, field reps per client in each country, credit analysts per loan book), then headcount and employer cost by department (k FCFA).", ts_table("Staff", from_label="Team that grows with volume")),
     "unit": ("Unit economics", "Per-client economics and efficiency ratios by year.", annual_table("Unit economics", cols="DEFGH", first=6)),
+    "levers": ("Pricing levers", "What each change to prices, limits, fees or costs does to year-5 revenue and EBITDA, all else equal. Blue cells are the example changes; change them in the Excel file. Insurance referrals are shown here, outside the plan.", blocks_html("Pricing levers")),
     "regulatory": ("Regulatory path", "What each stage of the plan needs from regulators in the WAEMU (BCEAO zone), Senegal and Côte d'Ivoire, and where its cost sits in the model.", regulatory_html()),
     "market": ("Market", "Formal employers in Senegal and Côte d'Ivoire, the target market and the share the plan reaches.", annual_table("Market", cols="DEFGH", head_row=4, first=5)),
 }

@@ -88,10 +88,11 @@ for col, w in {"A": 2, "B": 52, "C": 16, "D": 15, "E": 15, "F": 15, "G": 15, "H"
 arow = [6]
 
 
-def a_sec(text, kind="scalar"):
+def a_sec(text, kind="scalar", opt=False):
     r = arow[0] + 1
     A.cell(r, 2, text)
-    heads = ["Unit", "Value used", "Prudent", "Base", "Ambitious", "€ / FCFA equivalent", "Source / note"] if kind == "scalar" else \
+    heads = ["Unit", "Value used", "Option A", "Option B", "Option C", "€ / FCFA equivalent", "Source / note"] if opt else \
+        ["Unit", "Value used", "Prudent", "Base", "Ambitious", "€ / FCFA equivalent", "Source / note"] if kind == "scalar" else \
         ["Unit", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Source / note", "", "Y1 (€ / FCFA)", "Y2 (€ / FCFA)", "Y3 (€ / FCFA)", "Y4 (€ / FCFA)", "Y5 (€ / FCFA)"]
     for j, h in enumerate(heads):
         if h:
@@ -117,6 +118,24 @@ def a_in(nm, label, value, unit, fmt=NUM, note="", scen=None):
     A.cell(r, 9, note).font = F(color=GREY)
     fml, fm = equiv(unit, f"D{r}")
     if fml and nm not in ("FX_EUR", "FX_USD"):
+        style(A.cell(r, 8, fml), fmt=fm, color=GREY)
+    name(nm, f"'Assumptions'!$D${r}")
+    arow[0] += 1
+    return r
+
+
+def a_opt(nm, label, values, unit, fmt=NUM, note=""):
+    """Input that switches with Pricing_Option (columns E-G = options A, B, C)."""
+    r = arow[0]
+    A.cell(r, 2, label).font = F()
+    A.cell(r, 3, unit).font = F(color=GREY)
+    A.cell(r, 4, f"=CHOOSE(Pricing_Option,E{r},F{r},G{r})")
+    style(A.cell(r, 4), fmt=fmt)
+    for j, v in enumerate(values):
+        style(A.cell(r, 5 + j, v), fmt=fmt, color=BLUE, fill=IN_FILL)
+    A.cell(r, 9, note).font = F(color=GREY)
+    fml, fm = equiv(unit, f"D{r}")
+    if fml:
         style(A.cell(r, 8, fml), fmt=fm, color=GREY)
     name(nm, f"'Assumptions'!$D${r}")
     arow[0] += 1
@@ -174,62 +193,97 @@ a_in("Partner_Growth", "Partner channel monthly growth", 0.06, "% / month", PCT,
 a_in("Partner_Cap_SN", "Partner channel cap, Senegal", 80, "clients / month", NUM, "")
 a_in("Partner_Cap_CI", "Partner channel cap, Côte d'Ivoire", 60, "clients / month", NUM, "")
 a_in("CAC_Digital", "Digital ads cost per signed client", None, "FCFA", NUM, "Media spend only. Meta leads 600–2,800 FCFA; lead-to-client conversion assumed 2–4%.", scen=(100000, 75000, 55000))
-a_in("Mix_Petite", "Share of new clients on Petite (1–10 staff)", 0.60, "%", PCT, "From Business model v2. The three shares must add up to 100% (see check on the Dashboard).")
-a_in("Mix_Moyenne", "Share of new clients on Moyenne (11–50 staff)", 0.30, "%", PCT, "")
-a_in("Mix_Grande", "Share of new clients on Grande (51+ staff)", 0.10, "%", PCT, "")
-a_in("Churn_Petite", "Monthly churn, Petite", None, "% / month", PCT2, "Small companies leave or close more often.", scen=(0.03, 0.02, 0.015))
-a_in("Churn_Moyenne", "Monthly churn, Moyenne", None, "% / month", PCT2, "", scen=(0.02, 0.0125, 0.01))
-a_in("Churn_Grande", "Monthly churn, Grande", None, "% / month", PCT2, "", scen=(0.015, 0.0075, 0.005))
+a_in("Mix_Petite", "Share of new clients on Essentiel (mostly small firms)", 0.60, "%", PCT, "Plans are chosen by limits and features, not staff count. Small firms (about 5 staff) take Essentiel. The three shares must add up to 100% (see check on the Dashboard).")
+a_in("Mix_Moyenne", "Share of new clients on Pro (mostly mid-size firms)", 0.30, "%", PCT, "Firms that need approvals (double signature) or the accounting module, typically 10–50 staff.")
+a_in("Mix_Grande", "Share of new clients on Business (mostly large firms)", 0.10, "%", PCT, "")
+a_in("Churn_Petite", "Monthly churn, Essentiel", None, "% / month", PCT2, "Small companies leave or close more often.", scen=(0.03, 0.02, 0.015))
+a_in("Churn_Moyenne", "Monthly churn, Pro", None, "% / month", PCT2, "", scen=(0.02, 0.0125, 0.01))
+a_in("Churn_Grande", "Monthly churn, Business", None, "% / month", PCT2, "", scen=(0.015, 0.0075, 0.005))
 a_in("Referral_Fee", "Referral fee per partner-channel client", 25000, "FCFA", NUM, "Paid to accountants and payroll software partners (cost breakdown).")
 a_in("Rep_Transport", "Field sales transport allowance per rep", 75000, "FCFA / month", NUM, "50–100k FCFA (cost breakdown).")
 
-a_sec("4. Pricing and fees")
-a_in("Price_Petite", "Subscription, Petite (1–10 staff)", 9900, "FCFA / month", NUM, "Business model v2.")
-a_in("Price_Moyenne", "Subscription, Moyenne (11–50 staff)", 29900, "FCFA / month", NUM, "Business model v2.")
-a_in("Price_Grande", "Subscription, Grande (51+ staff)", 149900, "FCFA / month", NUM, "Raised from 79,900 after the market analysis (Oct 2026): salaries stay free, but a Grande client averages 120 staff, about 24M FCFA of payroll a month, which costs 240,000 FCFA a month at Wave's 1%. Wallet payout costs (PI-SPI) made 79,900 loss-making.")
+a_sec("4. Plans and pricing")
+a_in("Pricing_Option", "Pricing option (1 = A acquisition first, 2 = B balanced, 3 = C revenue first)", 2, "option", "0", "Decision (Oct 2026): plans by limits and features, not staff count. B is the base. Switch to compare; prices below change with it. See the Pricing levers tab.")
+a_sec("4a. Plan prices (columns E–G are options A, B, C)", opt=True)
+a_opt("Price_Petite", "Essentiel plan", (4900, 9900, 14900), "FCFA / month", NUM, "1 user + 1 invited free, 30 transfers, 1 physical and 2 virtual cards, salaries free up to 3M FCFA a month. B is below a bank's micro-business account fee (10,000).")
+a_opt("Price_Moyenne", "Pro plan", (19900, 29900, 39900), "FCFA / month", NUM, "3 users, 150 transfers, 3 physical and 10 virtual cards, approvals (double signature), accounting module, salaries free up to 15M FCFA a month.")
+a_opt("Price_Grande", "Business plan", (59900, 89900, 129900), "FCFA / month", NUM, "10 users, 500 transfers, 10 physical and unlimited virtual cards, multi-level approvals, API, several companies, adviser, salaries free up to 60M FCFA a month.")
+a_sec("4b. Plan limits, add-ons and fees")
 a_in("Price_Increase", "Annual price increase", 0.0, "% / year", PCT, "")
-a_in("Free_Months", "Free months for every new client", 3, "months", "0", "Launch offer: first 3 months free. Use 0 to 6.")
+a_in("Free_Months", "Free months for every new client", 1, "months", "0", "Decision (Oct 2026): first month free on every plan (was 3).")
 a_in("Annual_Share", "Share of clients paying yearly", 0.30, "%", PCT, "")
 a_in("Annual_Free", "Months free on yearly billing", 2, "months", "0", "Yearly price = 10 months.")
-a_in("Card_Fee", "Physical card fee (one-off; first card free)", 5000, "FCFA", NUM, "Business model v2.")
+a_in("Users_Incl_Petite", "Users included, Essentiel", 2, "users", NUM, "1 main user + 1 invited free.")
+a_in("Users_Incl_Moyenne", "Users included, Pro", 3, "users", NUM, "")
+a_in("Users_Incl_Grande", "Users included, Business", 10, "users", NUM, "")
+a_in("Transfers_Incl_Petite", "Transfers included a month, Essentiel", 30, "transfers", NUM, "All outgoing transfers except salaries. Salaries never count and are always included.")
+a_in("Transfers_Incl_Moyenne", "Transfers included a month, Pro", 150, "transfers", NUM, "")
+a_in("Transfers_Incl_Grande", "Transfers included a month, Business", 500, "transfers", NUM, "")
+a_in("Cards_Phys_Incl_Petite", "Physical cards included, Essentiel", 1, "cards", NUM, "Virtual cards: 2 / 10 / unlimited.")
+a_in("Cards_Phys_Incl_Moyenne", "Physical cards included, Pro", 3, "cards", NUM, "")
+a_in("Cards_Phys_Incl_Grande", "Physical cards included, Business", 10, "cards", NUM, "")
+a_in("Payroll_Free_Petite", "Salaries free up to, Essentiel", 3000000, "FCFA / month", NUM, "Above this, salaries paid to wallets cost the client Payroll_Over_Fee; salaries to bank accounts stay free. Average clients stay far below.")
+a_in("Payroll_Free_Moyenne", "Salaries free up to, Pro", 15000000, "FCFA / month", NUM, "")
+a_in("Payroll_Free_Grande", "Salaries free up to, Business", 60000000, "FCFA / month", NUM, "")
+a_in("Extra_User_Fee", "Extra user beyond the plan", 2500, "FCFA / month", NUM, "")
+a_in("Extra_Card_Fee", "Extra physical card beyond the plan", 2000, "FCFA / month", NUM, "Plus the one-off card fee below.")
+a_in("Payroll_Over_Fee", "Salaries to wallets above the free amount", 0.003, "% of amount", PCT2, "A third of Wave's 1%. Protects against very large payrolls on small plans.")
+a_in("Card_Fee", "Physical card fee beyond the plan (one-off)", 5000, "FCFA", NUM, "Printing and delivery of an extra card.")
 a_in("FX_Fee", "Fee on card spending in foreign currencies", 0.01, "%", PCT, "Business model v2. Card spending in FCFA is free.")
 a_in("Interchange_Share", "Interchange share received on FCFA card spending", None, "%", PCT2, "Placeholder: WAEMU interchange levels are not published. Negotiate with the partner bank.", scen=(0.003, 0.005, 0.007))
 a_in("Deposit_Share", "Share of bank income on client balances", None, "% / year", PCT2, "Negotiated with the partner bank; the largest non-credit lever.", scen=(0.01, 0.015, 0.02))
-a_in("Overage_Fee", "Fee per supplier payout above the allowance", 300, "FCFA", NUM, "Allowance: 50 / 200 / 1,000 payouts a month. Salaries always unlimited and free. Raised from 100 to 300 (Oct 2026) so overage covers its 250 FCFA cost; banks charge 3,000–5,000 per interbank transfer.")
+a_in("Overage_Fee", "Fee per transfer above the plan allowance", 300, "FCFA", NUM, "Allowance: 30 / 150 / 500 transfers a month. Salaries never count. Covers the 250 FCFA cost; banks charge 3,000–5,000 per interbank transfer.")
 a_in("PL_Fee", "Payment links: fee on mobile money collections", 0.01, "%", PCT, "")
 a_in("PL_Cost", "Payment links: operator and aggregator cost", 0.007, "%", PCT2, "0.5–1.5% (cost breakdown).")
 a_in("PL_Momo_Share", "Payment links: share collected by mobile money", 0.70, "%", PCT, "The rest by card or transfer, free.")
 a_in("PL_Adoption", "Payment links: share of clients using them (at maturity)", 0.25, "%", PCT, "")
 a_in("PL_Ramp", "Payment links: months to reach maturity", 12, "months", "0", "")
+a_sec("4c. Paid modules")
+a_in("Payroll_Mod_Start", "Payroll module goes live", 11, "month #", "0", "Payslips plus the monthly IPRES, CSS and income-tax declarations, built from the salaries Kelen pays. Senegal first, Côte d'Ivoire rules at its launch.")
+a_in("Payslip_Fee", "Payroll module: price per payslip", 500, "FCFA / payslip", NUM, "3–5× cheaper than payroll software (KayFay 1,500–2,500 per payslip, minimum 15,000 a month).")
+a_in("Payroll_Mod_Uptake", "Payroll module: share of client employees covered (at maturity)", 0.40, "%", PCT, "Assumption: 40% of clients use it.")
+a_in("Payroll_Mod_Ramp", "Payroll module: months to reach maturity", 12, "months", "0", "")
+a_in("Payslip_Cost", "Payroll module: cost per payslip", 50, "FCFA / payslip", NUM, "Delivery by WhatsApp/SMS and computing; the module itself is built by the team.")
+a_in("Intl_Start", "International supplier payments go live", 13, "month #", "0", "Through the partner bank's foreign-exchange set-up, under the 2024 WAEMU foreign-exchange rules.")
+a_in("Intl_Fee", "International payments: fee charged (FX margin)", 0.015, "% of amount", PCT2, "Banks and informal channels typically take 2–5%. Change with the cost below: see the grid on Pricing levers.")
+a_in("Intl_Cost", "International payments: cost to Kelen", 0.005, "% of amount", PCT2, "UNKNOWN: partner bank FX spread plus correspondent fees. Estimate; get a quote.")
+a_in("Intl_Uptake", "International payments: share of clients using them (at maturity)", 0.20, "%", PCT, "Importers: China, Turkey, Dubai, France.")
+a_in("Intl_Ramp", "International payments: months to reach maturity", 12, "months", "0", "")
 
 a_sec("5. Usage per client (monthly, by plan)")
-a_in("Spend_Dom_Petite", "Card spending in FCFA, Petite", 300000, "FCFA / month", NUM, "Business model v2 (assumption).")
-a_in("Spend_Dom_Moyenne", "Card spending in FCFA, Moyenne", 800000, "FCFA / month", NUM, "")
-a_in("Spend_Dom_Grande", "Card spending in FCFA, Grande", 2500000, "FCFA / month", NUM, "")
-a_in("Spend_For_Petite", "Card spending in foreign currencies, Petite", 300000, "FCFA / month", NUM, "Ads, software subscriptions, travel.")
-a_in("Spend_For_Moyenne", "Card spending in foreign currencies, Moyenne", 1200000, "FCFA / month", NUM, "")
-a_in("Spend_For_Grande", "Card spending in foreign currencies, Grande", 3500000, "FCFA / month", NUM, "")
-a_in("Balance_Petite", "Average balance, Petite", 3000000, "FCFA", NUM, "")
-a_in("Balance_Moyenne", "Average balance, Moyenne", 10000000, "FCFA", NUM, "")
-a_in("Balance_Grande", "Average balance, Grande", 40000000, "FCFA", NUM, "")
-a_in("Emp_Petite", "Employees, Petite", 5, "people", NUM, "")
-a_in("Emp_Moyenne", "Employees, Moyenne", 25, "people", NUM, "")
-a_in("Emp_Grande", "Employees, Grande", 120, "people", NUM, "")
-a_in("Supplier_Petite", "Supplier payouts a month, Petite", 10, "payouts", NUM, "")
-a_in("Supplier_Moyenne", "Supplier payouts a month, Moyenne", 40, "payouts", NUM, "")
-a_in("Supplier_Grande", "Supplier payouts a month, Grande", 150, "payouts", NUM, "")
-a_in("Overage_Petite", "Payouts above the allowance, Petite", 0, "payouts", NUM, "")
-a_in("Overage_Moyenne", "Payouts above the allowance, Moyenne", 5, "payouts", NUM, "")
-a_in("Overage_Grande", "Payouts above the allowance, Grande", 40, "payouts", NUM, "")
-a_in("Cards_New_Petite", "Physical cards ordered at sign-up, Petite", 1, "cards", NUM, "")
-a_in("Cards_New_Moyenne", "Physical cards ordered at sign-up, Moyenne", 3, "cards", NUM, "")
-a_in("Cards_New_Grande", "Physical cards ordered at sign-up, Grande", 8, "cards", NUM, "")
-a_in("Cards_Act_Petite", "Active cards (physical + virtual), Petite", 2, "cards", NUM, "")
-a_in("Cards_Act_Moyenne", "Active cards (physical + virtual), Moyenne", 6, "cards", NUM, "")
-a_in("Cards_Act_Grande", "Active cards (physical + virtual), Grande", 15, "cards", NUM, "")
-a_in("PL_Coll_Petite", "Payment link collections, Petite (users)", 800000, "FCFA / month", NUM, "")
-a_in("PL_Coll_Moyenne", "Payment link collections, Moyenne (users)", 3000000, "FCFA / month", NUM, "")
-a_in("PL_Coll_Grande", "Payment link collections, Grande (users)", 10000000, "FCFA / month", NUM, "")
+a_in("Spend_Dom_Petite", "Card spending in FCFA, Essentiel", 300000, "FCFA / month", NUM, "Business model v2 (assumption).")
+a_in("Spend_Dom_Moyenne", "Card spending in FCFA, Pro", 800000, "FCFA / month", NUM, "")
+a_in("Spend_Dom_Grande", "Card spending in FCFA, Business", 2500000, "FCFA / month", NUM, "")
+a_in("Spend_For_Petite", "Card spending in foreign currencies, Essentiel", 300000, "FCFA / month", NUM, "Ads, software subscriptions, travel.")
+a_in("Spend_For_Moyenne", "Card spending in foreign currencies, Pro", 1200000, "FCFA / month", NUM, "")
+a_in("Spend_For_Grande", "Card spending in foreign currencies, Business", 3500000, "FCFA / month", NUM, "")
+a_in("Balance_Petite", "Average balance, Essentiel", 3000000, "FCFA", NUM, "")
+a_in("Balance_Moyenne", "Average balance, Pro", 10000000, "FCFA", NUM, "")
+a_in("Balance_Grande", "Average balance, Business", 40000000, "FCFA", NUM, "")
+a_in("Emp_Petite", "Employees, Essentiel", 5, "people", NUM, "")
+a_in("Emp_Moyenne", "Employees, Pro", 25, "people", NUM, "")
+a_in("Emp_Grande", "Employees, Business", 120, "people", NUM, "")
+a_in("Supplier_Petite", "Transfers out a month (salaries not counted), Essentiel", 10, "payouts", NUM, "")
+a_in("Supplier_Moyenne", "Transfers out a month (salaries not counted), Pro", 40, "payouts", NUM, "")
+a_in("Supplier_Grande", "Transfers out a month (salaries not counted), Business", 150, "payouts", NUM, "")
+a_in("Overage_Petite", "Paid transfers above the allowance (average per client), Essentiel", 1, "transfers", NUM, "Most clients stay inside the allowance; about 1 in 10 exceeds it by about 10.")
+a_in("Overage_Moyenne", "Paid transfers above the allowance (average per client), Pro", 3, "transfers", NUM, "")
+a_in("Overage_Grande", "Paid transfers above the allowance (average per client), Business", 10, "transfers", NUM, "")
+a_in("Users_Petite", "Users per client, Essentiel", 2, "users", NUM, "")
+a_in("Users_Moyenne", "Users per client, Pro", 4, "users", NUM, "Owner, manager, accountant, assistant.")
+a_in("Users_Grande", "Users per client, Business", 12, "users", NUM, "")
+a_in("Intl_Vol_Petite", "International payments a month (clients who use them), Essentiel", 1000000, "FCFA / month", NUM, "Assumption.")
+a_in("Intl_Vol_Moyenne", "International payments a month (clients who use them), Pro", 3000000, "FCFA / month", NUM, "")
+a_in("Intl_Vol_Grande", "International payments a month (clients who use them), Business", 10000000, "FCFA / month", NUM, "")
+a_in("Cards_New_Petite", "Physical cards ordered at sign-up, Essentiel", 1, "cards", NUM, "")
+a_in("Cards_New_Moyenne", "Physical cards ordered at sign-up, Pro", 3, "cards", NUM, "")
+a_in("Cards_New_Grande", "Physical cards ordered at sign-up, Business", 8, "cards", NUM, "")
+a_in("Cards_Act_Petite", "Active cards (physical + virtual), Essentiel", 2, "cards", NUM, "")
+a_in("Cards_Act_Moyenne", "Active cards (physical + virtual), Pro", 6, "cards", NUM, "")
+a_in("Cards_Act_Grande", "Active cards (physical + virtual), Business", 15, "cards", NUM, "")
+a_in("PL_Coll_Petite", "Payment link collections, Essentiel (users)", 800000, "FCFA / month", NUM, "")
+a_in("PL_Coll_Moyenne", "Payment link collections, Pro (users)", 3000000, "FCFA / month", NUM, "")
+a_in("PL_Coll_Grande", "Payment link collections, Business (users)", 10000000, "FCFA / month", NUM, "")
 a_in("Avg_Salary", "Average monthly salary paid through Kelen", 200000, "FCFA", NUM, "SME average; the formal-sector average is higher (about 380,000 FCFA).")
 a_in("Wallet_Share", "Share of salaries paid to mobile money wallets", 0.60, "%", PCT, "Global Findex 2025: about 64% of Senegal's private wage earners are paid by phone, 33% into an account; in Côte d'Ivoire 57% are still paid in cash only (market analysis, Oct 2026).")
 a_in("EmpAcc_Adoption", "Employees who open a Kelen salary account", 0.20, "%", PCT, "")
@@ -623,9 +677,9 @@ M.sec("New clients")
 M.line("new_sn", "New clients, Senegal", lambda c, p, i: f"={c}{M.k['field_sn']}+{c}{M.k['part_sn']}+{c}{M.k['dig_sn']}", unit="clients", fmt=NUM1)
 M.line("new_ci", "New clients, Côte d'Ivoire", lambda c, p, i: f"={c}{M.k['field_ci']}+{c}{M.k['part_ci']}+{c}{M.k['dig_ci']}", unit="clients", fmt=NUM1)
 M.line("new_total", "New clients, total", lambda c, p, i: f"={c}{M.k['new_sn']}+{c}{M.k['new_ci']}", unit="clients", fmt=NUM1, bold=True)
-M.line("new_p", "of which Petite", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_Petite", unit="clients", fmt=NUM1)
-M.line("new_m", "of which Moyenne", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_Moyenne", unit="clients", fmt=NUM1)
-M.line("new_g", "of which Grande", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_Grande", unit="clients", fmt=NUM1)
+M.line("new_p", "of which Essentiel", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_Petite", unit="clients", fmt=NUM1)
+M.line("new_m", "of which Pro", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_Moyenne", unit="clients", fmt=NUM1)
+M.line("new_g", "of which Business", lambda c, p, i: f"={c}{M.k['new_total']}*Mix_Grande", unit="clients", fmt=NUM1)
 M.line("new_partner", "New clients from partners (for referral fees)", lambda c, p, i: f"={c}{M.k['part_sn']}+{c}{M.k['part_ci']}", unit="clients", fmt=NUM1)
 M.sec("Sales and marketing budget (non-staff)")
 M.line("c_digital", "Digital ads", lambda c, p, i: f"={c}{M.k['dig_b_sn']}+{c}{M.k['dig_b_ci']}")
@@ -641,13 +695,14 @@ M.line("cac", "Blended cost to acquire a client (staff + budget)", lambda c, p, 
 # =====================================================================================
 # CLIENTS & REVENUE
 # =====================================================================================
+DISP = {"Petite": "Essentiel", "Moyenne": "Pro", "Grande": "Business"}
 R = TS("Clients & revenue", "Active clients by plan, usage and every revenue line except credit (see Credit).")
 R.sec("New clients by plan")
 for pl, key in (("Petite", "p"), ("Moyenne", "m"), ("Grande", "g")):
-    R.line(f"new_{key}", f"New clients, {pl}", lambda c, p, i, key=key: f"={M.ref('new_' + key, c)}", unit="clients", fmt=NUM1, color=GREEN)
+    R.line(f"new_{key}", f"New clients, {DISP[pl]}", lambda c, p, i, key=key: f"={M.ref('new_' + key, c)}", unit="clients", fmt=NUM1, color=GREEN)
 R.sec("Active clients (end of month)")
 for pl, key in (("Petite", "p"), ("Moyenne", "m"), ("Grande", "g")):
-    R.line(f"act_{key}", f"Active clients, {pl}",
+    R.line(f"act_{key}", f"Active clients, {DISP[pl]}",
            lambda c, p, i, key=key, pl=pl: f"={c}{R.k['new_' + key]}" if i == 0 else f"={p}{R.k['act_' + key]}*(1-Churn_{pl})+{c}{R.k['new_' + key]}",
            unit="clients", fmt=NUM, total="last")
 R.line("act_total", "Active clients, total", lambda c, p, i: f"={c}{R.k['act_p']}+{c}{R.k['act_m']}+{c}{R.k['act_g']}", unit="clients", total="last", bold=True)
@@ -657,36 +712,46 @@ R.line("act_ci", "Active clients, Côte d'Ivoire (approx.)", lambda c, p, i: f"=
 R.sec("Clients in their free months, and paying clients")
 for pl, key in (("Petite", "p"), ("Moyenne", "m"), ("Grande", "g")):
     nr = R.k["new_" + key]
-    R.line(f"free_{key}", f"In free months, {pl}", lambda c, p, i, nr=nr: f"=IF(Free_Months<=0,0,SUM(OFFSET({c}{nr},0,1-MIN(Free_Months,{c}$3),1,MIN(Free_Months,{c}$3))))", unit="clients", fmt=NUM, total=None)
+    R.line(f"free_{key}", f"In free months, {DISP[pl]}", lambda c, p, i, nr=nr: f"=IF(Free_Months<=0,0,SUM(OFFSET({c}{nr},0,1-MIN(Free_Months,{c}$3),1,MIN(Free_Months,{c}$3))))", unit="clients", fmt=NUM, total=None)
 for pl, key in (("Petite", "p"), ("Moyenne", "m"), ("Grande", "g")):
-    R.line(f"pay_{key}", f"Paying clients, {pl}", lambda c, p, i, key=key: f"=MAX(0,{c}{R.k['act_' + key]}-{c}{R.k['free_' + key]})", unit="clients", fmt=NUM, total="last")
+    R.line(f"pay_{key}", f"Paying clients, {DISP[pl]}", lambda c, p, i, key=key: f"=MAX(0,{c}{R.k['act_' + key]}-{c}{R.k['free_' + key]})", unit="clients", fmt=NUM, total="last")
 R.sec("Usage")
 mix3 = lambda c, base: f"{c}{R.k['act_p']}*{base}_Petite+{c}{R.k['act_m']}*{base}_Moyenne+{c}{R.k['act_g']}*{base}_Grande"
 R.line("employees", "Employees of active clients", lambda c, p, i: f"={mix3(c, 'Emp')}", unit="people", total="last")
 R.line("emp_acc", "Employee salary accounts", lambda c, p, i: f"=IF({c}$3>=EmpAcc_Start,{c}{R.k['employees']}*EmpAcc_Adoption,0)", unit="accounts", total="last")
 R.line("cards_issued", "Physical cards issued", lambda c, p, i: f"={c}{R.k['new_p']}*Cards_New_Petite+{c}{R.k['new_m']}*Cards_New_Moyenne+{c}{R.k['new_g']}*Cards_New_Grande", unit="cards", fmt=NUM1)
-R.line("cards_paid", "Physical cards charged (first one free)", lambda c, p, i: f"={c}{R.k['new_p']}*MAX(0,Cards_New_Petite-1)+{c}{R.k['new_m']}*MAX(0,Cards_New_Moyenne-1)+{c}{R.k['new_g']}*MAX(0,Cards_New_Grande-1)", unit="cards", fmt=NUM1)
+R.line("cards_paid", "Physical cards beyond the plan, ordered", lambda c, p, i: f"={c}{R.k['new_p']}*MAX(0,Cards_New_Petite-Cards_Phys_Incl_Petite)+{c}{R.k['new_m']}*MAX(0,Cards_New_Moyenne-Cards_Phys_Incl_Moyenne)+{c}{R.k['new_g']}*MAX(0,Cards_New_Grande-Cards_Phys_Incl_Grande)", unit="cards", fmt=NUM1)
 R.line("cards_active", "Active cards", lambda c, p, i: f"={mix3(c, 'Cards_Act')}", unit="cards", total="last")
 R.line("spend_dom", "Card spending in FCFA", lambda c, p, i: f"={mix3(c, 'Spend_Dom')}")
 R.line("spend_for", "Card spending in foreign currencies", lambda c, p, i: f"={mix3(c, 'Spend_For')}")
 R.line("balances", "Client balances (average)", lambda c, p, i: f"={mix3(c, 'Balance')}", total="last")
 R.line("payroll", "Salaries paid through Kelen", lambda c, p, i: f"={c}{R.k['employees']}*Avg_Salary")
-R.line("supplier", "Supplier payouts", lambda c, p, i: f"={mix3(c, 'Supplier')}", unit="payouts")
-R.line("overage", "Supplier payouts above the allowance", lambda c, p, i: f"={mix3(c, 'Overage')}", unit="payouts")
+R.line("supplier", "Transfers out (salaries not counted)", lambda c, p, i: f"={mix3(c, 'Supplier')}", unit="transfers")
+R.line("overage", "Transfers above the plan allowance", lambda c, p, i: f"={mix3(c, 'Overage')}", unit="transfers")
+R.line("users_extra", "Extra users beyond the plans", lambda c, p, i: f"={c}{R.k['act_p']}*MAX(0,Users_Petite-Users_Incl_Petite)+{c}{R.k['act_m']}*MAX(0,Users_Moyenne-Users_Incl_Moyenne)+{c}{R.k['act_g']}*MAX(0,Users_Grande-Users_Incl_Grande)", unit="users", total="last")
+R.line("cards_extra", "Extra physical cards beyond the plans (in use)", lambda c, p, i: f"={c}{R.k['act_p']}*MAX(0,Cards_New_Petite-Cards_Phys_Incl_Petite)+{c}{R.k['act_m']}*MAX(0,Cards_New_Moyenne-Cards_Phys_Incl_Moyenne)+{c}{R.k['act_g']}*MAX(0,Cards_New_Grande-Cards_Phys_Incl_Grande)", unit="cards", total="last")
+R.line("payroll_over", "Salaries to wallets above the plans' free amount", lambda c, p, i: f"=({c}{R.k['act_p']}*MAX(0,Emp_Petite*Avg_Salary-Payroll_Free_Petite)+{c}{R.k['act_m']}*MAX(0,Emp_Moyenne*Avg_Salary-Payroll_Free_Moyenne)+{c}{R.k['act_g']}*MAX(0,Emp_Grande*Avg_Salary-Payroll_Free_Grande))*Wallet_Share")
+R.line("payslips", "Payslips in the payroll module", lambda c, p, i: f"=IF({c}$3>=Payroll_Mod_Start,MIN(1,({c}$3-Payroll_Mod_Start+1)/Payroll_Mod_Ramp)*Payroll_Mod_Uptake,0)*{c}{R.k['employees']}", unit="payslips")
+R.line("intl_vol", "International payments sent", lambda c, p, i: f"=IF({c}$3>=Intl_Start,MIN(1,({c}$3-Intl_Start+1)/Intl_Ramp)*Intl_Uptake,0)*({mix3(c, 'Intl_Vol')})")
 R.line("pl_adopt", "Payment links: share of clients using them", lambda c, p, i: f"=IF({c}$3>=PayLinks_Start,MIN(1,({c}$3-PayLinks_Start+1)/PL_Ramp)*PL_Adoption,0)", unit="%", fmt=PCT, total=None)
 R.line("pl_coll", "Payment links: amounts collected", lambda c, p, i: f"=({mix3(c, 'PL_Coll')})*{c}{R.k['pl_adopt']}")
 R.sec("Revenue (excluding credit)")
 R.line("price_f", "Price factor (yearly increase × yearly-billing discount)", lambda c, p, i: f"=(1+Price_Increase)^({c}$5-1)*(1-Annual_Share*Annual_Free/12)", unit="x", fmt="0.000", total=None)
 for pl, key in (("Petite", "p"), ("Moyenne", "m"), ("Grande", "g")):
-    R.line(f"rev_sub_{key}", f"Subscriptions, {pl}", lambda c, p, i, key=key, pl=pl: f"={c}{R.k['pay_' + key]}*Price_{pl}*{c}{R.k['price_f']}")
+    R.line(f"rev_sub_{key}", f"Subscriptions, {DISP[pl]}", lambda c, p, i, key=key, pl=pl: f"={c}{R.k['pay_' + key]}*Price_{pl}*{c}{R.k['price_f']}")
 R.line("rev_sub", "Subscriptions", lambda c, p, i: f"={c}{R.k['rev_sub_p']}+{c}{R.k['rev_sub_m']}+{c}{R.k['rev_sub_g']}", bold=True)
 R.line("rev_fx", "Fees on foreign-currency card spending", lambda c, p, i: f"={c}{R.k['spend_for']}*FX_Fee")
 R.line("rev_ic", "Interchange share on FCFA card spending", lambda c, p, i: f"={c}{R.k['spend_dom']}*Interchange_Share")
 R.line("rev_dep", "Share of bank income on client balances", lambda c, p, i: f"={c}{R.k['balances']}*Deposit_Share/12")
-R.line("rev_cards", "Physical card fees", lambda c, p, i: f"={c}{R.k['cards_paid']}*Card_Fee")
-R.line("rev_over", "Supplier payouts above the allowance", lambda c, p, i: f"={c}{R.k['overage']}*Overage_Fee")
+R.line("rev_cards", "Physical card fees (one-off, cards beyond the plan)", lambda c, p, i: f"={c}{R.k['cards_paid']}*Card_Fee")
+R.line("rev_over", "Transfers above the plan allowance", lambda c, p, i: f"={c}{R.k['overage']}*Overage_Fee")
 R.line("rev_pl", "Payment link fees", lambda c, p, i: f"={c}{R.k['pl_coll']}*PL_Momo_Share*PL_Fee")
-R.line("rev_total", "Revenue excluding credit", lambda c, p, i: f"={c}{R.k['rev_sub']}+SUM({c}{R.k['rev_fx']}:{c}{R.k['rev_pl']})", bold=True)
+R.line("rev_users", "Extra users", lambda c, p, i: f"={c}{R.k['users_extra']}*Extra_User_Fee")
+R.line("rev_cardx", "Extra physical cards (monthly)", lambda c, p, i: f"={c}{R.k['cards_extra']}*Extra_Card_Fee")
+R.line("rev_payover", "Salaries above the plans' free amount", lambda c, p, i: f"={c}{R.k['payroll_over']}*Payroll_Over_Fee")
+R.line("rev_payslip", "Payroll module (payslips and declarations)", lambda c, p, i: f"={c}{R.k['payslips']}*Payslip_Fee")
+R.line("rev_intl", "International payments", lambda c, p, i: f"={c}{R.k['intl_vol']}*Intl_Fee")
+R.line("rev_total", "Revenue excluding credit", lambda c, p, i: f"={c}{R.k['rev_sub']}+SUM({c}{R.k['rev_fx']}:{c}{R.k['rev_intl']})", bold=True)
 
 # =====================================================================================
 # CREDIT
@@ -738,8 +803,10 @@ C.line("v_scheme", "Visa / Mastercard cross-border fees", lambda c, p, i: f"={rr
 C.line("v_fraud", "Fraud and chargebacks", lambda c, p, i: f"=({rr('spend_dom', c)}+{rr('spend_for', c)})*Fraud_Rate")
 C.line("v_wallet", "Salaries paid to wallets", lambda c, p, i: f"={rr('payroll', c)}*Wallet_Share*Wallet_Payout_Cost")
 C.line("v_bankpay", "Salaries paid to bank accounts", lambda c, p, i: f"={rr('employees', c)}*(1-Wallet_Share)*Bank_Payout_Cost")
-C.line("v_supplier", "Supplier payouts", lambda c, p, i: f"={rr('supplier', c)}*Supplier_Payout_Cost")
+C.line("v_supplier", "Transfers out (suppliers and others)", lambda c, p, i: f"={rr('supplier', c)}*Supplier_Payout_Cost")
 C.line("v_pl", "Payment link collection costs", lambda c, p, i: f"={rr('pl_coll', c)}*PL_Momo_Share*PL_Cost")
+C.line("v_intl", "International payments (FX spread and correspondent fees)", lambda c, p, i: f"={rr('intl_vol', c)}*Intl_Cost")
+C.line("v_payslip", "Payroll module (payslip delivery)", lambda c, p, i: f"={rr('payslips', c)}*Payslip_Cost")
 C.line("v_notif", "SMS, WhatsApp and support tools", lambda c, p, i: f"={rr('act_total', c)}*Notif_Cost+{rr('emp_acc', c)}*Emp_Notif")
 C.line("v_empacc", "Employee account processing", lambda c, p, i: f"={rr('emp_acc', c)}*EmpAcc_Cost")
 C.line("v_total", "Total variable costs", lambda c, p, i: f"=SUM({c}{C.k['v_bank']}:{c}{C.k['v_empacc']})", bold=True)
@@ -812,16 +879,17 @@ C.line("f_total", "Total fixed costs", lambda c, p, i: f"={c}{C.k['f_before']}+{
 P = TS("P&L monthly", "Profit and loss by month. Revenue excludes VAT and taxes on financial services.")
 P.sec("Revenue")
 for key, lab in (("rev_sub", "Subscriptions"), ("rev_fx", "Fees on foreign-currency card spending"), ("rev_ic", "Interchange share"),
-                 ("rev_dep", "Share of bank income on client balances"), ("rev_cards", "Physical card fees"), ("rev_over", "Supplier payout fees above the allowance"),
-                 ("rev_pl", "Payment link fees")):
+                 ("rev_dep", "Share of bank income on client balances"), ("rev_cards", "Physical card fees"), ("rev_over", "Transfers above the plan allowance"),
+                 ("rev_pl", "Payment link fees"), ("rev_users", "Extra users"), ("rev_cardx", "Extra physical cards (monthly)"),
+                 ("rev_payover", "Salaries above the plans' free amount"), ("rev_payslip", "Payroll module"), ("rev_intl", "International payments")):
     P.line(key, lab, lambda c, p, i, key=key: f"={R.ref(key, c)}", color=GREEN)
 P.line("rev_credit", "Net credit income", lambda c, p, i: f"={K.ref('net', c)}", color=GREEN)
 P.line("revenue", "Total revenue", lambda c, p, i: f"=SUM({c}{P.k['rev_sub']}:{c}{P.k['rev_credit']})", bold=True, fill=TOT_FILL)
 P.sec("Cost of revenue (variable costs)")
 P.line("d_bank", "Bank accounts and onboarding", lambda c, p, i: f"={C.ref('v_bank', c)}+{C.ref('v_onboard', c)}")
 P.line("d_cards", "Cards: processing, production, scheme fees, fraud", lambda c, p, i: f"={C.ref('v_cardproc', c)}+{C.ref('v_cardprod', c)}+{C.ref('v_scheme', c)}+{C.ref('v_fraud', c)}")
-P.line("d_pay", "Payouts and collections", lambda c, p, i: f"={C.ref('v_wallet', c)}+{C.ref('v_bankpay', c)}+{C.ref('v_supplier', c)}+{C.ref('v_pl', c)}")
-P.line("d_msg", "Messaging and employee accounts", lambda c, p, i: f"={C.ref('v_notif', c)}+{C.ref('v_empacc', c)}")
+P.line("d_pay", "Payouts, collections and international payments", lambda c, p, i: f"={C.ref('v_wallet', c)}+{C.ref('v_bankpay', c)}+{C.ref('v_supplier', c)}+{C.ref('v_pl', c)}+{C.ref('v_intl', c)}")
+P.line("d_msg", "Messaging, payslips and employee accounts", lambda c, p, i: f"={C.ref('v_notif', c)}+{C.ref('v_empacc', c)}+{C.ref('v_payslip', c)}")
 P.line("cogs", "Total cost of revenue", lambda c, p, i: f"=SUM({c}{P.k['d_bank']}:{c}{P.k['d_msg']})", bold=True)
 P.line("gm", "Gross margin", lambda c, p, i: f"={c}{P.k['revenue']}-{c}{P.k['cogs']}", bold=True, fill=TOT_FILL)
 P.line("gm_pct", "Gross margin %", lambda c, p, i: f"=IFERROR({c}{P.k['gm']}/{c}{P.k['revenue']},0)", unit="%", fmt=PCT, total=None)
@@ -1001,7 +1069,7 @@ def y_f(key, label, fn, fmt=NUM, bold=False, total=None, fill=None, unit=None):
 
 
 y_sec("Revenue")
-for key in ("rev_sub", "rev_fx", "rev_ic", "rev_dep", "rev_cards", "rev_over", "rev_pl", "rev_credit"):
+for key in ("rev_sub", "rev_fx", "rev_ic", "rev_dep", "rev_cards", "rev_over", "rev_pl", "rev_users", "rev_cardx", "rev_payover", "rev_payslip", "rev_intl", "rev_credit"):
     lab = P.ws.cell(P.k[key], 1).value
     y_sum(key, lab, P, key)
 y_sum("revenue", "Total revenue", P, "revenue", bold=True)
@@ -1220,6 +1288,180 @@ style(MK.cell(r, 4), fmt=NUM)
 style(MK.cell(r, 5, f"=D{r}/FX_EUR"), fmt=EURN)
 MK.cell(r, 9, "Account fees only; transfer, card and payout fees come on top. Today SMEs also pay 1% of payroll to Wave Business or Orange Money (1.5% to non-Orange wallets), and Julaya charges 0.5–1.5%.").font = F(color=GREY)
 mrow[0] += 1
+
+
+# =====================================================================================
+# PRICING LEVERS
+# =====================================================================================
+EUR2 = '"€"#,##0.00;-"€"#,##0.00;"-"'
+PL3 = ("Petite", "Moyenne", "Grande")
+LV = wb.create_sheet("Pricing levers")
+LV.sheet_view.showGridLines = False
+for col, w in {"A": 46, "B": 52, "C": 16, "D": 14, "E": 16, "F": 18, "G": 18, "H": 14}.items():
+    LV.column_dimensions[col].width = w
+LV["A1"] = "Pricing levers"
+LV["A1"].font = F(bold=True, size=14, color=TEAL)
+LV["A2"] = "What each change does to year-5 revenue and EBITDA, all else equal. Type a change in the blue cells. The model's client numbers do not depend on prices, so these effects are exact; the price-response line at the end is an estimate."
+LV["A2"].font = F(italic=True, color=GREY)
+lvr = [4]
+
+
+def lv_title(text, sub=""):
+    lvr[0] += 1
+    LV.cell(lvr[0], 1, text).font = F(bold=True, size=12, color=TEAL)
+    lvr[0] += 1
+    if sub:
+        LV.cell(lvr[0], 1, sub).font = F(italic=True, color=GREY)
+        lvr[0] += 1
+
+
+def lv_head(heads):
+    for j, h in enumerate(heads):
+        c = LV.cell(lvr[0], 1 + j, h)
+        c.font = F(bold=True, color=WHITE)
+        c.fill = HEAD_FILL
+        c.alignment = Alignment(wrap_text=True, vertical="top")
+    LV.row_dimensions[lvr[0]].height = 30
+    lvr[0] += 1
+
+
+def lv_sub(text):
+    LV.cell(lvr[0], 1, text).font = F(bold=True)
+    for col in range(1, 9):
+        LV.cell(lvr[0], col).fill = SEC_FILL
+    lvr[0] += 1
+
+
+def lv_row(vals, fmts, inputs=(), bold=False, eur=None):
+    r = lvr[0]
+    for j, (v, fm) in enumerate(zip(vals, fmts)):
+        if v is None:
+            continue
+        c = LV.cell(r, 1 + j, v(r) if callable(v) else v)
+        if j in inputs:
+            style(c, fmt=fm, color=BLUE, fill=IN_FILL)
+        else:
+            style(c, fmt=fm, bold=bold)
+        if j == 1:
+            c.font = F(color=GREY)
+            c.alignment = Alignment(wrap_text=True, vertical="top")
+    lvr[0] += 1
+    if eur:
+        r2 = lvr[0]
+        LV.cell(r2, 1, "   in €").font = F(italic=True, color=GREY)
+        for col in eur:
+            LV[f"{col}{r2}"] = f"=IF(ISNUMBER({col}{r}),{col}{r}/FX_EUR,\"\")"
+            style(LV[f"{col}{r2}"], fmt=EUR2, italic=True, color=GREY)
+        lvr[0] += 1
+    return r
+
+
+Y5REV, Y5EB = f"'P&L annual'!$H${YK['revenue']}", f"'P&L annual'!$H${YK['ebitda']}"
+RS = "'Clients & revenue'"
+y5 = lambda key: f"SUMIF({RS}!${FC}$5:${LC}$5,5,{RS}!${FC}${R.k[key]}:${LC}${R.k[key]})"
+PF5 = "((1+Price_Increase)^4*(1-Annual_Share*Annual_Free/12))"
+
+# --- volumes behind the levers (year 5)
+VOL = {}
+def vol(key, label, expr, unit, fmt=NUM):
+    VOL[key] = f"$C${lvr[0]}"
+    lv_row([label, unit, "=" + expr], [None, None, fmt])
+
+lv_title("Year 5 at a glance", "Base for every lever below: the current scenario and pricing option.")
+lv_head(["Item", "Unit", "Year 5"])
+lv_row(["Total revenue", "FCFA", f"={Y5REV}"], [None, None, NUM], eur=["C"])
+lv_row(["EBITDA", "FCFA", f"={Y5EB}"], [None, None, NUM], eur=["C"])
+lv_row(["EBITDA margin", "%", f"=IFERROR({Y5EB}/{Y5REV},0)"], [None, None, PCT])
+lv_row(["Pricing option in use", "1 = A, 2 = B, 3 = C", "=Pricing_Option"], [None, None, "0"])
+
+LH = ["Lever", "What it means", "Today", "Change (type here)", "After the change", "Revenue, year 5 (change)", "EBITDA, year 5 (change)", "EBITDA margin after"]
+LF = [None, None, NUM, NUM, NUM, NUM, NUM, PCT]
+LP = [None, None, PCT2, PCT2, PCT2, NUM, NUM, PCT]
+
+
+LD = [None, None, NUM1, NUM1, NUM1, NUM, NUM, PCT]
+
+
+def lever(label, what, today, change, drev, debit, pct=False, dec=False):
+    """drev / debit: formulas using D{r} (the change)."""
+    return lv_row([label, what, f"={today}", change, lambda r: f"=C{r}+D{r}", lambda r: "=" + drev.format(d=f"D{r}"), lambda r: "=" + debit.format(d=f"D{r}"),
+                   lambda r: f"=IFERROR(({Y5EB}+G{r})/({Y5REV}+F{r}),0)"], LP if pct else (LD if dec else LF), inputs=(3,), eur=["F", "G"])
+
+
+lv_title("Plans", "Prices and what is included. A higher price or a smaller allowance raises revenue but may slow sales: see the price-response line at the end.")
+lv_head(LH)
+for pl in PL3:
+    k = {"Petite": "p", "Moyenne": "m", "Grande": "g"}[pl]
+    e = f"{{d}}*{y5('pay_' + k)}*{PF5}"
+    lever(f"{DISP[pl]} price", "Monthly subscription. Change in FCFA (e.g. -2000 or 5000).", f"Price_{pl}", {"Petite": -2000, "Moyenne": -5000, "Grande": -10000}[pl], e, e)
+e = f"{{d}}*{y5('rev_sub')}"
+lever("All plans at once", "Change in % of every plan price (e.g. -10%).", "0", -0.10, e, e, pct=True)
+newc = "+".join(f"SUMIF({RS}!${FC}$5:${LC}$5,5,{RS}!${FC}${R.k['new_' + k]}:${LC}${R.k['new_' + k]})*Price_{pl}" for k, pl in (("p", "Petite"), ("m", "Moyenne"), ("g", "Grande")))
+e = f"-{{d}}*({newc})*{PF5}"
+lever("Free months at sign-up", "Each extra free month gives away one month of subscription for every new client.", "Free_Months", 1, e, e)
+act = y5("act_total")
+lever("Paid transfers above the allowance", "Average extra transfers each client pays for per month. A smaller allowance raises it.", "0", 1, f"{{d}}*{act}*Overage_Fee", f"{{d}}*{act}*(Overage_Fee-Supplier_Payout_Cost)", dec=True)
+lever("Fee per extra transfer", "Price of each transfer above the allowance (FCFA).", "Overage_Fee", 100, f"{{d}}*{y5('overage')}", f"{{d}}*{y5('overage')}")
+lever("Extra users per client", "Average users above the plan, e.g. if Pro included 2 users instead of 3.", "0", 0.5, f"{{d}}*{act}*Extra_User_Fee", f"{{d}}*{act}*Extra_User_Fee", dec=True)
+lever("Fee per extra user", "Monthly fee for each user beyond the plan (FCFA).", "Extra_User_Fee", 500, f"{{d}}*{y5('users_extra')}", f"{{d}}*{y5('users_extra')}")
+lever("Extra physical cards per client", "Average physical cards above the plan, e.g. if plans included fewer cards.", "0", 0.5, f"{{d}}*{act}*Extra_Card_Fee", f"{{d}}*{act}*(Extra_Card_Fee-Card_Proc_Fee)", dec=True)
+lever("Fee per extra physical card", "Monthly fee for each physical card beyond the plan (FCFA).", "Extra_Card_Fee", 500, f"{{d}}*{y5('cards_extra')}", f"{{d}}*{y5('cards_extra')}")
+wp = f"{y5('payroll')}*Wallet_Share"
+lever("Fee on all salaries paid to wallets", "Not recommended: salaries stay free. Shows what charging them would bring (e.g. 0.25%).", "0", 0.0025, f"{{d}}*{wp}", f"{{d}}*{wp}", pct=True)
+
+lv_title("Paid modules and commissions", "Fees on top of the subscription.")
+lv_head(LH)
+lever("Payroll module: price per payslip", "FCFA per payslip (payslip plus the monthly declarations).", "Payslip_Fee", 250, f"{{d}}*{y5('payslips')}", f"{{d}}*{y5('payslips')}")
+lever("Payroll module: uptake", "Share of client employees covered (at maturity).", "Payroll_Mod_Uptake", 0.10, f"{{d}}/Payroll_Mod_Uptake*{y5('payslips')}*Payslip_Fee", f"{{d}}/Payroll_Mod_Uptake*{y5('payslips')}*(Payslip_Fee-Payslip_Cost)", pct=True)
+lever("International payments: fee", "Margin charged on international payments.", "Intl_Fee", 0.005, f"{{d}}*{y5('intl_vol')}", f"{{d}}*{y5('intl_vol')}", pct=True)
+lever("International payments: uptake", "Share of clients using them (at maturity).", "Intl_Uptake", 0.10, f"{{d}}/Intl_Uptake*{y5('intl_vol')}*Intl_Fee", f"{{d}}/Intl_Uptake*{y5('intl_vol')}*(Intl_Fee-Intl_Cost)", pct=True)
+lever("Card spending in other currencies: fee", "Fee on card payments in other currencies (ads, software, travel).", "FX_Fee", 0.005, f"{{d}}*{y5('spend_for')}", f"{{d}}*{y5('spend_for')}", pct=True)
+pl_m = f"{y5('pl_coll')}*PL_Momo_Share"
+lever("Payment links: fee", "Fee on mobile-money collections through payment links.", "PL_Fee", 0.005, f"{{d}}*{pl_m}", f"{{d}}*{pl_m}", pct=True)
+bal = f"{y5('balances')}/12"
+lever("Share of bank income on balances", "Negotiated with the partner bank, per year.", "Deposit_Share", 0.005, f"{{d}}*{bal}", f"{{d}}*{bal}", pct=True)
+
+lv_title("Costs to negotiate", "Lower costs raise EBITDA without changing what clients pay. Type a negative change for a lower cost.")
+lv_head(LH)
+lever("Salaries paid to wallets (PI-SPI)", "Cost per salary sent to a wallet, % of the amount.", "Wallet_Payout_Cost", -0.0015, "0", f"-{{d}}*{wp}", pct=True)
+lever("Transfers out", "Cost per transfer through the partner bank (FCFA).", "Supplier_Payout_Cost", -150, "0", f"-{{d}}*{y5('supplier')}")
+lever("International payments: cost", "Partner bank FX spread and correspondent fees (unknown).", "Intl_Cost", 0.003, "0", f"-{{d}}*{y5('intl_vol')}", pct=True)
+lever("Card spending in other currencies: cost", "Visa / Mastercard cross-border fees (unknown).", "Scheme_Rate", 0.003, "0", f"-{{d}}*{y5('spend_for')}", pct=True)
+lever("Card processing", "Per active card per month (FCFA).", "Card_Proc_Fee", -500, "0", f"-{{d}}*{y5('cards_active')}")
+lever("Partner bank fee per account", "Per business account per month (FCFA).", "Bank_Fee", -1500, "0", f"-{{d}}*{act}")
+
+# --- fee vs cost grids
+def grid(title, sub, vol_expr, fees, costs):
+    lv_title(title, sub)
+    lv_head(["Fee charged → / cost to Kelen ↓", "Net margin on 1M FCFA"] + [f"Fee {f:.1%}".replace(".0%", "%") for f in fees])
+    for c_ in costs:
+        lv_row([f"Cost {c_:.1%}".replace(".0%", "%"), f"=1000000*({fees[1]}-{c_})"] + [f"=({f}-{c_})*{vol_expr}" for f in fees],
+               [None, NUM] + [NUM] * len(fees))
+grid("International payments: year-5 EBITDA by fee and cost", "Cost is unknown until the partner bank quotes. Each cell = (fee − cost) × year-5 volume sent. Middle column of fees = net margin shown in column B.",
+     y5("intl_vol"), (0.01, 0.015, 0.02, 0.025), (0.003, 0.005, 0.008, 0.01))
+grid("Card spending in other currencies: year-5 EBITDA by fee and cost", "Visa / Mastercard cross-border fees are unknown until the processor quotes. Each cell = (fee − cost) × year-5 foreign card spending.",
+     y5("spend_for"), (0.01, 0.015, 0.02, 0.025), (0.003, 0.005, 0.008, 0.01))
+
+# --- insurance referrals (outside the P&L)
+lv_title("Insurance referrals (kept outside the plan)", "Kelen introduces clients to an insurer (staff health cover, vehicle fleets) and earns a commission. Not in the P&L: what it could add in year 5.")
+lv_head(["Item", "What it means", "Value"])
+ri = {}
+for k_, lab, what, v_, fm in (("u", "Clients insured through Kelen", "Share of active clients", 0.10, PCT), ("p", "Average premium per insured client", "FCFA a month (health cover for staff, fleet)", 150000, NUM),
+                              ("c", "Commission", "% of premiums paid by the insurer", 0.10, PCT), ("k", "Cost of running it", "% of commissions (support, partner management)", 0.20, PCT)):
+    ri[k_] = lv_row([lab, what, v_], [None, None, fm], inputs=(2,))
+ri["rev"] = lv_row(["Revenue, year 5", "Active client-months × share insured × premium × commission", f"={act}*C{ri['u']}*C{ri['p']}*C{ri['c']}"], [None, None, NUM], bold=True, eur=["C"])
+lv_row(["EBITDA, year 5", "Revenue × (1 − running cost)", f"=C{ri['rev']}*(1-C{ri['k']})"], [None, None, NUM], bold=True, eur=["C"])
+
+# --- price response (estimate)
+lv_title("If lower prices bring more clients (estimate)", "The model's sales come from reps, partners and ads, not from price. This line estimates the trade-off: a price cut on every plan, with more clients signing as a result.")
+lv_head(["Item", "What it means", "Value"])
+rp = lv_row(["Price cut on all plans", "% (negative = cheaper)", -0.10], [None, None, PCT], inputs=(2,))
+rq = lv_row(["Extra clients it brings", "% more active clients in year 5 (your estimate)", 0.05], [None, None, PCT], inputs=(2,))
+gm_ex = f"('P&L annual'!$H${YK['revenue']}-'P&L annual'!$H${YK['rev_credit']}-'P&L annual'!$H${YK['cogs']})"
+rs_ = lv_row(["Subscriptions lost on existing clients", "Price cut × year-5 subscriptions", f"=C{rp}*{y5('rev_sub')}"], [None, None, NUM], eur=["C"])
+rg = lv_row(["Margin from the extra clients", "Extra clients × year-5 gross margin before credit, at the new price", f"=C{rq}*({gm_ex}+C{rs_})"], [None, None, NUM], eur=["C"])
+lv_row(["Net effect on EBITDA, year 5", "Positive means the price cut pays for itself", f"=C{rs_}+C{rg}"], [None, None, NUM], bold=True, eur=["C"])
+lv_row(["Extra clients needed to break even", "% more clients that would offset the price cut", f"=IFERROR(-C{rs_}/({gm_ex}+C{rs_}),0)"], [None, None, PCT], bold=True)
 
 # =====================================================================================
 # DASHBOARD
@@ -1444,8 +1686,8 @@ UC.cell(ucr[0], 1, "Company-wide, not per person: 2 shared Claude seats, the web
 ucr[0] += 1
 
 # --- one client
-uc_title("One business client, per month, by plan", "Steady state: after the free months, payment links at full adoption, no credit. Scenario inputs at their current value.")
-uc_head(["Line", "How it is calculated", "", "Petite", "Moyenne", "Grande"])
+uc_title("One business client, per month, by plan", "Steady state: after the free month, payment links and paid modules at full adoption, no credit. Pricing option and scenario inputs at their current value.")
+uc_head(["Line", "How it is calculated", "", "Essentiel (small firm)", "Pro (mid-size firm)", "Business (large firm)"])
 PL3 = ("Petite", "Moyenne", "Grande")
 cli_f = [None, None, None, NUM, NUM, NUM]
 
@@ -1465,8 +1707,13 @@ rev_rows = [
     cli("Fees on foreign-currency card spending", "Foreign-currency card spending × FX fee", "Spend_For_{P}*FX_Fee"),
     cli("Interchange share", "FCFA card spending × interchange share", "Spend_Dom_{P}*Interchange_Share"),
     cli("Share of bank income on balances", "Average balance × yearly share ÷ 12", "Balance_{P}*Deposit_Share/12"),
-    cli("Fees on supplier payouts above the allowance", "Payouts above the allowance × fee per payout", "Overage_{P}*Overage_Fee"),
+    cli("Transfers above the plan allowance", "Paid transfers above the allowance × fee per transfer", "Overage_{P}*Overage_Fee"),
     cli("Payment link fees (average client)", "Collections × adoption × share by mobile money × fee", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Fee"),
+    cli("Extra users", "Users beyond the plan × fee per user", "MAX(0,Users_{P}-Users_Incl_{P})*Extra_User_Fee"),
+    cli("Extra physical cards (monthly)", "Cards beyond the plan × monthly fee", "MAX(0,Cards_New_{P}-Cards_Phys_Incl_{P})*Extra_Card_Fee"),
+    cli("Salaries above the free amount", "Payroll to wallets above the plan's free amount × fee", "MAX(0,Emp_{P}*Avg_Salary-Payroll_Free_{P})*Wallet_Share*Payroll_Over_Fee"),
+    cli("Payroll module (average client)", "Employees × uptake × price per payslip", "Emp_{P}*Payroll_Mod_Uptake*Payslip_Fee"),
+    cli("International payments (average client)", "Monthly volume × uptake × fee", "Intl_Vol_{P}*Intl_Uptake*Intl_Fee"),
 ]
 r_revt = cli_tot("Revenue per client", None, lambda c: "=" + "+".join(f"{c}{x}" for x in rev_rows))
 uc_sub("Cost to serve")
@@ -1477,7 +1724,9 @@ cost_rows = [
     cli("Fraud and chargebacks", "All card spending × fraud rate", "(Spend_Dom_{P}+Spend_For_{P})*Fraud_Rate"),
     cli("Salaries paid to mobile wallets", "Employees × average salary × share to wallets × cost rate", "Emp_{P}*Avg_Salary*Wallet_Share*Wallet_Payout_Cost"),
     cli("Salaries paid to bank accounts", "Employees × share to banks × cost per transfer", "Emp_{P}*(1-Wallet_Share)*Bank_Payout_Cost"),
-    cli("Supplier payouts", "Payouts × cost per payout", "Supplier_{P}*Supplier_Payout_Cost"),
+    cli("Transfers out", "Transfers × cost per transfer", "Supplier_{P}*Supplier_Payout_Cost"),
+    cli("International payments", "Monthly volume × uptake × cost", "Intl_Vol_{P}*Intl_Uptake*Intl_Cost"),
+    cli("Payroll module", "Employees × uptake × cost per payslip", "Emp_{P}*Payroll_Mod_Uptake*Payslip_Cost"),
     cli("Payment link collection costs", "Collections × adoption × share by mobile money × operator cost", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Cost"),
     cli("SMS, WhatsApp and support tools", "Flat per client", "Notif_Cost"),
 ]
@@ -1487,7 +1736,7 @@ uc_row(["Contribution margin", None, None] + [(lambda r, c=c: f"=IFERROR({c}{r_c
 uc_sub("Once, when the client signs up")
 cli("Onboarding check tools", "Company screening + people checked × ID check (our team's review time is in salaries)", "KYB_Cost+KYC_Cost*KYC_Persons")
 cli("Physical cards printed and delivered", "Cards ordered at sign-up × cost per card", "Cards_New_{P}*Card_Prod_Cost")
-cli("Card fees charged to the client (revenue)", "(Cards ordered − 1 free) × card fee", "MAX(0,Cards_New_{P}-1)*Card_Fee")
+cli("Card fees charged to the client (revenue)", "(Cards ordered − cards in the plan) × card fee", "MAX(0,Cards_New_{P}-Cards_Phys_Incl_{P})*Card_Fee")
 cli("Referral fee (partner-channel clients only)", "Fee paid to the accountant or software partner", "Referral_Fee")
 cli("Subscription given away (free months)", "Free months × plan price", "Free_Months*Price_{P}")
 
@@ -1517,10 +1766,15 @@ def price(label, unit, expr, fmt=NUM):
 
 uc_sub("What clients pay")
 for pl in PL3:
-    price(f"Subscription, {pl}", "FCFA / month", f"Price_{pl}")
-price("Extra physical card", "FCFA / card", "Card_Fee")
+    price(f"Subscription, {DISP[pl]}", "FCFA / month", f"Price_{pl}")
+price("Extra user", "FCFA / month", "Extra_User_Fee")
+price("Extra physical card (monthly)", "FCFA / month", "Extra_Card_Fee")
+price("Extra physical card (printing, one-off)", "FCFA / card", "Card_Fee")
+price("Transfer above the plan allowance", "FCFA / transfer", "Overage_Fee")
+price("Salaries to wallets above the free amount", "% of amount", "Payroll_Over_Fee", PCT2)
+price("Payroll module, per payslip", "FCFA / payslip", "Payslip_Fee")
+price("International payment", "% of amount", "Intl_Fee", PCT2)
 price("Fee on foreign-currency card spending", "% of spending", "FX_Fee", PCT)
-price("Supplier payout above the allowance", "FCFA / payout", "Overage_Fee")
 price("Payment link fee (mobile money)", "% of amount", "PL_Fee", PCT)
 price("Credit (factoring, payroll bridge, credit line, advances)", "% / year", "Yield_Line", PCT)
 uc_sub("Technology")
@@ -1630,6 +1884,7 @@ lines = [
     ("P&L monthly", "Revenue, cost of revenue, gross margin, operating expenses, EBITDA, tax, net income (no depreciation: equipment is expensed)."),
     ("P&L annual", "Years 1–5, cash and funding, operating figures and a euro view."),
     ("Cash flow", "Monthly cash, cash set aside, funding rounds, runway."),
+    ("Pricing levers", "What changing a price, a limit, a fee or a cost does to year-5 revenue and EBITDA; fee-versus-cost grids for international payments and card fees; insurance referrals kept outside the plan."),
     ("Unit economics", "ARPA, cost to serve, contribution, CAC, payback, lifetime value, efficiency and credit ratios."),
     ("Market", "Formal employers in Senegal and Côte d'Ivoire, target market and penetration."),
     ("Sheets ending in (€)", "The same monthly sheet with every amount in euros. Annual sheets, Dashboard, Assumptions and Hiring plan show euros in extra columns."),
@@ -1659,7 +1914,7 @@ for j, (a, b) in enumerate(lines):
 order = ["Cover", "Dashboard", "Assumptions", "Hiring plan"]
 for nm_ in ("Staff", "Sales & marketing", "Clients & revenue", "Credit", "Costs", "P&L monthly"):
     order += [nm_, TWINS[nm_]]
-order += ["P&L annual", "Cash flow", TWINS["Cash flow"], "Unit economics", "Market", "Regulatory path"]
+order += ["P&L annual", "Pricing levers", "Cash flow", TWINS["Cash flow"], "Unit economics", "Market", "Regulatory path"]
 order.insert(order.index("Hiring plan"), "Unit costs")
 wb._sheets = [wb[n] for n in order]
 for ws in wb.worksheets:
