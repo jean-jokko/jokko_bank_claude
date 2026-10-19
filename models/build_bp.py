@@ -216,7 +216,7 @@ a_in("Annual_Free", "Months free on yearly billing", 2, "months", "0", "Yearly p
 a_in("Users_Incl_Petite", "Users included, Essentiel", 2, "users", NUM, "1 main user + 1 invited free.")
 a_in("Users_Incl_Moyenne", "Users included, Pro", 3, "users", NUM, "")
 a_in("Users_Incl_Grande", "Users included, Business", 10, "users", NUM, "")
-a_in("Transfers_Incl_Petite", "Transfers included a month, Essentiel", 30, "transfers", NUM, "All outgoing transfers except salaries, to bank accounts and wallets alike. Salaries never count.")
+a_in("Transfers_Incl_Petite", "Transfers included a month, Essentiel", 30, "transfers", NUM, "Decision (Oct 2026): transfers to bank accounts only. Salaries never count; transfers to wallets fall under the mobile money allowance.")
 a_in("Transfers_Incl_Moyenne", "Transfers included a month, Pro", 150, "transfers", NUM, "")
 a_in("Transfers_Incl_Grande", "Transfers included a month, Business", 500, "transfers", NUM, "")
 a_in("Cards_Phys_Incl_Petite", "Physical cards included, Essentiel", 1, "cards", NUM, "Virtual cards: 2 / 10 / unlimited.")
@@ -227,9 +227,9 @@ a_in("Payroll_Free_Moyenne", "Salaries to bank accounts free up to, Pro", 150000
 a_in("Payroll_Free_Grande", "Salaries to bank accounts free up to, Business", 60000000, "FCFA / month", NUM, "")
 a_in("Extra_User_Fee", "Extra user beyond the plan", 2500, "FCFA / month", NUM, "")
 a_in("Extra_Card_Fee", "Extra physical card beyond the plan", 2000, "FCFA / month", NUM, "Plus the one-off card fee below.")
-a_in("MM_Free_Petite", "Mobile money free up to, Essentiel", 300000, "FCFA / month", NUM, "Decision (Oct 2026): every transfer to a wallet (Wave, Orange Money…), salaries included.")
-a_in("MM_Free_Moyenne", "Mobile money free up to, Pro", 1000000, "FCFA / month", NUM, "")
-a_in("MM_Free_Grande", "Mobile money free up to, Business", 5000000, "FCFA / month", NUM, "")
+a_in("MM_Free_Petite", "Mobile money free up to, Essentiel", 500000, "FCFA / month", NUM, "Decision (Oct 2026): every transfer to a wallet (Wave, Orange Money…), salaries included. Fair use: the allowance cannot be split into many tiny transfers.")
+a_in("MM_Free_Moyenne", "Mobile money free up to, Pro", 2000000, "FCFA / month", NUM, "")
+a_in("MM_Free_Grande", "Mobile money free up to, Business", 10000000, "FCFA / month", NUM, "")
 a_in("MM_Fee", "Fee on mobile money above the free amount", None, "% of amount", PCT2, "Decision (Oct 2026): 1.15% while Kelen pays the operators' 1% (no deal, prudent); 1% once the partner bank gives a capped or flat price (base and ambitious). Wave charges 1%.", scen=(0.0115, 0.01, 0.01))
 a_in("Card_Fee", "Physical card fee beyond the plan (one-off)", 5000, "FCFA", NUM, "Printing and delivery of an extra card.")
 a_in("FX_Fee", "Fee on card spending in foreign currencies", 0.02, "%", PCT, "Cost research (Oct 2026): networks charge the issuer about 1.2%; banks charge clients 2–3% (NSIA 2.5%, UBA 2.5–3%, Coris 2% + 500 F), Djamo 3–4% + 200 F. Card spending in FCFA is free.")
@@ -237,7 +237,7 @@ a_in("FX_Interchange", "Interchange earned on card spending in foreign currencie
 a_in("Foreign_Spend_Factor", "Card spending in foreign currencies allowed by the FX rules", None, "x", "0.00", "Règlement 06/2024/CM/UEMOA, Art. 47, limits residents' card use abroad to usual travel and personal expenses. Prudent assumes 40% of SME foreign card spending (ads, software) is blocked.", scen=(0.6, 1.0, 1.0))
 a_in("Interchange_Share", "Interchange share received on FCFA card spending", 0, "%", PCT2, "Not in the plan: no partner has agreed to share it. Possible upside if negotiated: see Pricing levers. The BCEAO gives the issuer (the partner bank) 20% of the merchant fee, about 0.4–0.7%.")
 a_in("Deposit_Share", "Share of bank income on client balances", 0, "% / year", PCT2, "Not in the plan: no partner has agreed to share it. Possible upside if negotiated: see Pricing levers. The partner bank earns about 3–5% a year on client balances.")
-a_in("Overage_Fee", "Fee per transfer above the plan allowance", 450, "FCFA", NUM, "Decision (Oct 2026). Allowance: 30 / 150 / 500 transfers a month, to banks and wallets alike; salaries never count. Also charged on each salary to a bank account above the free amount. Banks charge 3,000–5,000 per interbank transfer.")
+a_in("Overage_Fee", "Fee per transfer above the plan allowance", 450, "FCFA", NUM, "Decision (Oct 2026). Allowance: 30 / 150 / 500 transfers to bank accounts a month; salaries and transfers to wallets never count. Also charged on each salary to a bank account above the free amount. Banks charge 3,000–5,000 per interbank transfer.")
 a_in("PL_Fee", "Payment links: fee on mobile money collections", 0.015, "%", PCT, "Cost research (Oct 2026): gateways charge 1.5–3% (PayTech 1.5–2%, PayDunya 2.25%, Flutterwave 2%); Wave and Orange merchant 1%. Card and transfer payments are free.")
 a_in("PL_Cost", "Payment links: operator and aggregator cost", None, "%", PCT2, "Cost research (Oct 2026): Wave and Orange merchant pricing 1%; gateways 1.5–3%; receiving through PI-SPI is free. Ambitious = direct operator deal or PI-SPI routing.", scen=(0.012, 0.01, 0.005))
 a_in("PL_Momo_Share", "Payment links: share collected by mobile money", 0.70, "%", PCT, "The rest by card or transfer, free.")
@@ -271,7 +271,7 @@ a_in("Emp_Grande", "Employees, Business", 120, "people", NUM, "")
 a_in("Supplier_Petite", "Transfers out a month (salaries not counted), Essentiel", 10, "payouts", NUM, "")
 a_in("Supplier_Moyenne", "Transfers out a month (salaries not counted), Pro", 40, "payouts", NUM, "")
 a_in("Supplier_Grande", "Transfers out a month (salaries not counted), Business", 150, "payouts", NUM, "")
-a_in("Overage_Petite", "Paid transfers above the allowance (average per client), Essentiel", 1, "transfers", NUM, "Most clients stay inside the allowance; about 1 in 10 exceeds it by about 10.")
+a_in("Overage_Petite", "Paid transfers above the allowance (average per client), Essentiel", 1, "transfers", NUM, "All transfers out above the allowance; the model keeps only the share going to bank accounts (1 − share sent to wallets). Most clients stay inside; about 1 in 10 exceeds it by about 10.")
 a_in("Overage_Moyenne", "Paid transfers above the allowance (average per client), Pro", 3, "transfers", NUM, "")
 a_in("Overage_Grande", "Paid transfers above the allowance (average per client), Business", 10, "transfers", NUM, "")
 a_in("Users_Petite", "Users per client, Essentiel", 2, "users", NUM, "")
@@ -742,7 +742,7 @@ R.line("payroll", "Salaries paid through Kelen", lambda c, p, i: f"={c}{R.k['emp
 R.line("supplier", "Transfers out (salaries not counted)", lambda c, p, i: f"={mix3(c, 'Supplier')}", unit="transfers")
 R.line("mm_n", "Transfers to wallets (salaries and others)", lambda c, p, i: f"={c}{R.k['employees']}*Wallet_Share+{c}{R.k['supplier']}*Sup_Wallet_Share", unit="transfers")
 R.line("mm_vol", "Amount sent to wallets (salaries and others)", lambda c, p, i: f"={c}{R.k['payroll']}*Wallet_Share+{c}{R.k['supplier']}*Sup_Wallet_Share*Sup_Avg_Amount")
-R.line("overage", "Transfers above the plan allowance", lambda c, p, i: f"={mix3(c, 'Overage')}", unit="transfers")
+R.line("overage", "Bank transfers above the plan allowance", lambda c, p, i: f"=({mix3(c, 'Overage')})*(1-Sup_Wallet_Share)", unit="transfers")
 R.line("users_extra", "Extra users beyond the plans", lambda c, p, i: f"={c}{R.k['act_p']}*MAX(0,Users_Petite-Users_Incl_Petite)+{c}{R.k['act_m']}*MAX(0,Users_Moyenne-Users_Incl_Moyenne)+{c}{R.k['act_g']}*MAX(0,Users_Grande-Users_Incl_Grande)", unit="users", total="last")
 R.line("cards_extra", "Extra physical cards beyond the plans (in use)", lambda c, p, i: f"={c}{R.k['act_p']}*MAX(0,Cards_New_Petite-Cards_Phys_Incl_Petite)+{c}{R.k['act_m']}*MAX(0,Cards_New_Moyenne-Cards_Phys_Incl_Moyenne)+{c}{R.k['act_g']}*MAX(0,Cards_New_Grande-Cards_Phys_Incl_Grande)", unit="cards", total="last")
 R.line("payroll_over", "Mobile money above the plans' free amount", lambda c, p, i: f"={c}{R.k['act_p']}*(MM_Low_Share*MAX(0,0.5*(Emp_Petite*Avg_Salary*Wallet_Share+Supplier_Petite*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Petite)+MM_Mid_Share*MAX(0,(Emp_Petite*Avg_Salary*Wallet_Share+Supplier_Petite*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Petite)+(1-MM_Low_Share-MM_Mid_Share)*MAX(0,2.25*(Emp_Petite*Avg_Salary*Wallet_Share+Supplier_Petite*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Petite))+{c}{R.k['act_m']}*(MM_Low_Share*MAX(0,0.5*(Emp_Moyenne*Avg_Salary*Wallet_Share+Supplier_Moyenne*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Moyenne)+MM_Mid_Share*MAX(0,(Emp_Moyenne*Avg_Salary*Wallet_Share+Supplier_Moyenne*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Moyenne)+(1-MM_Low_Share-MM_Mid_Share)*MAX(0,2.25*(Emp_Moyenne*Avg_Salary*Wallet_Share+Supplier_Moyenne*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Moyenne))+{c}{R.k['act_g']}*(MM_Low_Share*MAX(0,0.5*(Emp_Grande*Avg_Salary*Wallet_Share+Supplier_Grande*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Grande)+MM_Mid_Share*MAX(0,(Emp_Grande*Avg_Salary*Wallet_Share+Supplier_Grande*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Grande)+(1-MM_Low_Share-MM_Mid_Share)*MAX(0,2.25*(Emp_Grande*Avg_Salary*Wallet_Share+Supplier_Grande*Sup_Wallet_Share*Sup_Avg_Amount)-MM_Free_Grande))")
@@ -897,7 +897,7 @@ C.line("f_total", "Total fixed costs", lambda c, p, i: f"={c}{C.k['f_before']}+{
 P = TS("P&L monthly", "Profit and loss by month. Revenue excludes VAT and taxes on financial services.")
 P.sec("Revenue")
 for key, lab in (("rev_sub", "Subscriptions"), ("rev_fx", "Fees on foreign-currency card spending"), ("rev_ic", "Interchange share (not in the plan)"),
-                 ("rev_dep", "Share of bank income on balances (not in the plan)"), ("rev_cards", "Physical card fees"), ("rev_over", "Transfers above the plan allowance"),
+                 ("rev_dep", "Share of bank income on balances (not in the plan)"), ("rev_cards", "Physical card fees"), ("rev_over", "Bank transfers above the plan allowance"),
                  ("rev_pl", "Payment link fees"), ("rev_users", "Extra users"), ("rev_cardx", "Extra physical cards (monthly)"),
                  ("rev_payover", "Mobile money above the free amount"), ("rev_payslip", "Payroll module"), ("rev_intl", "International payments"),
                  ("rev_fxic", "Interchange abroad (not in the plan)")):
@@ -1374,7 +1374,7 @@ def ps_row(vals, fmt=None, eur=None, bold=False):
 
 
 three = lambda base: [f"={base}_Petite", f"={base}_Moyenne", f"={base}_Grande"]
-ps_title("The three plans", "Clients choose by what they need, not by staff count. Two simple limits: a number of transfers (banks and wallets alike, salaries never count) and an amount sent to mobile money (salaries included).")
+ps_title("The three plans", "Clients choose by what they need, not by staff count. Two simple limits: a number of transfers to bank accounts (salaries never count) and an amount sent to mobile money (salaries included).")
 ps_head(["What is included", "Essentiel", "Pro", "Business", "Notes"])
 ps_sub("Price")
 ps_row(["Monthly price"] + three("Price") + ["FCFA a month, excluding VAT. Option A / B / C on Assumptions."], NUM, eur=list("BCD"), bold=True)
@@ -1382,8 +1382,8 @@ ps_row(["Yearly billing (price for 12 months)", "=Price_Petite*(12-Annual_Free)"
 ps_row(["Free trial", "=Free_Months&\" month free\"", "=Free_Months&\" month free\"", "=Free_Months&\" month free\"", "Every new client, every plan."])
 ps_sub("Limits")
 ps_row(["Users included"] + three("Users_Incl") + ["Essentiel: 1 main user + 1 invited free. More users: add-on below."], NUM)
-ps_row(["Transfers out a month"] + three("Transfers_Incl") + ["Payments to suppliers and others, to a bank account or a wallet. Salaries never count. Above it: fee per extra transfer. Incoming transfers are free and unlimited."], NUM)
-ps_row(["Mobile money free up to"] + three("MM_Free") + ["FCFA a month sent to wallets (Wave, Orange Money, Mixx…), salaries included. Above it: the mobile money fee below."], NUM, eur=list("BCD"))
+ps_row(["Bank transfers a month"] + three("Transfers_Incl") + ["Payments to suppliers and others by bank transfer. Salaries and transfers to wallets never count. Above it: fee per extra transfer. Incoming transfers are free and unlimited."], NUM)
+ps_row(["Mobile money free up to"] + three("MM_Free") + ["FCFA a month sent to wallets (Wave, Orange Money, Mixx…), salaries included. Above it: the mobile money fee below. Fair use: no splitting into many tiny transfers."], NUM, eur=list("BCD"))
 ps_row(["Salaries to bank accounts free up to"] + three("Payroll_Free") + ["FCFA of salaries a month. Above it: fee per extra transfer for each salary."], NUM, eur=list("BCD"))
 ps_row(["Physical cards"] + three("Cards_Phys_Incl") + ["Visa cards for staff. More cards: add-on below."], NUM)
 ps_row(["Virtual cards", "2", "10", "Unlimited", "For online payments: ads, software, subscriptions."])
@@ -1410,7 +1410,7 @@ for lab, nm, unit, fm, note in (
         ("Extra user", "Extra_User_Fee", "FCFA / month", NUM, "Each user beyond the plan."),
         ("Extra physical card", "Extra_Card_Fee", "FCFA / month", NUM, "Each physical card beyond the plan."),
         ("Extra physical card, printing and delivery", "Card_Fee", "FCFA, one-off", NUM, "When the extra card is ordered."),
-        ("Transfer above the plan allowance", "Overage_Fee", "FCFA / transfer", NUM, "Each transfer beyond the monthly number, to a bank or a wallet, and each salary to a bank account above the free amount. Banks charge 3,000–5,000."),
+        ("Bank transfer above the plan allowance", "Overage_Fee", "FCFA / transfer", NUM, "Each bank transfer beyond the monthly number, and each salary to a bank account above the free amount. Not charged on transfers to wallets. Banks charge 3,000–5,000."),
         ("Mobile money above the free amount", "MM_Fee", "% of amount", PCT2, "Only the part sent to wallets above the plan's free amount. 1.15% while Kelen pays the operators 1%; 1% once the partner bank gives a capped or flat price. Wave charges 1%."),
         ("Payroll module", "Payslip_Fee", "FCFA / payslip", NUM, "Payslip plus the monthly IPRES, CSS and income-tax declarations. Optional, every plan."),
 ):
@@ -1562,7 +1562,7 @@ newc = "+".join(f"SUMIF({RS}!${FC}$5:${LC}$5,5,{RS}!${FC}${R.k['new_' + k]}:${LC
 e = f"-{{d}}*({newc})*{PF5}"
 lever("Free months at sign-up", "Each extra free month gives away one month of subscription for every new client.", "Free_Months", 1, e, e)
 act = y5("act_total")
-lever("Paid transfers above the allowance", "Average extra transfers each client pays for per month. A smaller allowance raises it.", "0", 1, f"{{d}}*{act}*Overage_Fee", f"{{d}}*{act}*(Overage_Fee-Supplier_Payout_Cost)", dec=True)
+lever("Paid bank transfers above the allowance", "Average extra bank transfers each client pays for per month. A smaller allowance raises it.", "0", 1, f"{{d}}*{act}*Overage_Fee", f"{{d}}*{act}*(Overage_Fee-Supplier_Payout_Cost)", dec=True)
 lever("Fee per extra transfer", "Price of each transfer above the allowance (FCFA).", "Overage_Fee", 100, f"{{d}}*{y5('overage')}", f"{{d}}*{y5('overage')}")
 lever("Extra users per client", "Average users above the plan, e.g. if Pro included 2 users instead of 3.", "0", 0.5, f"{{d}}*{act}*Extra_User_Fee", f"{{d}}*{act}*Extra_User_Fee", dec=True)
 lever("Fee per extra user", "Monthly fee for each user beyond the plan (FCFA).", "Extra_User_Fee", 500, f"{{d}}*{y5('users_extra')}", f"{{d}}*{y5('users_extra')}")
@@ -1874,7 +1874,7 @@ uc_sub("Revenue")
 rev_rows = [
     cli("Subscription (after the yearly-billing discount)", "Plan price × (1 − share paying yearly × free months on yearly billing ÷ 12)", "Price_{P}*(1-Annual_Share*Annual_Free/12)"),
     cli("Fees on foreign-currency card spending", "Foreign-currency card spending × FX fee", "Spend_For_{P}*Foreign_Spend_Factor*FX_Fee"),
-    cli("Transfers above the plan allowance", "Paid transfers above the allowance × fee per transfer", "Overage_{P}*Overage_Fee"),
+    cli("Bank transfers above the plan allowance", "Paid bank transfers above the allowance × fee per transfer", "Overage_{P}*(1-Sup_Wallet_Share)*Overage_Fee"),
     cli("Payment link fees (average client)", "Collections × adoption × share by mobile money × fee", "PL_Coll_{P}*PL_Adoption*PL_Momo_Share*PL_Fee"),
     cli("Extra users", "Users beyond the plan × fee per user", "MAX(0,Users_{P}-Users_Incl_{P})*Extra_User_Fee"),
     cli("Extra physical cards (monthly)", "Cards beyond the plan × monthly fee", "MAX(0,Cards_New_{P}-Cards_Phys_Incl_{P})*Extra_Card_Fee"),
@@ -1937,7 +1937,7 @@ for pl in PL3:
 price("Extra user", "FCFA / month", "Extra_User_Fee")
 price("Extra physical card (monthly)", "FCFA / month", "Extra_Card_Fee")
 price("Extra physical card (printing, one-off)", "FCFA / card", "Card_Fee")
-price("Transfer above the plan allowance", "FCFA / transfer", "Overage_Fee")
+price("Bank transfer above the plan allowance", "FCFA / transfer", "Overage_Fee")
 price("Mobile money above the free amount", "% of amount", "MM_Fee", PCT2)
 price("Payroll module, per payslip", "FCFA / payslip", "Payslip_Fee")
 price("International payment", "% of amount", "Intl_Fee", PCT2)
