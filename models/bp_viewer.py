@@ -502,7 +502,7 @@ tabs = [
 sections = {
     "overview": ("Overview", f"Base scenario. Five years from {nv('Start_Date'):%B %Y}, Senegal first, Côte d'Ivoire from month {nv('Launch_CI')}. Partners hold the licences until Kelen buys a microfinance company (SFD) in month {nv('SFD_Acq_Month')}.",
                  f'<div class="kpis">{kpi_html}</div><div class="charts">{bar_chart()}{cash_chart()}</div>'
-                 f'<h3 data-comment-target>Three scenarios</h3><p class="lead">The scenario switch changes sales productivity, partner and digital acquisition, churn, interchange, the bank income share on balances, credit volumes and credit losses.</p>{scen_html}'
+                 f'<h3 data-comment-target>Three scenarios</h3><p class="lead">The scenario switch changes sales productivity, partner and digital acquisition, churn, credit volumes and losses, and every cost or partner rate without a public price: prudent uses public prices and a 40% cut in foreign card spending (FX rules), base the researched values, ambitious negotiated targets.</p>{scen_html}'
                  f'<h3 data-comment-target>Year by year (FCFA millions, euros underneath)</h3>' + annual_table("Dashboard", cols="DEFGH", head_row=19, first=20, stop_label="Checks", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
     "assumptions": ("Assumptions", "Every input of the model with its source. Values in the 'Value used' column are those of the base scenario.", assumptions_html()),
     "unitcosts": ("Unit costs", "What one of each thing costs or earns: one employee by role, one business client by plan, one loan, and the price of every fixed item. Every figure comes from the inputs on Assumptions and Hiring plan.", blocks_html("Unit costs")),
