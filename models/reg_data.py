@@ -61,7 +61,7 @@ REG = [
          ("Card spending abroad",
           "Under Règlement 06/2024 card payments abroad go through the partner bank. Art. 47 limits residents' card use abroad to usual travel and personal expenses, and Art. 12 makes banks check card use against import-payment rules. SME spending on foreign ads and software by card may be restricted: confirm with the partner bank. Visa / Mastercard charge the issuer about 1.2% on foreign spending and pay interchange back.",
           "Règlement n°06/2024/CM/UEMOA, Arts 12, 47; BCEAO instructions 001–015-07-2025/RFE",
-          "Fee on foreign card spending 2%, network costs; prudent scenario cuts foreign card spending by 40%", "To confirm"),
+          "Fee on foreign card spending 2.5%, network costs; prudent scenario cuts foreign card spending by 40%", "To confirm"),
          ("Instant payments",
           "Payouts to wallets and bank accounts run through the partner's connection to PI-SPI. From 2 November 2026 every interoperable transfer must go through PI-SPI (175 participants, Wave included). The BCEAO communiqué of 2 October 2026 prices only transfers between individuals: free up to 8,000 FCFA a day per user and institution, then 0–0.8%; receiving free. Business, bulk and merchant payments are priced freely by each institution, so Kelen's cost depends on the partner bank. The earlier '30 free receipts then up to 1%' rule was the launch regime, now replaced. Ecobank has certified PI-SPI business APIs in all 8 countries.",
           "BCEAO communiqué of 2 Oct 2026; BCEAO PI-SPI participant list, 30 Sept 2026",
