@@ -230,12 +230,12 @@ a_in("Extra_Card_Fee", "Extra physical card beyond the plan", 0, "FCFA / month",
 a_in("MM_Free_Petite", "Mobile money free up to, Essentiel", 200000, "FCFA / month", NUM, "Decision (Oct 2026): every transfer to a wallet (Wave, Orange Money…), salaries included. Fair use: the allowance cannot be split into many tiny transfers.")
 a_in("MM_Free_Moyenne", "Mobile money free up to, Pro", 1000000, "FCFA / month", NUM, "")
 a_in("MM_Free_Grande", "Mobile money free up to, Business", 5000000, "FCFA / month", NUM, "")
-a_in("MM_Fee", "Fee on mobile money above the free amount", 0.0115, "% of amount", PCT2, "Decision (Oct 2026): 1.15%, capped per transfer (below). No deal with the operators yet: Kelen pays 1% capped at 5,000 FCFA. Wave charges 1%.")
-a_in("MM_Fee_Cap", "Mobile money fee: cap per transfer", 8500, "FCFA / transfer", NUM, "Decision (Oct 2026). Reached at about 740,000 FCFA per transfer; average transfers (75,000–200,000) stay below it, so it does not change the totals.")
+a_in("MM_Fee", "Fee on mobile money above the free amount", 0.0125, "% of amount", PCT2, "Decision (Oct 2026): 1.25%, capped per transfer (below). No deal with the operators yet: Kelen pays 1% capped at 5,000 FCFA. Wave charges 1%.")
+a_in("MM_Fee_Cap", "Mobile money fee: cap per transfer", 8500, "FCFA / transfer", NUM, "Decision (Oct 2026). Reached at 680,000 FCFA per transfer; average transfers (75,000–200,000) stay below it, so it does not change the totals.")
 a_in("Card_Fee", "Physical card fee beyond the plan (one-off)", 6500, "FCFA", NUM, "Decision (Oct 2026): 6,500 for printing and delivery of each card beyond the first.")
 a_in("FX_Fixed_Fee", "Fee per card payment in foreign currencies", 200, "FCFA / payment", NUM, "Decision (Oct 2026): 200, like Djamo.")
 a_in("FX_Avg_Txn", "Average card payment in foreign currencies", 25000, "FCFA", NUM, "Assumption: ads and software subscriptions, about $40. Used to count payments.")
-a_in("FX_Fee", "Fee on card spending in foreign currencies", 0.025, "%", PCT2, "Decision (Oct 2026): 2.5% plus a fixed fee per payment (below), like Djamo (3–4% + 200 F). Cost research (Oct 2026): networks charge the issuer about 1.2%; banks charge clients 2–3% (NSIA 2.5%, UBA 2.5–3%, Coris 2% + 500 F), Djamo 3–4% + 200 F. Card spending in FCFA is free.")
+a_in("FX_Fee", "Fee on card spending in foreign currencies", 0.03, "%", PCT2, "Decision (Oct 2026): 3% plus a fixed fee per payment (below), like Djamo (3–4% + 200 F). Cost research (Oct 2026): networks charge the issuer about 1.2%; banks charge clients 2–3% (NSIA 2.5%, UBA 2.5–3%, Coris 2% + 500 F), Djamo 3–4% + 200 F. Card spending in FCFA is free.")
 a_in("FX_Interchange", "Interchange earned on card spending in foreign currencies", 0, "% of foreign spending", PCT2, "Not in the plan: no partner has agreed to share it. Possible upside if negotiated: see Pricing levers. Card networks pay the issuer (the partner bank) about 0.4–1.2%.")
 a_in("Foreign_Spend_Factor", "Card spending in foreign currencies allowed by the FX rules", None, "x", "0.00", "Règlement 06/2024/CM/UEMOA, Art. 47, limits residents' card use abroad to usual travel and personal expenses. Prudent assumes 40% of SME foreign card spending (ads, software) is blocked.", scen=(0.6, 1.0, 1.0))
 a_in("Interchange_Share", "Interchange share received on FCFA card spending", 0, "%", PCT2, "Not in the plan: no partner has agreed to share it. Possible upside if negotiated: see Pricing levers. The BCEAO gives the issuer (the partner bank) 20% of the merchant fee, about 0.4–0.7%.")
@@ -253,9 +253,9 @@ a_in("Payroll_Mod_Uptake", "Payroll module: share of client employees covered (a
 a_in("Payroll_Mod_Ramp", "Payroll module: months to reach maturity", 12, "months", "0", "")
 a_in("Payslip_Cost", "Payroll module: cost per payslip", 15, "FCFA / payslip", NUM, "Cost research (Oct 2026): WhatsApp utility message about 2.3 FCFA (Meta, Rest of Africa); Orange SMS 4–10 FCFA; plus computing.")
 a_in("Intl_Start", "International supplier payments go live", 13, "month #", "0", "Through the partner bank's foreign-exchange set-up, under the 2024 WAEMU foreign-exchange rules.")
-a_in("Intl_Fee", "International payments: fee charged (% of amount)", 0.035, "% of amount", PCT2, "Decision (Oct 2026): Kelen charges what the bank or provider charges (break-even on the rate) and earns the fixed fee below. Banks charge SMEs about 3–4% all-in; Capi Money about 3% (to check). The 0.6% tax on transfers out of the zone is passed on at cost.")
-a_in("Intl_Cost", "International payments: cost to Kelen (% of amount)", 0.035, "% of amount", PCT2, "Provider not chosen yet (partner bank, Capi Money or others). Assumed all-in 3.5%, the same as the fee.")
-a_in("Intl_Fixed_Fee", "International payments: fixed fee per payment", 750, "FCFA / payment", NUM, "Decision (Oct 2026): Kelen's only margin on international payments.")
+a_in("Intl_Fee", "International payments: fee charged (% of amount)", 0.038, "% of amount", PCT2, "Decision (Oct 2026): 3.8%, 0.3 point above the assumed cost, plus the fixed fee below. Banks charge SMEs about 3–4% all-in; Capi Money about 3% (to check). The 0.6% tax on transfers out of the zone is passed on at cost.")
+a_in("Intl_Cost", "International payments: cost to Kelen (% of amount)", 0.035, "% of amount", PCT2, "Provider not chosen yet (partner bank, Capi Money or others). Assumed all-in 3.5%.")
+a_in("Intl_Fixed_Fee", "International payments: fixed fee per payment", 1500, "FCFA / payment", NUM, "Decision (Oct 2026): 1,500, far below the banks' 25,000–60,000 FCFA of fixed fees per payment.")
 a_in("Intl_Avg_Payment", "International payments: average payment", 1000000, "FCFA", NUM, "Assumption, used to count payments for the fixed fee.")
 a_in("Intl_Uptake", "International payments: share of clients using them (at maturity)", 0.20, "%", PCT, "Importers: China, Turkey, Dubai, France.")
 a_in("Intl_Ramp", "International payments: months to reach maturity", 12, "months", "0", "")
@@ -1421,7 +1421,7 @@ for lab, nm, unit, fm, note in (
         ("Extra physical card", "Card_Fee", "FCFA, one-off", NUM, "The first physical card is free; each other card is paid once, for printing and delivery. No monthly fee."),
         ("Bank transfer above the plan allowance", "Overage_Fee", "FCFA / transfer", NUM, "Each bank transfer beyond the monthly number, and each salary to a bank account above the free amount. Not charged on transfers to wallets. Banks charge 3,000–5,000."),
         ("Mobile money above the free amount", "MM_Fee", "% of amount", PCT2, "Only the part sent to wallets above the plan's free amount. Kelen pays the operators 1% (capped at 5,000 FCFA) until a deal is signed. Wave charges 1%."),
-        ("Mobile money fee: cap per transfer", "MM_Fee_Cap", "FCFA / transfer", NUM, "The fee above never exceeds this on a single transfer (reached at about 740,000 FCFA)."),
+        ("Mobile money fee: cap per transfer", "MM_Fee_Cap", "FCFA / transfer", NUM, "The fee above never exceeds this on a single transfer (reached at 680,000 FCFA)."),
         ("Card payment in other currencies", "FX_Fixed_Fee", "FCFA / payment", NUM, "On top of the % below, for each card payment in dollars or euros."),
         ("International payment", "Intl_Fixed_Fee", "FCFA / payment", NUM, "On top of the % below, for each payment abroad."),
         ("Payroll module", "Payslip_Fee", "FCFA / payslip", NUM, "Payslip plus the monthly IPRES, CSS and income-tax declarations. Optional, every plan."),
@@ -1433,7 +1433,7 @@ ps_head(["Commission", "Rate", "Unit", "", "What it is for"])
 for lab, nm, note in (
         ("Payment links and QR collections (mobile money)", "PL_Fee", "When a client's customer pays an invoice by Wave or Orange Money. Card and transfer payments are free."),
         ("Card spending in other currencies", "FX_Fee", "Ads, software and travel paid in dollars or euros, plus a fixed fee per payment (below). Card spending in FCFA is free."),
-        ("International supplier payments", "Intl_Fee", "Paying suppliers abroad (China, Turkey, Dubai, France). The same rate the bank or provider charges Kelen, plus a fixed fee (below). The 0.6% tax on transfers out of the zone is added at cost."),
+        ("International supplier payments", "Intl_Fee", "Paying suppliers abroad (China, Turkey, Dubai, France). About the rate the bank or provider charges Kelen (3.5% assumed), plus a fixed fee (below). The 0.6% tax on transfers out of the zone is added at cost."),
 ):
     ps_row([lab, f"={nm}", "% of amount", None, note], PCT2)
 
@@ -1513,7 +1513,7 @@ for row in (
         ("Card processor (HPS, Paymentology, GIM-UEMOA…)", "Approves every card payment in real time against the client's balance and handles card files.", "A monthly fee per active card.", "From the card launch."),
         ("Visa / Mastercard", "The card network. Paid through the partner bank.", "Cross-border fees on payments in other currencies.", "From the card launch."),
         ("Partner SFD (microfinance institution)", "Lends under its licence and with its funding; Kelen finds, scores and services the loans.", "Kelen keeps a share of the net margin and puts up a first-loss reserve.", "Month 18 to month 24 in Senegal; all along in Côte d'Ivoire."),
-        ("International payment provider (partner bank, Capi Money or others)", "Converts FCFA and pays suppliers abroad in euros, dollars or yuan.", "Its rate (about 3.5% assumed) plus the 0.6% tax, both passed on to the client.", "From month 13."),
+        ("International payment provider (partner bank, Capi Money or others)", "Converts FCFA and pays suppliers abroad in euros, dollars or yuan.", "Its rate (about 3.5% assumed); Kelen charges 3.8% plus 1,500 FCFA per payment. The 0.6% tax is passed on to the client.", "From month 13."),
         ("Maak (group company)", "The banking platform: accounts ledger, payments, cards and app back-end.", "A lease for 3 years, then upgrades and maintenance.", "From month 1."),
 ):
     hw_row(row)
@@ -1690,7 +1690,7 @@ lv_head(LH)
 lever("Payroll module: price per payslip", "FCFA per payslip (payslip plus the monthly declarations).", "Payslip_Fee", 250, f"{{d}}*{y5('payslips')}", f"{{d}}*{y5('payslips')}")
 lever("Payroll module: uptake", "Share of client employees covered (at maturity).", "Payroll_Mod_Uptake", 0.10, f"{{d}}/Payroll_Mod_Uptake*{y5('payslips')}*Payslip_Fee", f"{{d}}/Payroll_Mod_Uptake*{y5('payslips')}*(Payslip_Fee-Payslip_Cost)", pct=True)
 lever("International payments: fixed fee", "FCFA per payment, Kelen's margin.", "Intl_Fixed_Fee", 250, f"{{d}}*{y5('intl_vol')}/Intl_Avg_Payment", f"{{d}}*{y5('intl_vol')}/Intl_Avg_Payment")
-lever("International payments: fee", "% charged on international payments (today the same as the cost).", "Intl_Fee", 0.005, f"{{d}}*{y5('intl_vol')}", f"{{d}}*{y5('intl_vol')}", pct=True)
+lever("International payments: fee", "% charged on international payments.", "Intl_Fee", 0.005, f"{{d}}*{y5('intl_vol')}", f"{{d}}*{y5('intl_vol')}", pct=True)
 lever("International payments: uptake", "Share of clients using them (at maturity).", "Intl_Uptake", 0.10, f"{{d}}/Intl_Uptake*{y5('intl_vol')}*(Intl_Fee+Intl_Fixed_Fee/Intl_Avg_Payment)", f"{{d}}/Intl_Uptake*{y5('intl_vol')}*(Intl_Fee+Intl_Fixed_Fee/Intl_Avg_Payment-Intl_Cost)", pct=True)
 lever("Card spending in other currencies: fee", "Fee on card payments in other currencies (ads, software, travel).", "FX_Fee", 0.005, f"{{d}}*{y5('spend_for')}", f"{{d}}*{y5('spend_for')}", pct=True)
 fx_net = "(FX_Fee+FX_Fixed_Fee/FX_Avg_Txn+FX_Interchange-Scheme_Rate-Scheme_Fixed/FX_Avg_Txn-Fraud_Rate)"
@@ -1978,7 +1978,7 @@ svc("Extra physical card (one-off)", "Card printer", "Card_Fee", "Card_Prod_Cost
 svc("50,000 FCFA card payment in FCFA", "Fraud and disputes (interchange stays with the bank)", "0", "50000*Fraud_Rate", "Estimate")
 svc("25,000 FCFA card payment in dollars (ads, software)", "Visa / Mastercard and the partner bank (FX margin)", "25000*FX_Fee+FX_Fixed_Fee", "25000*(Scheme_Rate+Fraud_Rate)+Scheme_Fixed", "Researched: network fees about 0.9% + $0.43; bank FX margin to quote")
 uc_sub("International payments and payroll")
-svc("1,000,000 FCFA paid to a supplier abroad", "Partner bank or provider (Capi Money…)", "1000000*Intl_Fee+Intl_Fixed_Fee", "1000000*Intl_Cost", "Assumed: provider not chosen; break-even on the rate")
+svc("1,000,000 FCFA paid to a supplier abroad", "Partner bank or provider (Capi Money…)", "1000000*Intl_Fee+Intl_Fixed_Fee", "1000000*Intl_Cost", "Assumed: provider not chosen yet")
 svc("One payslip with the monthly declarations", "WhatsApp / SMS, computing", "Payslip_Fee", "Payslip_Cost", "Researched")
 uc_sub("Credit")
 svc("1,000,000 FCFA credit line for a year, Kelen's own SFD", "Lenders (cost of funds), credit losses, servicing", "1000000*Yield_Line", "1000000*(CoF+CoR_Line*CoR_Mult+Servicing)", "With the partner SFD, Kelen keeps its share of this (Assumptions, section 7)")
