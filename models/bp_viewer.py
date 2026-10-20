@@ -278,7 +278,41 @@ def hiring_html():
     return f'<div class="tw"><table class="hp"><thead><tr>{th}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
 
 
-def blocks_html(sheet):
+def staff_years_html():
+    """Headcount at each year end and staff cost per year, by department, from the Staff sheet."""
+    v = wv["Staff"]
+    months = {c: v.cell(3, c).value for c in range(1, v.max_column + 1)}
+    years = {c: v.cell(5, c).value for c in range(1, v.max_column + 1)}
+    ends = [next((c for c, m in months.items() if m == 12 * y), None) for y in range(1, 6)]
+    def label_rows(prefix):
+        return [(r, str(v.cell(r, 1).value)[len(prefix):]) for r in range(1, v.max_row + 1) if isinstance(v.cell(r, 1).value, str) and v.cell(r, 1).value.startswith(prefix)]
+    def cost_year(r, y):
+        return sum(v.cell(r, c).value or 0 for c, yy in years.items() if yy == y and isinstance(months.get(c), (int, float)))
+    th = "".join(f'<th scope="col">{h}</th>' for h in ["Department"] + [f"Year {y}" for y in range(1, 6)])
+    body = ""
+    for r, dep in label_rows("Headcount: "):
+        body += f'<tr data-comment-target><th scope="row">{E(dep)}</th>' + "".join(f'<td>{fmt_num(v.cell(r, c).value or 0, "int")}</td>' for c in ends) + "</tr>"
+    tot = next(r for r in range(1, v.max_row + 1) if v.cell(r, 1).value == "Total headcount")
+    body += '<tr class=b><th scope="row">Total</th>' + "".join(f'<td>{fmt_num(v.cell(tot, c).value or 0, "int")}</td>' for c in ends) + "</tr>"
+    hc = f'<h3 data-comment-target>Headcount at each year end, by department</h3><p class="lead">Fixed roles from the table above plus the team that grows with volume.</p><div class="tw"><table class="an uc"><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>'
+    body = ""
+    for lab in ("Customer support agents · SN", "Developers · SN", "Field sales reps, Senegal · SN", "Field sales reps, Côte d'Ivoire · CI", "Credit analysts and collections · SN"):
+        r = next((r for r in range(1, v.max_row + 1) if v.cell(r, 1).value == lab), None)
+        if r:
+            body += f'<tr data-comment-target><th scope="row">{E(lab.split(" · ")[0])}</th>' + "".join(f'<td>{fmt_num(v.cell(r, c).value or 0, "int")}</td>' for c in ends) + "</tr>"
+    vd = f'<h3 data-comment-target>Roles that grow with clients and loans (year end)</h3><p class="lead">Customer support: one agent per {nv("Clients_per_Support"):,.0f} active clients (at least {nv("Support_Min"):.0f}). Sales reps: per country, from the clients each rep signs. Developers and credit analysts: per client and per loan book. Ratios on Assumptions, section 8.</p><div class="tw"><table class="an uc"><thead><tr>{th.replace("Department", "Role")}</tr></thead><tbody>{body}</tbody></table></div>'
+    body = ""
+    tcost = [0] * 5
+    for r, dep in label_rows("Staff cost: "):
+        vals = [cost_year(r, y) for y in range(1, 6)]
+        tcost = [a + b for a, b in zip(tcost, vals)]
+        body += f'<tr data-comment-target><th scope="row">{E(dep)}</th>' + "".join(f'<td>{fmt_num(x / 1e6, "dec1")}<span class="eur">{eur_fmt(x / FX)}</span></td>' for x in vals) + "</tr>"
+    body += '<tr class=b><th scope="row">Total</th>' + "".join(f'<td>{fmt_num(x / 1e6, "dec1")}<span class="eur">{eur_fmt(x / FX)}</span></td>' for x in tcost) + "</tr>"
+    sc = f'<h3 data-comment-target>Staff cost per year, by department (FCFA millions)</h3><p class="lead">Employer cost: gross salary plus {nv("Employer_Charges"):.0%} charges, with yearly raises.</p><div class="tw"><table class="an uc"><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>'
+    return hc + vd + sc
+
+
+def blocks_html(sheet, wrap_all=False):
     """Render a sheet made of titled blocks (title row, optional italic subtitle, dark header row, data rows)."""
     v, f = wv[sheet], wf[sheet]
     out, rows, cols = [], [], []
@@ -348,7 +382,7 @@ def blocks_html(sheet):
             rows.append(f'<tr class="sec"><th scope="rowgroup" colspan="{len(cols)}">{E(a.value)}</th></tr>')
             continue
         bold = bool(font and font.b)
-        cls = [(" class=tx" if c == 2 and isinstance(v.cell(r, c).value, str) and len(v.cell(r, c).value) > 16 else (" class=u" if isinstance(v.cell(r, c).value, str) else ""))
+        cls = [(" class=tx" if (c == 2 or wrap_all) and isinstance(v.cell(r, c).value, str) and len(v.cell(r, c).value) > 16 else (" class=u" if isinstance(v.cell(r, c).value, str) else ""))
                for c, h in cols]
         rows.append({"cells": [cell(r, c) for c, h in cols], "cls": cls, "bold": bold})
     flush()
@@ -495,7 +529,7 @@ def cash_chart():
 
 # ------------------------------------------------------------------ page
 tabs = [
-    ("overview", "Overview"), ("plans", "Plans & pricing"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
+    ("overview", "Overview"), ("plans", "Plans & pricing"), ("how", "How it works"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
     ("cash", "Cash flow"), ("costs", "Costs"), ("sales", "Sales & marketing"), ("revenue", "Clients & revenue"), ("credit", "Credit"),
     ("staff", "Staff"), ("unit", "Unit economics"), ("market", "Market"), ("regulatory", "Regulatory path"),
 ]
@@ -505,8 +539,9 @@ sections = {
                  f'<h3 data-comment-target>Three scenarios</h3><p class="lead">The scenario switch changes sales productivity, partner and digital acquisition, churn, credit volumes and losses, and every cost or partner rate without a public price: prudent uses public prices and a 40% cut in foreign card spending (FX rules), base the researched values, ambitious negotiated targets.</p>{scen_html}'
                  f'<h3 data-comment-target>Year by year (FCFA millions, euros underneath)</h3>' + annual_table("Dashboard", cols="DEFGH", head_row=19, first=20, stop_label="Checks", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
     "assumptions": ("Assumptions", "Every input of the model with its source. Values in the 'Value used' column are those of the base scenario.", assumptions_html()),
-    "unitcosts": ("Unit costs", "What one of each thing costs or earns: one employee by role, one business client by plan, one loan, and the price of every fixed item. Every figure comes from the inputs on Assumptions and Hiring plan.", blocks_html("Unit costs")),
-    "hiring": ("Hiring plan", f"The fixed roles. Employer cost = gross salary + {nv('Employer_Charges'):.0%} charges. Customer support, developers, field sales reps and credit analysts grow with clients and the loan book: see the Staff tab.", hiring_html()),
+    "unitcosts": ("Unit costs", "Service by service: what the client pays, what it costs Kelen and who Kelen pays, what Kelen keeps. Then one employee by role, one business client by plan, one loan, and the price of every fixed item. Every figure comes from the inputs on Assumptions and Hiring plan.", blocks_html("Unit costs")),
+    "hiring": ("Hiring plan", f"The fixed roles, then the whole team year by year: headcount by department, the roles that grow with clients (customer support, sales reps, developers, credit analysts) and the staff cost. Employer cost = gross salary + {nv('Employer_Charges'):.0%} charges.", hiring_html() + staff_years_html()),
+    "how": ("How it works", "What the partner bank, the SFD and Kelen each do, how the money moves for every service, when Kelen must put up its own cash, the mobile money routes, the co-branded card programme and what changes with Kelen's own SFD.", blocks_html("How it works", wrap_all=True)),
     "pnl": ("P&L by year", "FCFA millions, with the euro equivalent under each amount.", annual_table("P&L annual", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
     "pnlm": ("P&L by month", "Thousands of FCFA (k FCFA), with the euro equivalent under each amount. Hover a line name to see its formula.", ts_table("P&L monthly")),
     "cash": ("Cash flow", "Thousands of FCFA, euros underneath. Cash set aside (card collateral, credit reserves, equity in the own SFD's loans) is excluded from closing cash.", ts_table("Cash flow")),
