@@ -3,6 +3,7 @@ import base64, datetime, html, sys
 from openpyxl import load_workbook
 
 XLSX, SC1, SC3, OUT = sys.argv[1:5]
+TGT = sys.argv[5] if len(sys.argv) > 5 else None
 wv = load_workbook(XLSX, data_only=True)
 wf = load_workbook(XLSX)
 E = lambda s: html.escape(str(s), quote=True)
@@ -474,9 +475,10 @@ scen_html = '<div class="tw"><table class="an sc"><thead><tr><th class="c0" scop
 
 
 # ------------------------------------------------------------------ charts (inline SVG, drawn to scale)
-def bar_chart():
-    rev = [x / FX / 1e6 for x in base["rev"]]
-    eb = [x / FX / 1e6 for x in base["ebitda"]]
+def bar_chart(d=None):
+    d = d or base
+    rev = [x / FX / 1e6 for x in d["rev"]]
+    eb = [x / FX / 1e6 for x in d["ebitda"]]
     hi = max(rev + [0]) * 1.1
     lo = min(eb + [0]) * 1.15
     W, H, L, R_, T, B = 640, 280, 48, 12, 16, 34
@@ -502,8 +504,8 @@ def bar_chart():
             f'<div class="legend"><span><i class="b1"></i>Revenue</span><span><i class="b2"></i>EBITDA</span></div></figure>')
 
 
-def cash_chart():
-    Q = wv["Cash flow"]
+def cash_chart(w=None):
+    Q = (w or wv)["Cash flow"]
     lab = {Q.cell(r, 1).value: r for r in range(1, Q.max_row + 1)}
     vals = [Q.cell(lab["Closing cash"], c).value / FX / 1e6 for c in MONTH_COLS]
     hi, lo = max(vals) * 1.1, min(0, min(vals)) * 1.1
@@ -527,9 +529,63 @@ def cash_chart():
             f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Closing cash by month">{"".join(g)}</svg></figure>')
 
 
+def target_html():
+    """The base plan with the partner deals signed: KPIs, what is negotiated, side by side with the base, P&L and metrics."""
+    global wv, wf
+    tv, tf = load_workbook(TGT, data_only=True), load_workbook(TGT)
+    t = dash_values(TGT)
+    def nv_in(w_v, w_f, name):
+        sheet, cell = w_f.defined_names[name].attr_text.split("!")
+        return w_v[sheet.strip("'")][cell.replace("$", "")].value
+    tk = [
+        ("EBITDA turns positive", be_text(t), f"Base plan: {be_text(base)}"),
+        ("Peak funding need", eur_fmt(t['peak'] / FX), f"{fcfa_fmt(t['peak'])} · base plan {fcfa_fmt(base['peak'])}"),
+        ("Year 5 revenue", eur_fmt(t['rev'][4] / FX), f"{fcfa_fmt(t['rev'][4])} · same clients and prices as the base plan"),
+        ("Year 5 EBITDA", eur_fmt(t['ebitda'][4] / FX), f"{fcfa_fmt(t['ebitda'][4])} · {fmt_num(t['ebitda'][4] / t['rev'][4], 'pct')} of revenue (base {fmt_num(base['ebitda'][4] / base['rev'][4], 'pct')})"),
+        ("Cash at the end of year 5", eur_fmt(t['cash'][4] / FX), f"{fcfa_fmt(t['cash'][4])} · base plan {fcfa_fmt(base['cash'][4])}"),
+    ]
+    kh = "".join(f'<div class="kpi" data-comment-target><div class="kl">{E(a)}</div><div class="kv">{b}</div><div class="ks">{c}</div></div>' for a, b, c in tk)
+    def mm(w_v, w_f):
+        p_, cap, flat = (nv_in(w_v, w_f, n) for n in ("MM_Cost_Pct", "MM_Cost_Cap", "MM_Cost_Flat"))
+        out = f"{p_ * 100:.1f}%".replace(".0%", "%") + (f" capped at {fcfa_fmt(cap)}" if cap else "")
+        return out + (f" + {fcfa_fmt(flat)}" if flat else "")
+    deals = [("Transfer to a wallet (Wave, Orange Money)", "Partner bank on PI-SPI, or Wave / Orange", mm, None),
+             ("Fee per business account, per month", "Partner bank", "Bank_Fee", "int"),
+             ("Transfer to another bank (suppliers)", "Partner bank", "Supplier_Payout_Cost", "int"),
+             ("Salary to a bank account", "Partner bank", "Bank_Payout_Cost", "int"),
+             ("Card processing, per active card per month", "Card processor", "Card_Proc_Fee", "int"),
+             ("Visa fees and bank FX margin on card payments abroad", "Partner bank", "Scheme_Rate", "pct2"),
+             ("International payments: provider cost", "Partner bank or provider", "Intl_Cost", "pct2"),
+             ("Card programme collateral (cash set aside)", "Partner bank", "Card_Collateral", "int")]
+    def dv(w_v, w_f, nm, kind):
+        if callable(nm):
+            return nm(w_v, w_f)
+        x = nv_in(w_v, w_f, nm)
+        return fmt_num(x, kind) + ("" if kind == "pct2" else " FCFA")
+    drows = "".join(f'<tr data-comment-target><th scope="row">{E(l)}</th><td class="u">{E(who)}</td><td>{dv(wv, wf, nm, k)}</td><td class="hl">{dv(tv, tf, nm, k)}</td></tr>' for l, who, nm, k in deals)
+    dtab = f'<div class="tw"><table class="an sc"><thead><tr><th class="c0" scope="col">Cost</th><th scope="col">Negotiated with</th><th scope="col">Base plan (no deal)</th><th scope="col" class="hl">Target</th></tr></thead><tbody>{drows}</tbody></table></div>'
+    crow = scen_rows + [("Cash at the end of year 5", lambda d: both(d["cash"][4])), ("Headcount, end of year 5", lambda d: fmt_num(d["hc"][4], "int"))]
+    ctab = '<div class="tw"><table class="an sc"><thead><tr><th class="c0" scope="col">Result</th><th scope="col">Base plan</th><th scope="col" class="hl">Target with deals</th></tr></thead><tbody>' + "".join(
+        f'<tr data-comment-target><th scope="row">{E(l)}</th><td>{fn(base)}</td><td class="hl">{fn(t)}</td></tr>' for l, fn in crow) + "</tbody></table></div>"
+    charts = f'<div class="charts">{bar_chart(t)}{cash_chart(tv)}</div>'
+    wv0, wf0 = wv, wf
+    wv, wf = tv, tf
+    try:
+        pnl = annual_table("P&L annual", scale_fcfa={"div": 1e6, "unit": "M FCFA"})
+        ue = annual_table("Unit economics", cols="DEFGH", first=6)
+    finally:
+        wv, wf = wv0, wf0
+    return (f'<div class="kpis">{kh}</div>'
+            f'<h3 data-comment-target>What is negotiated</h3><p class="lead">The targets from the partner negotiations. Everything else is the base plan: same clients, prices, team and timing.</p>{dtab}'
+            f'<h3 data-comment-target>Base plan and target side by side</h3>{ctab}{charts}'
+            f'<h3 data-comment-target>P&amp;L by year with the deals (FCFA millions, euros underneath)</h3>{pnl}'
+            f'<h3 data-comment-target>Key metrics with the deals</h3>{ue}'
+            f'<p class="lead small">Not counted here either: a share of card interchange or of the bank\'s income on client balances, if the bank also agrees (see Pricing levers).</p>')
+
+
 # ------------------------------------------------------------------ page
 tabs = [
-    ("overview", "Overview"), ("plans", "Plans & pricing"), ("how", "How it works"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
+    ("overview", "Overview"), ("target", "Target with deals"), ("plans", "Plans & pricing"), ("how", "How it works"), ("assumptions", "Assumptions"), ("unitcosts", "Unit costs"), ("hiring", "Hiring plan"), ("pnl", "P&L by year"), ("levers", "Pricing levers"), ("pnlm", "P&L by month"),
     ("cash", "Cash flow"), ("costs", "Costs"), ("sales", "Sales & marketing"), ("revenue", "Clients & revenue"), ("credit", "Credit"),
     ("staff", "Staff"), ("unit", "Unit economics"), ("market", "Market"), ("regulatory", "Regulatory path"),
 ]
@@ -538,6 +594,7 @@ sections = {
                  f'<div class="kpis">{kpi_html}</div><div class="charts">{bar_chart()}{cash_chart()}</div>'
                  f'<h3 data-comment-target>Three scenarios</h3><p class="lead">The scenario switch changes sales productivity, partner and digital acquisition, churn, credit volumes and losses, and every cost or partner rate without a public price: prudent uses public prices and a 40% cut in foreign card spending (FX rules), base the researched values, ambitious negotiated targets.</p>{scen_html}'
                  f'<h3 data-comment-target>Year by year (FCFA millions, euros underneath)</h3>' + annual_table("Dashboard", cols="DEFGH", head_row=19, first=20, stop_label="Checks", scale_fcfa={"div": 1e6, "unit": "M FCFA"})),
+    "target": ("Target with deals", "What the whole business looks like if the partner negotiations reach their targets: lower costs for transfers to wallets, bank transfers, accounts, card processing and FX. Same clients, prices and team as the base plan; the rest of the plan is unchanged.", target_html()),
     "assumptions": ("Assumptions", "Every input of the model with its source. Values in the 'Value used' column are those of the base scenario.", assumptions_html()),
     "unitcosts": ("Unit costs", "Service by service: what the client pays, what it costs Kelen and who Kelen pays, what Kelen keeps. Then one employee by role, one business client by plan, one loan, and the price of every fixed item. Every figure comes from the inputs on Assumptions and Hiring plan.", blocks_html("Unit costs")),
     "hiring": ("Hiring plan", f"The fixed roles, then the whole team year by year: headcount by department, the roles that grow with clients (customer support, sales reps, developers, credit analysts) and the staff cost. Employer cost = gross salary + {nv('Employer_Charges'):.0%} charges.", hiring_html() + staff_years_html()),
