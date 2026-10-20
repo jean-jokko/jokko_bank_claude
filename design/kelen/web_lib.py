@@ -155,7 +155,7 @@ def sidebar(active):
         groups.append(f'<div style="display: flex; flex-direction: column; gap: 2px">{h}{its}</div>')
     company = (f'<a href="Settings.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 16px; background: {GLASS}; border: {BORDER}; '
                f'box-shadow: {SH_CARD}; text-decoration: none; color: {INK}">{av("AN", ACC, 36)}<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">'
-               f'<span style="font-size: 14px; font-weight: 600">Atelier Ndiaye SARL</span><span style="font-size: 12px; color: {MUTED}">Essai gratuit · 12 janv.</span></span></a>')
+               f'<span style="font-size: 14px; font-weight: 600">Atelier Ndiaye SARL</span><span style="font-size: 12px; color: {MUTED}">Premier mois offert · 5 nov.</span></span></a>')
     bottom_ = (f'<div style="display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 12px; border-top: 1px solid {LINE}">'
                + nav_item("Paramètres", "Settings", "gear", active == "Settings")
                + f'<button style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 14px; color: {NAVFG}; font-size: 14px; font-weight: 500">{ic("help", 18, "1.5")}Aide et contact</button>'

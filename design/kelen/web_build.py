@@ -76,7 +76,7 @@ add("Main.dc.html", "Accueil", shell("Main", "Bonjour Aïssatou", "".join([
              + panel(row(circ("calendar", TINT), "Paie d'octobre · 31 oct.", "24 salariés · 3 465 000 FCFA · prête", href="BulkReview.dc.html", chevron=True)
                      + row(circ("shield", WARNBG, WARN), "2 validations en attente", "Virement et paie d'octobre", pill("2", "warn"), href="Approvals.dc.html", chevron=True)
                      + row(circ("bolt", WARNBG, WARN), "Senelec à payer", "126 450 FCFA · échéance 20 oct.", href="BillPay.dc.html", chevron=True)
-                     + row(circ("wallet", SOFT), "Choisir votre offre", "Avant le 12 janvier 2027", pill("À choisir", "warn"), href="Plan.dc.html", chevron=True, last=True), pad="0 14px"),
+                     + row(circ("wallet", SOFT), "Choisir votre offre", "Avant le 5 novembre", pill("À choisir", "warn"), href="Plan.dc.html", chevron=True, last=True), pad="0 14px"),
              pad="20px", gap=12)
         + card(card_title("Cartes", tlink("Gérer", "Cards.dc.html"))
                + f'<span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 13px; color: {MUTED}">Dépensé en octobre</span>'
@@ -152,11 +152,11 @@ add("CardDetail.dc.html", "Détail d'une carte", shell("Cards", "Carte principal
           f'<div style="display: flex; flex-wrap: wrap; gap: 10px; max-width: 420px">{card_action("Geler", "snow")}{card_action("Infos", "eye")}{card_action("Code PIN", "lock")}{card_action("Plafonds", "sliders")}</div>',
           card(f'<span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 13px; color: {MUTED}">Plafond mensuel</span>'
                f'<span style="font-size: 14px; font-weight: 600">412 300 <span style="color: {MUTED}; font-weight: 500">/ 1 500 000 FCFA</span></span></span>{progress(27)}'
-               + muted("Paiements en FCFA gratuits · autres devises : 1 %"), pad="18px 20px", gap=10), gap=18),
+               + muted("Acceptée partout où Visa est acceptée"), pad="18px 20px", gap=10), gap=18),
     stack(card(card_title("Réglages") + panel(toggle_row("Paiements en ligne", "Sites et applications", True) + toggle_row("Sans contact", "Paiements en magasin", True)
                                               + toggle_row("Retraits au distributeur", "Désactivés pour cette carte", False)
-                                              + toggle_row("Paiements hors UEMOA", "1 % de frais hors FCFA", True, last=True)), pad="20px", gap=12),
-          card(card_title("Dernières dépenses") + panel(row(tx_icon("card", SOFT), "Google Ads", "Payé en USD · dont 512 FCFA de frais (1 %)", amt(-51712))
+                                              + toggle_row("Paiements hors UEMOA", "Publicité en ligne, logiciels, voyages", True, last=True)), pad="20px", gap=12),
+          card(card_title("Dernières dépenses") + panel(row(tx_icon("card", SOFT), "Google Ads", "Payé en USD · 10 oct.", amt(-51712))
                                                         + row(tx_icon("card", SOFT), "Quincaillerie Médina", "Fournitures · 9 oct.", amt(-78500))
                                                         + row(tx_icon("card", SOFT), "Station Mermoz", "Carburant · 8 oct.", amt(-35000), last=True)), pad="20px", gap=12), gap=18),
     basis=(420, 420)), sub="Physique •••• 4821 · Aïssatou Ndiaye", back="Cards.dc.html",
@@ -183,8 +183,8 @@ def acct_from(name="Depuis : compte principal", sub="8 210 000 FCFA disponibles"
 
 add("NewCard.dc.html", "Nouvelle carte", flow("Nouvelle carte", "".join([
     flow_h1("Nouvelle carte", "Virtuelle tout de suite, ou physique livrée à l'entreprise."),
-    autogrid(option("Carte virtuelle", "Gratuite et illimitée, prête tout de suite", "card", True),
-             option("Carte physique", "5 000 FCFA une fois, livrée à l'entreprise. La première est offerte au gérant.", "truck"), min_w=260, gap=12),
+    autogrid(option("Carte virtuelle", "Gratuite, prête tout de suite", "card", True),
+             option("Carte physique", "Livrée à l'entreprise. La première est offerte, 6 500 FCFA les suivantes.", "truck"), min_w=260, gap=12),
     field("Nom de la carte", "Fournitures bureau"),
     panel(row(av("FS", "#FDE3DB", 36), "Titulaire", "Fatou Sarr · assistante", chevron=True) + acct_from("Compte", "Principal")),
     stack(label("Plafond mensuel"), chips(["100 000", "250 000", "500 000", "Autre"], 1), gap=8),
@@ -199,9 +199,10 @@ add("Notifications.dc.html", "Notifications", shell("Main", "Notifications", sta
         + row(circ("receive", POSBG, POS), "Recharge Wave reçue", "+500 000 FCFA sur le compte principal · 09:14", href="TxDetail.dc.html", chevron=True, last=True)), gap=8),
     stack(eyebrow("Cette semaine"), panel(
         row(circ("alert", ERRBG, ERR), "Paiement refusé", "Carte Publicité en ligne : plafond mensuel atteint · jeudi", href="CardDetail.dc.html", chevron=True)
+        + row(circ("trend", TINT), "Vous approchez d'une limite", "80 % du mobile money inclus utilisé ce mois-ci · mercredi", btn("Voir les offres", "Plan.dc.html", "secondary", None, "s"))
         + row(circ("file", SOFT), "Relevé de septembre disponible", "Compte principal · mardi", href="Statements.dc.html", chevron=True)
         + row(circ("drop", TINT), "Facture Sen'Eau", "41 200 FCFA à payer avant le 5 novembre · lundi", href="Bills.dc.html", chevron=True)
-        + row(circ("check", POSBG, POS), "Votre compte est ouvert", "IBAN prêt · choisissez votre offre avant le 12 janvier · 5 oct.", href="Approved.dc.html", chevron=True, last=True)), gap=8),
+        + row(circ("check", POSBG, POS), "Votre compte est ouvert", "IBAN prêt · choisissez votre offre avant le 5 novembre · 5 oct.", href="Approved.dc.html", chevron=True, last=True)), gap=8),
     gap=20), back="Main.dc.html", right=bell()))
 
 add("Settings.dc.html", "Profil et sécurité", shell("Settings", "Paramètres", "".join([
@@ -209,7 +210,7 @@ add("Settings.dc.html", "Profil et sécurité", shell("Settings", "Paramètres",
               f'<span style="margin-left: auto">{btn("Modifier le profil", None, "secondary", "edit", "s")}</span>', gap=18), pad="22px 24px"),
     autogrid(
         card(card_title("Entreprise") + panel(row(circ("building", SOFT), "Atelier Ndiaye SARL", "NINEA 006543219 2G3", chevron=True)
-                                              + row(circ("wallet", SOFT), "Offre et abonnement", "Essai gratuit jusqu'au 12 janvier · offre à choisir", pill("À choisir", "warn"), href="Plan.dc.html", chevron=True, last=True)), pad="20px", gap=12),
+                                              + row(circ("wallet", SOFT), "Offre et abonnement", "Premier mois offert jusqu'au 5 novembre · offre à choisir", pill("À choisir", "warn"), href="Plan.dc.html", chevron=True, last=True)), pad="20px", gap=12),
         card(card_title("Sécurité") + panel(row(circ("lock", SOFT), "Code secret", "Pour valider les paiements", chevron=True)
                                             + toggle_row("Double authentification", "Code par SMS à chaque connexion web", True, lead=circ("phone", SOFT))
                                             + row(circ("face", SOFT), "Appareils connectés", "2 appareils · ce navigateur", chevron=True, last=True)), pad="20px", gap=12),
@@ -230,7 +231,7 @@ add("Welcome.dc.html", "Bienvenue", onboarding("".join([
     hrow(f'<span style="margin-left: auto"><button style="all: unset; cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 16px; background: #FFFFFF; border: {FIELD_BORDER}">Français</button></span>'),
     f'<div style="max-width: 400px">{bank_card("Atelier Ndiaye SARL", "4821", "Carte entreprise")}</div>',
     h1("Ouvrez votre compte pro en ligne", "Sans passer en agence. Un seul abonnement, sans frais cachés.", size=34),
-    stack(check_item("Ouverture en ligne, sans passer en agence"), check_item("Salaires payés sur banque, Wave ou Orange Money"), check_item("Cartes Visa virtuelles illimitées"), gap=12),
+    stack(check_item("Ouverture en ligne, sans passer en agence"), check_item("Salaires payés sur banque, Wave ou Orange Money"), check_item("Cartes Visa physiques et virtuelles"), gap=12),
 ]), btn("J'ai déjà un compte", "Main.dc.html", "secondary") + btn("Ouvrir un compte", "SignUp.dc.html"), close=None))
 
 consent = (f'<button aria-pressed="true" style="all: unset; cursor: pointer; display: flex; gap: 10px; align-items: flex-start">'
@@ -332,7 +333,7 @@ add("Approved.dc.html", "Compte ouvert", onboarding("".join([
     f'<div style="display: flex; flex-direction: column; gap: 12px">{circ("check", POSBG, POS, 72, 32)}'
     + h1("Votre compte est ouvert", "Atelier Ndiaye SARL est validée. Vous avez aussi reçu un e-mail de confirmation avec votre RIB.") + '</div>',
     f'<span style="align-self: flex-start; height: 36px; padding: 0 16px; border-radius: 18px; background: {SOFT}; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px">IBAN SN08 SN01 •••• 3035 {ic("copy", 14, "1.8")}</span>',
-    note("Les 3 premiers mois sont offerts. Choisissez votre offre avant le 12 janvier 2027 pour garder votre compte.", "info", "calendar"),
+    note("Le premier mois est offert. Choisissez votre offre avant le 5 novembre pour garder votre compte.", "info", "calendar"),
 ]), btn("Aller à l'accueil", "Main.dc.html", "secondary") + btn("Choisir mon offre", "Plan.dc.html"), close="Main.dc.html",
     aside_title="Bienvenue chez Kelen.", aside_text="Votre IBAN est prêt : partagez-le, recevez vos premiers paiements et payez vos salariés."))
 
@@ -355,17 +356,17 @@ def inc(t):
 
 
 add("Plan.dc.html", "Offre et abonnement", shell("Plan", "Choisissez votre offre", "".join([
-    hrow(segmented(["Mensuel", "Annuel · 2 mois offerts"], 0), pill("Essai gratuit jusqu'au 12 janvier 2027", "info")),
-    autogrid(plan_card("Petite", "1 à 10 salariés", "9 900", points=("50 virements fournisseurs par mois", "Salaires sans limite")),
-             plan_card("Moyenne", "11 à 50 salariés", "29 900", True, "Pour vos 24 salariés", ("200 virements fournisseurs par mois", "Salaires sans limite")),
-             plan_card("Grande", "51 salariés et plus", "79 900", points=("1 000 virements fournisseurs par mois", "Salaires sans limite")), min_w=280, gap=20),
+    hrow(segmented(["Mensuel", "Annuel · 2 mois offerts"], 0), pill("Premier mois offert, jusqu'au 5 novembre", "info")),
+    autogrid(plan_card("Essentiel", "Pour démarrer", "9 900", points=("2 utilisateurs", "30 virements bancaires par mois", "200 000 FCFA par mois vers Wave et Orange Money", "Une carte Visa physique et 2 virtuelles")),
+             plan_card("Pro", "Pour les équipes", "19 500", True, "Recommandé pour vous", ("3 utilisateurs et double validation", "100 virements bancaires par mois", "1 000 000 FCFA par mois vers Wave et Orange Money", "Module comptable et 10 cartes virtuelles")),
+             plan_card("Business", "Pour les grandes équipes", "69 500", points=("10 utilisateurs et validations sur mesure", "400 virements bancaires par mois", "5 000 000 FCFA par mois vers Wave et Orange Money", "API, plusieurs sociétés, cartes virtuelles illimitées")), min_w=280, gap=20),
     card(card_title("Inclus dans toutes les offres")
          + f'<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px">'
-         + inc("Compte avec IBAN, sous-comptes et relevés") + inc("Utilisateurs illimités et double validation") + inc("Cartes virtuelles illimitées")
-         + inc("Salaires vers toutes les banques et wallets, sans limite") + inc("Virements fournisseurs au-delà du forfait : 100 FCFA")
-         + inc("Virements et paiements PI-SPI reçus gratuits") + '</div>', pad="22px 24px", gap=14),
-    p("Autres frais : carte physique 5 000 FCFA une fois · paiements par carte hors FCFA 1 %. Rien d'autre. Premier prélèvement le 12 janvier 2027. Sans engagement.", 13),
-]), sub="Les 3 premiers mois sont offerts. Choisissez une offre avant le 12 janvier 2027 pour garder votre compte.", right=bell()))
+         + inc("Compte avec IBAN, sous-comptes et relevés") + inc("Salaires vers toutes les banques, Wave et Orange Money") + inc("Une carte Visa physique offerte")
+         + inc("Virements et paiements PI-SPI reçus gratuits") + inc("Une alerte avant d'atteindre une limite") + inc("Sans engagement, changement d'offre à tout moment")
+         + '</div>', pad="22px 24px", gap=14),
+    p("Premier prélèvement le 5 novembre. Sans engagement.", 13),
+]), sub="Le premier mois est offert. Choisissez une offre avant le 5 novembre pour garder votre compte.", right=bell()))
 
 # ================================================================== Accounts and bank details
 add("Accounts.dc.html", "Comptes", shell("Accounts", "Comptes", "".join([
@@ -561,8 +562,8 @@ add("SendReview.dc.html", "Vérification", flow("Envoyer", "".join([
     card(f'<div style="display: flex; flex-direction: column; align-items: center; gap: 6px">{eyebrow("Montant")}'
          f'<span style="display: flex; align-items: baseline; gap: 10px"><span style="font-size: 46px; font-weight: 500; letter-spacing: -1.8px">1 250 000</span>{fcfa_tag()}</span></div>', pad="22px", radius=26),
     kv([("À", "Cissé Logistique SARL"), ("IBAN", "SN12 •••• 7781"), ("Depuis", "Compte principal"), ("Arrivée", "Instantanée (PI-SPI)"), ("Motif", "Facture F-2026-118")]),
-    kv([("Frais Kelen", "0 FCFA"), ("Taxe sur les transferts (0,5 %)", "6 250 FCFA"), ("Total débité", "1 256 250 FCFA")]),
-    note("Virement fournisseur n° 15 sur les 200 inclus ce mois-ci. La taxe de 0,5 % est reversée à l'État.", "soft", "info"),
+    kv([("Taxe sur les transferts (0,5 %)", "6 250 FCFA"), ("Total débité", "1 256 250 FCFA")]),
+    note("Inclus dans votre offre. La taxe de 0,5 % est reversée à l'État.", "soft", "info"),
     field("Code secret", placeholder="Votre code à 6 chiffres", typ="password", mode="numeric", hint="Ou validez sur votre téléphone avec Face ID."),
 ]), btn("Modifier", "SendAmount.dc.html", "secondary") + btn("Confirmer le virement", "SendSuccess.dc.html", "primary", "lock"), close="Main.dc.html", back="SendAmount.dc.html"))
 
@@ -577,7 +578,7 @@ add("Bulk.dc.html", "Paie groupée", shell("Bulk", "Paie groupée", "".join([
                                            [cell_main(circ("check", POSBG, POS, 36, 16), "Prestataires chantier"), muted("Payés le 12 sept."), muted("6 prestataires"), pill("Payée", "pos"), money_cell(1180000, sign=False)],
                                            [cell_main(circ("check", POSBG, POS, 36, 16), "Paie d'août"), muted("Payée le 29 août"), muted("23 salariés"), pill("Payée", "pos"), money_cell(3310000, sign=False)]],
                                           ["left", "left", "left", "left", "right"]), gap=12),
-    note("Salaires gratuits et sans limite, exonérés de la taxe sur les transferts.", "pos", "check"),
+    note("Les salaires sont exonérés de la taxe sur les transferts.", "pos", "check"),
 ]), sub="Salaires et prestataires en une fois, vers toutes les banques, Wave et Orange Money.",
     right=bell() + btn("Nouveau paiement groupé", "BulkNew.dc.html", "primary", "plus", "s")))
 
@@ -631,7 +632,7 @@ add("BulkReview.dc.html", "Paie d'octobre", flow("Paie groupée", "".join([
           table(["Salarié", "Moyen de paiement", "Compte", "Montant"],
                 [[cell_main(av(i, bg, 36), n, r), muted(m) if n != "Ousmane Faye" else pill("À vérifier", "warn"), muted(acc), money_cell(a, sign=False)] for i, bg, n, r, m, acc, a in PEOPLE[:5]],
                 ["left", "left", "left", "right"]), gap=12),
-    kv([("Frais", "0 FCFA"), ("Taxe sur les transferts", "Exonérée (salaires)")]),
+    kv([("Taxe sur les transferts", "Exonérée (salaires)")]),
 ]), btn("Envoyer pour validation", "BulkApproval.dc.html"), close="Main.dc.html", back="Bulk.dc.html", width=1040))
 
 add("BulkApproval.dc.html", "Validation de la paie", flow("Paie groupée", "".join([
@@ -669,7 +670,7 @@ add("Bills.dc.html", "Factures", shell("Bills", "Factures", cols(
 add("BillPay.dc.html", "Payer une facture", flow("Factures", "".join([
     f'<div style="display: flex; align-items: center; gap: 14px">{circ("bolt", WARNBG, WARN, 56, 26)}{h1("Senelec", "Électricité · facture mensuelle", size=28)}</div>',
     field("Numéro de contrat", "2310 4471 902", mode="numeric"),
-    stack(card_title("Facture trouvée"), kv([("Titulaire", "Atelier Ndiaye SARL"), ("Période", "Septembre 2026"), ("Échéance", "20 octobre 2026"), ("Montant", "126 450 FCFA"), ("Frais", "0 FCFA")]), gap=10),
+    stack(card_title("Facture trouvée"), kv([("Titulaire", "Atelier Ndiaye SARL"), ("Période", "Septembre 2026"), ("Échéance", "20 octobre 2026"), ("Montant", "126 450 FCFA")]), gap=10),
     panel(acct_from(last=False) + toggle_row("Enregistrer ce contrat", "Rappel chaque mois avant l'échéance", True, last=True)),
 ]), btn("Payer 126 450 FCFA", "BillSuccess.dc.html", "primary", "lock"), close="Main.dc.html", back="Bills.dc.html"))
 
@@ -690,7 +691,7 @@ add("Team.dc.html", "Équipe et droits", shell("Team", "Équipe et droits", "".j
     autogrid(card(card_title("Double validation") + p("Virements de plus de 1 000 000 FCFA et toutes les paies.", 14) + f'<span>{btn("Modifier la règle", None, "secondary", None, "s")}</span>', pad="20px", gap=10),
              card(card_title("Validations en attente", pill("2", "warn")) + p("Un virement et la paie d'octobre attendent votre accord.", 14) + f'<span>{btn("Voir", "Approvals.dc.html", "primary", None, "s")}</span>', pad="20px", gap=10),
              min_w=320, gap=16),
-]), sub="Utilisateurs illimités, inclus dans votre offre.", right=bell() + btn("Inviter", "Invite.dc.html", "primary", "plus", "s")))
+]), sub="Invitez votre équipe et choisissez les droits de chacun.", right=bell() + btn("Inviter", "Invite.dc.html", "primary", "plus", "s")))
 
 add("Invite.dc.html", "Inviter un membre", flow("Équipe et droits", "".join([
     flow_h1("Inviter un membre"),
@@ -740,7 +741,7 @@ soon_page("Intl.dc.html", "Intl", "Virement international", "Payez vos fournisse
     cols(stack(panel(row(circ("globe", TINT), "Vers : France", "Euro (EUR)", chevron=True, last=True)),
                autogrid(card(f'<span style="font-size: 13px; color: {MUTED}">Vous envoyez</span><span style="font-size: 30px; font-weight: 500; letter-spacing: -1px">6 559 570 FCFA</span>', pad="18px 20px", gap=4),
                         card(f'<span style="font-size: 13px; color: {MUTED}">Le fournisseur reçoit</span><span style="font-size: 30px; font-weight: 500; letter-spacing: -1px">10 000,00 EUR</span>', pad="18px 20px", gap=4), min_w=240, gap=12),
-               kv([("Taux", "1 EUR = 655,957 FCFA (parité fixe)"), ("Frais", "Affichés avant l'envoi"), ("Délai", "Affiché avant l'envoi")]), gap=14),
+               kv([("Taux", "1 EUR = 655,957 FCFA (parité fixe)"), ("Délai", "Affiché avant l'envoi")]), gap=14),
          stack(note("Une pièce justificative (facture, contrat) est demandée pour chaque transfert hors UEMOA, selon la réglementation des changes de la BCEAO.", "soft", "file"),
                stack(card_title("Pays envisagés"), chips(["France · EUR", "Chine · CNY", "Émirats · AED", "Turquie · TRY", "Maroc · MAD", "Nigeria · NGN", "Ghana · GHS"], -1), gap=10), gap=16),
          basis=(520, 380)),
@@ -749,7 +750,7 @@ soon_page("Intl.dc.html", "Intl", "Virement international", "Payez vos fournisse
 soon_page("PayLinks.dc.html", "PayLinks", "Liens de paiement", "Faites-vous payer par Wave, Orange Money, carte ou virement avec un simple lien.", cols(
     card(card_title("Nouveau lien") + field("Montant", "350 000", mode="numeric") + field("Description", "Acompte table en acajou, commande 212")
          + f'<div style="display: flex; gap: 6px; flex-wrap: wrap">{pill("Wave", "info")}{pill("Orange Money", "info")}{pill("Carte", "info")}{pill("Virement", "info")}</div>'
-         + p("Frais : 1 % sur les paiements mobile money.", 12) + f'<div style="display: flex">{btn("Créer et partager", None, "primary", "share", "s")}</div>', pad="22px", gap=12),
+         + f'<div style="display: flex">{btn("Créer et partager", None, "primary", "share", "s")}</div>', pad="22px", gap=12),
     stack(card_title("Vos liens"), table(["Lien", "Statut", "Montant"],
                                          [[cell_main(circ("link", WARNBG, WARN, 36, 16), "Acompte commande 212", "Créé aujourd'hui · envoyé sur WhatsApp"), pill("En attente", "warn"), money_cell(350000, sign=False)],
                                           [cell_main(circ("link", POSBG, POS, 36, 16), "Chaises salle de réunion", "Payé par Wave le 8 oct."), pill("Payé", "pos"), money_cell(780000, sign=False)],
